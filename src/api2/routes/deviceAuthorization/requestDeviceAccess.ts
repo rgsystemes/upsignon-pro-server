@@ -13,6 +13,7 @@ import { MicrosoftGraph } from 'upsignon-ms-entra';
 import { getBankIds } from '../../helpers/bankUUID';
 import Joi from 'joi';
 import { SessionStore } from '../../../helpers/sessionStore';
+import { hasAvailableLicence } from '../../../helpers/licenceCheck';
 
 // TESTS
 // - if I request access for a user that does not exist, it creates the user and the device request
@@ -77,6 +78,13 @@ export const requestDeviceAccess2 = async (req: any, res: any) => {
         logInfo(safeBody.userEmail, 'requestDeviceAccess2 fail: email address not allowed');
         return res.status(403).json({ error: 'email_address_not_allowed' });
       }
+
+      // make sure there is still at least 1 unused licence
+      if (!hasAvailableLicence(groupIds.internalId)) {
+        res.status(403).json({ error: 'no_more_licence' });
+        return;
+      }
+
       userRes = await db.query(
         'INSERT INTO users (email, ms_entra_id, bank_id) VALUES ($1,$2,$3) RETURNING id',
         [safeBody.userEmail, userMSEntraId, bankIds.internalId],
