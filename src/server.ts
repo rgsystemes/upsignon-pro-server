@@ -52,6 +52,7 @@ import { updateLicences } from './licences';
 import { getBrowserSetupPreference } from './api2/routes/browserSetupSecurity/getBrowserSetupPreference';
 import { setBrowserSetupUserPreference } from './api2/routes/browserSetupSecurity/setBrowserSetupUserPreference';
 import { authenticateWithOpenidAuthCode } from './api2/routes/authentication/authenticateWithOpenidAuthCode';
+import { verifySignatureMiddleware } from './helpers/signatureHelper';
 
 const app = express();
 
@@ -90,10 +91,15 @@ app.get('/', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.status(200).send('UpSignOn PRO server is running');
 });
-app.post('/licences', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  return updateLicences(req, res);
-});
+app.post(
+  '/licences',
+  (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    next();
+  },
+  verifySignatureMiddleware,
+  updateLicences,
+);
 
 // BANK ROUTING with or without bankUUID (default bankUUID used to be 1)
 // TODO(giregk): remove default bank id routes in 2026
