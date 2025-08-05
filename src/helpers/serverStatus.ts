@@ -14,8 +14,8 @@ export const sendStatusUpdate = async (): Promise<void> => {
         resolve(stdout?.toString().trim() || 'unknown');
       });
     });
-    const licenseCountResult = await db.query('SELECT COUNT(*) FROM users');
-    const licenseCount = licenseCountResult.rows[0].count;
+    const nbVaultsResult = await db.query('SELECT COUNT(*) FROM users');
+    const nbVaults = nbVaultsResult.rows[0].count;
     const statsByBank = await getStatsByBank();
     const statsByReseller = await getStatsByReseller();
     const userAppVersionsResult = await db.query(
@@ -30,7 +30,7 @@ export const sendStatusUpdate = async (): Promise<void> => {
     const serverStatus = {
       serverUrl: env.API_PUBLIC_HOSTNAME,
       serverVersion,
-      licenseCount,
+      nbVaults,
       userAppVersions,
       securityGraph: JSON.stringify(stats),
       statsByBank,
