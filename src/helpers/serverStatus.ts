@@ -159,7 +159,7 @@ const sendToUpSignOn = async (status: any) => {
 
 const getStatsByBank = async () => {
   const res = await db.query(
-    'SELECT banks.id, banks.name, banks.created_at, banks.nb_licences_sold, banks.stop_this_instance, banks.settings, banks.reseller_id, (SELECT COUNT(users.id) FROM users WHERE users.bank_id=banks.id) AS nb_users FROM banks',
+    'SELECT banks.id, banks.name, banks.created_at, banks.stop_this_instance, banks.settings, banks.reseller_id, (SELECT COUNT(users.id) FROM users WHERE users.bank_id=banks.id) AS nb_users FROM banks',
   );
   return JSON.stringify(
     res.rows.map((r) => {
