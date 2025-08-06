@@ -4,7 +4,7 @@ exports.up = async function (db) {
   await db.query('BEGIN');
   await db.query(`CREATE TABLE IF NOT EXISTS external_licences
     (
-    ext_id INT UNIQUE,
+    ext_id INT PRIMARY KEY,
     nb_licences INT NOT NULL,
     valid_from TIMESTAMP WITH TIME ZONE NOT NULL,
     valid_until TIMESTAMP WITH TIME ZONE,
@@ -15,19 +15,20 @@ exports.up = async function (db) {
     )`);
   await db.query(`CREATE TABLE IF NOT EXISTS internal_licences
     (
-    id INT SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     external_licences_id INT NOT NULL REFERENCES external_licences(ext_id) ON DELETE CASCADE,
     nb_licences INT NOT NULL,
-    bank_id SMALLINT NOT NULL REFERENCES banks(id) ON DELETE CASCADE
+    bank_id SMALLINT NOT NULL REFERENCES banks(id) ON DELETE CASCADE,
+    UNIQUE(external_licences_id, bank_id)
     )`);
-  await db.query('ALTER TABlE banks DROP COLUMN IF EXISTS nb_licences_sold');
+  await db.query('ALTER TABLE banks DROP COLUMN IF EXISTS nb_licences_sold');
   await db.query("DELETE FROM settings WHERE key='LICENCES'");
   await db.query('COMMIT');
 };
 
 exports.down = async function (db) {
   await db.query('BEGIN');
-  await db.query('ALTER TABlE banks ADD COLUMN IF NOT EXISTS nb_licences_sold INTEGER DEFAULT 0');
+  await db.query('ALTER TABLE banks ADD COLUMN IF NOT EXISTS nb_licences_sold INTEGER DEFAULT 0');
   await db.query('DROP TABLE IF EXISTS internal_licences');
   await db.query('DROP TABLE IF EXISTS external_licences');
   await db.query('COMMIT');

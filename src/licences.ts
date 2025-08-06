@@ -124,7 +124,7 @@ export const updateLicences = async (req: any, res: any) => {
       ...bankLicences.map((b: BankLicence) => b.id),
     ];
 
-    await db.query('DELETE FROM external_licences WHERE NOT(ext_id=ANY ($1::int[])', [
+    await db.query('DELETE FROM external_licences WHERE NOT(ext_id=ANY ($1::int[]))', [
       allUpdatedLicenceIds,
     ]);
 

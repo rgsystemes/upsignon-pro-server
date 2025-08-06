@@ -5,7 +5,7 @@ export const hasAvailableLicence = async (bankId: number): Promise<boolean> => {
     `SELECT
     il.nb_licences
     FROM internal_licences AS il
-    LEFT JOIN external_licences AS el ON el.external_licences_id=il.ext_id
+    INNER JOIN external_licences AS el ON il.external_licences_id=el.ext_id
     WHERE il.bank_id=$1
     AND ((el.is_monthly=true AND el.to_be_renewed != false) OR (el.valid_from <= current_timestamp(0) AND current_timestamp(0) < el.valid_until))
     `,
@@ -14,13 +14,13 @@ export const hasAvailableLicence = async (bankId: number): Promise<boolean> => {
   const externalLicences = await db.query(
     `SELECT
     el.nb_licences
-    LEFT JOIN external_licences AS el
+    FROM external_licences AS el
     WHERE el.bank_id=$1
     AND ((el.is_monthly=true AND el.to_be_renewed != false) OR (el.valid_from <= current_timestamp(0) AND current_timestamp(0) < el.valid_until))
     `,
     [bankId],
   );
-  const vaultsRes = await db.query('SELECT count(1) as nb_vaults FROM users WHERE group_id=$1', [
+  const vaultsRes = await db.query('SELECT count(1) as nb_vaults FROM users WHERE bank_id=$1', [
     bankId,
   ]);
   let bankSpecificNbLicences = 0;
