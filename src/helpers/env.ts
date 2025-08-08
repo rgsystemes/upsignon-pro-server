@@ -51,4 +51,6 @@ export default {
   SENDING_MAIL: SENDING_MAIL || `ne-pas-repondre@${DKIM_HOSTNAME}`,
   DKIM_KEY_SELECTOR,
   DKIM_PRIVATE_KEY,
+  STATUS_SERVER_URL:
+    NODE_ENV !== 'development' ? 'https://app.upsignon.eu' : 'http://localhost:3002',
 };
