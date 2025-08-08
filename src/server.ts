@@ -53,6 +53,7 @@ import { getBrowserSetupPreference } from './api2/routes/browserSetupSecurity/ge
 import { setBrowserSetupUserPreference } from './api2/routes/browserSetupSecurity/setBrowserSetupUserPreference';
 import { authenticateWithOpenidAuthCode } from './api2/routes/authentication/authenticateWithOpenidAuthCode';
 import { verifySignatureMiddleware } from './helpers/signatureHelper';
+import { forceStatusUpdate } from './helpers/serverStatus';
 
 const app = express();
 
@@ -107,6 +108,14 @@ app.post(
     next();
   },
   startLicencePulling,
+);
+app.post(
+  '/force-pro-status-update',
+  (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    next();
+  },
+  forceStatusUpdate,
 );
 
 // BANK ROUTING with or without bankUUID (default bankUUID used to be 1)
