@@ -9,6 +9,7 @@ import { syncPeriodicallyWithMicrosoftEntra } from './syncWithMicrosoftEntra';
 import { aggregateStatsDaily } from './dailyStats';
 import { setupMSGraph } from './init_ms_graph';
 import { sendTrialEmailReminders } from './trialEmails';
+import { pullLicences } from '../licences';
 
 if (env.HTTP_PROXY) {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -22,6 +23,7 @@ async function cronjob(randomDelay: number) {
   await cleanOldRevokedDevices();
   await cleanOrphanSharedVaults();
   await getActivationStatus();
+  await pullLicences();
   setTimeout(async () => {
     await sendStatusUpdate();
     // randomize the time of the call in the next 5 minutes to avoid overloading the server

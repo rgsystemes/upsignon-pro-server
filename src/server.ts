@@ -48,7 +48,7 @@ import { checkUserPublicKey2 } from './api2/routes/sharingRecipients/checkUserPu
 import { updateDeviceMetaData2 } from './api2/routes/devices/updateDeviceMetaData';
 import { logEvent } from './api2/routes/audit/logEvent';
 import libsodium from 'libsodium-wrappers';
-import { updateLicences } from './licences';
+import { startLicencePulling, updateLicences } from './licences';
 import { getBrowserSetupPreference } from './api2/routes/browserSetupSecurity/getBrowserSetupPreference';
 import { setBrowserSetupUserPreference } from './api2/routes/browserSetupSecurity/setBrowserSetupUserPreference';
 import { authenticateWithOpenidAuthCode } from './api2/routes/authentication/authenticateWithOpenidAuthCode';
@@ -99,6 +99,14 @@ app.post(
   },
   verifySignatureMiddleware,
   updateLicences,
+);
+app.post(
+  '/start-licence-pulling',
+  (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    next();
+  },
+  startLicencePulling,
 );
 
 // BANK ROUTING with or without bankUUID (default bankUUID used to be 1)

@@ -135,9 +135,7 @@ const getStats = async (): Promise<{ def: string[]; data: any[] }> => {
 
 const sendToUpSignOn = async (status: any) => {
   try {
-    const url = env.IS_PRODUCTION
-      ? 'https://app.upsignon.eu/pro-status'
-      : 'http://localhost:3002/pro-status';
+    const url = `${env.STATUS_SERVER_URL}/pro-status`;
 
     const response = await fetch(url, {
       method: 'POST',
