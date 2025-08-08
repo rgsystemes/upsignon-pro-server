@@ -80,7 +80,7 @@ export const requestDeviceAccess2 = async (req: any, res: any) => {
       }
 
       // make sure there is still at least 1 unused licence
-      if (!hasAvailableLicence(bankIds.internalId)) {
+      if (!(await hasAvailableLicence(bankIds.internalId))) {
         res.status(403).json({ error: 'no_more_licence' });
         return;
       }

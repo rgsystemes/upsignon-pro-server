@@ -96,7 +96,7 @@ export const updateLicences = async (req: any, res: any) => {
       const b = bankLicences[i];
       await db.query(
         `INSERT INTO external_licences
-        (ext_id, nb_licences, valid_from, valid_until, is_monthly, to_be_renewed,reseller_id, bank_id)
+        (ext_id, nb_licences, valid_from, valid_until, is_monthly, to_be_renewed, reseller_id, bank_id)
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
         ON CONFLICT (ext_id) DO UPDATE SET
         nb_licences=EXCLUDED.nb_licences,
