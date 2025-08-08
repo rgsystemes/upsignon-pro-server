@@ -5,6 +5,11 @@ import { db } from './db';
 import childProcess from 'child_process';
 import { logError } from './logger';
 
+export const forceStatusUpdate = async (req: any, res: any) => {
+  await sendStatusUpdate();
+  res.status(200).end();
+};
+
 export const sendStatusUpdate = async (): Promise<void> => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
