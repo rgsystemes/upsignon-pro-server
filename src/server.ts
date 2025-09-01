@@ -92,6 +92,9 @@ app.get('/', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.status(200).send('UpSignOn PRO server is running');
 });
+
+/// Called by SEPTEO IT SOLUTIONS servers to push licence updates
+/// This call is signed by SEPTEO IT SOLUTIONS
 app.post(
   '/licences',
   (req, res, next) => {
@@ -101,6 +104,8 @@ app.post(
   verifySignatureMiddleware,
   updateLicences,
 );
+
+/// Called by the upsignon-pro-dashboard to pull licences from SEPTEO IT SOLUTIONS in order to avoid code duplication.
 app.post(
   '/start-licence-pulling',
   (req, res, next) => {
