@@ -47,24 +47,24 @@ export const checkDevice2 = async (req: any, res: any) => {
         ud.device_public_key_2 AS device_public_key_2,
         ud.session_auth_challenge AS session_auth_challenge,
         ud.session_auth_challenge_exp_time AS session_auth_challenge_exp_time,
-        (SELECT COUNT(*) FROM user_devices AS ud2
-          WHERE
-            ud2.user_id=users.id AND
-            (ud2.authorization_status = 'AUTHORIZED' OR
-              ud2.authorization_status = 'PENDING' OR
-              ud2.authorization_status = 'USER_VERIFIED_PENDING_ADMIN_CHECK'
-            )
-        ) AS device_count,
+        COUNT(ud2.id) AS device_count,
         banks.settings AS bank_settings
-        FROM user_devices AS ud
-        INNER JOIN users ON ud.user_id = users.id
-        INNER JOIN banks ON banks.id = users.bank_id
-        WHERE
-          users.email=$1
-          AND ud.device_unique_id = $2
-          AND ud.authorization_status != 'REVOKED_BY_ADMIN'
-          AND ud.authorization_status != 'REVOKED_BY_USER'
-          AND users.bank_id=$3
+      FROM user_devices AS ud
+      INNER JOIN users ON ud.user_id = users.id
+      INNER JOIN banks ON banks.id = users.bank_id
+      LEFT JOIN user_devices AS ud2
+        ON ud2.user_id=users.id AND
+          (ud2.authorization_status = 'AUTHORIZED' OR
+            ud2.authorization_status = 'PENDING' OR
+            ud2.authorization_status = 'USER_VERIFIED_PENDING_ADMIN_CHECK'
+          )
+      WHERE
+        users.email=$1
+        AND ud.device_unique_id = $2
+        AND ud.authorization_status != 'REVOKED_BY_ADMIN'
+        AND ud.authorization_status != 'REVOKED_BY_USER'
+        AND users.bank_id=$3
+      GROUP BY ud.id, users.id, banks.id
       `,
       [userEmail, deviceId, bankIds.internalId],
     );
@@ -118,7 +118,7 @@ export const checkDevice2 = async (req: any, res: any) => {
     let requireAdminCheck = false;
     if (
       dbRes.rows[0]?.device_count != null &&
-      dbRes.rows[0].device_count > 1 &&
+      Number.parseInt(dbRes.rows[0].device_count, 10) > 1 &&
       dbRes.rows[0].bank_settings != null &&
       dbRes.rows[0].bank_settings?.REQUIRE_ADMIN_CHECK_FOR_SECOND_DEVICE
     ) {
