@@ -162,7 +162,18 @@ const sendToUpSignOn = async (status: any) => {
 
 const getStatsByBank = async () => {
   const res = await db.query(
-    'SELECT banks.id, banks.name, banks.created_at, banks.stop_this_instance, banks.settings, banks.reseller_id, (SELECT COUNT(users.id) FROM users WHERE users.bank_id=banks.id) AS nb_users FROM banks',
+    `SELECT
+      banks.id,
+      banks.name,
+      banks.created_at,
+      banks.stop_this_instance,
+      banks.settings,
+      banks.reseller_id,
+      COUNT(users.id) AS nb_users
+    FROM banks
+    LEFT JOIN users
+      ON users.bank_id=banks.id
+    GROUP BY banks.id`,
   );
   return JSON.stringify(
     res.rows.map((r) => {
@@ -183,10 +194,15 @@ const getStatsByBank = async () => {
 
 const getStatsByReseller = async () => {
   const res = await db.query(`SELECT
-      id,
-      name,
-      (SELECT COUNT(1) FROM users INNER JOIN banks ON banks.id = users.bank_id WHERE banks.reseller_id = resellers.id) as nb_vaults
-    FROM resellers`);
+      resellers.id,
+      resellers.name,
+      COUNT(users.id) AS nb_vaults
+    FROM resellers
+    LEFT JOIN banks
+      ON banks.reseller_id = resellers.id
+    LEFT JOIN users
+      ON banks.id = users.bank_id
+    GROUP BY resellers.id`);
   return JSON.stringify(res.rows);
 };
 const getHasDailyBackup = () => {
