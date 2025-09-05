@@ -10,6 +10,7 @@ exports.up = async function (db) {
     valid_until TIMESTAMP WITH TIME ZONE,
     is_monthly BOOLEAN NOT NULL,
     to_be_renewed BOOLEAN NOT NULL,
+    uses_pool BOOLEAN DEFAULT false,
     reseller_id UUID REFERENCES resellers(id) ON DELETE CASCADE,
     bank_id SMALLINT REFERENCES banks(id) ON DELETE CASCADE
     )`);
