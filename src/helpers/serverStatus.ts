@@ -233,7 +233,7 @@ const fetchActivationStatus = async (): Promise<boolean> => {
       return true;
     }
 
-    const response = await fetch('https://app.upsignon.eu/pro-activation-status', {
+    const response = await fetch(`${env.STATUS_SERVER_URL}/pro-activation-status`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
