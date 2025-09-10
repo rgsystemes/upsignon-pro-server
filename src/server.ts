@@ -131,7 +131,7 @@ app.get('/:bankUUID/', (req, res) => {
   return res
     .status(303)
     .redirect(
-      `https://app.upsignon.eu/pro-setup?url=${encodeURIComponent(`https://${hostname}${req.originalUrl}`)}`,
+      `${env.STATUS_SERVER_URL}/pro-setup?url=${encodeURIComponent(`https://${hostname}${req.originalUrl}`)}`,
     );
 });
 // API 2
@@ -262,7 +262,7 @@ if (module === require.main) {
       startServer(app, () => {
         logInfo(`You can try to open in your browser\n  - https://${env.API_PUBLIC_HOSTNAME}\n`);
         logInfo(
-          `Your setup link is https://upsignon.eu/pro-setup?url=https://${env.API_PUBLIC_HOSTNAME}`,
+          `Your setup link is ${env.STATUS_SERVER_URL}/pro-setup?url=https://${env.API_PUBLIC_HOSTNAME}`,
         );
       });
     });

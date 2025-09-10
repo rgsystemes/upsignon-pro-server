@@ -22,6 +22,7 @@ const {
   SENDING_MAIL,
   DKIM_KEY_SELECTOR,
   DKIM_PRIVATE_KEY_PATH,
+  STATUS_SERVER_URL, // DEV ONLY
 } = process.env;
 
 const USE_POSTFIX_BOOL = USE_POSTFIX === 'true';
@@ -51,6 +52,5 @@ export default {
   SENDING_MAIL: SENDING_MAIL || `ne-pas-repondre@${DKIM_HOSTNAME}`,
   DKIM_KEY_SELECTOR,
   DKIM_PRIVATE_KEY,
-  STATUS_SERVER_URL:
-    NODE_ENV !== 'development' ? 'https://app.upsignon.eu' : 'http://localhost:3002',
+  STATUS_SERVER_URL: STATUS_SERVER_URL || 'https://app.upsignon.eu',
 };
