@@ -3,7 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { db } from './db';
 import childProcess from 'child_process';
-import { logError } from './logger';
+import { logError, logInfo } from './logger';
+import { proxiedFetch } from './xmlHttpRequest';
 
 export const forceStatusUpdate = async (req: any, res: any) => {
   await sendStatusUpdate();
@@ -141,12 +142,9 @@ const getStats = async (): Promise<{ def: string[]; data: any[] }> => {
 const sendToUpSignOn = async (status: any) => {
   try {
     const url = `${env.STATUS_SERVER_URL}/pro-status`;
-
-    const response = await fetch(url, {
+    logInfo(`ProxiedFetch to ${url}`);
+    const response = await proxiedFetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(status),
     });
 
@@ -229,25 +227,18 @@ const getHasDailyBackup = () => {
 
 const fetchActivationStatus = async (): Promise<boolean> => {
   try {
-    if (!env.IS_PRODUCTION) {
-      return true;
-    }
-
-    const response = await fetch(`${env.STATUS_SERVER_URL}/pro-activation-status`, {
+    const url = `${env.STATUS_SERVER_URL}/pro-activation-status`;
+    logInfo(`ProxiedFetch to ${url}`);
+    const response = await proxiedFetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ url: env.API_PUBLIC_HOSTNAME }),
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
-    const resBody = await response.json();
     console.log('Get Activation status');
-    return !!resBody.isActive;
+    return !!JSON.parse(response.body).isActive;
   } catch (e) {
     logError('getActivationStatus', e);
     throw e;
@@ -261,11 +252,11 @@ const interval = null;
 export const getActivationStatus = async () => {
   try {
     IS_ACTIVE = await fetchActivationStatus();
-    if (!IS_ACTIVE) {
-      console.log('==================== LICENCES DEACTIVATED, please contact our support.');
-    }
   } catch (e) {
     IS_ACTIVE = false;
+  }
+  if (!IS_ACTIVE) {
+    console.log('==================== LICENCES DEACTIVATED, please contact our support.');
   }
   if (!IS_ACTIVE && interval == null) {
     setInterval(
