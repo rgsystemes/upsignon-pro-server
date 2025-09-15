@@ -137,7 +137,7 @@ const sendTrialEndingEmailToSalesRep = async (
     const htmlMessage = `<body>
     <p>Bonjour,</p>
     <img alt="UpSignon logo" loading="lazy" width="200" decoding="async" data-nimg="1" style="color:transparent;" src="https://upsignon.eu/_next/static/media/logo-upsignon-website.a0d265f5.svg">
-    <p style="background-color:#1E3758;color:white;padding: 0 5px;">Liste des comptes trial arrrivant à expiration</p>
+    <p style="background-color:#1E3758;color:white;padding: 0 5px;">Liste des comptes trial arrivant à expiration</p>
 
     ${contentbySales
       .map((c) => {
@@ -211,9 +211,9 @@ const getTrialsTable = (
         .map((t, i) => {
           const rowStyle = i % 2 === 0 ? 'background:#E7E7E7;' : 'background:#fff;';
           return `<tr style="${rowStyle}">
-          <td style="padding:8px;text-align:center;"">${t.id}</td>
-          <td style="padding:8px;text-align:center;"">${t.name || ''}</td>
-          <td style="padding:8px;text-align:center;"">${t.reseller || ''}</td>
+          <td style="padding:8px;text-align:center;">${t.id}</td>
+          <td style="padding:8px;text-align:center;">${t.name || ''}</td>
+          <td style="padding:8px;text-align:center;">${t.reseller || ''}</td>
           <td style="padding:8px;text-align:center;">${t.nbUsers}</td>
           <td style="padding:8px;text-align:center;">${new Date(t.createdAt).toLocaleDateString('fr')}</td>
           <td style="padding:8px;text-align:center;${expiredCase ? 'color:red;' : ''}">${t.remainingDays}</td>
