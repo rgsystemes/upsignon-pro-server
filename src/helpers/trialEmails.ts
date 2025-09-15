@@ -34,18 +34,19 @@ export const sendTrialEmailReminders = (): void => {
   // call function every day at 8am
   const nextCronDate = getNext8am();
   setTimeout(() => {
-    doSendTrialEmailReminder();
+    if (isMonday()) {
+      doSendTrialEmailReminder();
+    }
     setInterval(doSendTrialEmailReminder, 24 * 3600 * 1000); // call it every 24 hours
   }, nextCronDate.getTime() - Date.now()); // start the cron at the next 8am
 };
 
 const doSendTrialEmailReminder = async (): Promise<void> => {
   try {
-    if (isMonday()) {
-      logInfo('doSendTrialEmailReminder');
-      // get all trials
-      const trialsRes = await db.query(
-        `SELECT
+    logInfo('doSendTrialEmailReminder');
+    // get all trials
+    const trialsRes = await db.query(
+      `SELECT
           banks.id,
           banks.name,
           banks.settings->'SALES_REP' as sales_rep,
@@ -59,68 +60,67 @@ const doSendTrialEmailReminder = async (): Promise<void> => {
         WHERE banks.settings->>'IS_TESTING' = 'true'
         GROUP BY banks.id, resellers.id
         ORDER BY testing_expiration_date ASC`,
-      );
-      const trials = trialsRes.rows.map((t) => {
-        return {
-          salesRep: inputSanitizer.cleanForHTMLInjections(t.sales_rep),
-          id: t.id,
-          name: inputSanitizer.cleanForHTMLInjections(t.name),
-          reseller: inputSanitizer.cleanForHTMLInjections(t.reseller_name),
-          nbUsers: t.nb_users,
-          createdAt: t.created_at,
-          remainingDays: getRemainingDays(t.testing_expiration_date),
-        };
-      });
+    );
+    const trials = trialsRes.rows.map((t) => {
+      return {
+        salesRep: inputSanitizer.cleanForHTMLInjections(t.sales_rep),
+        id: t.id,
+        name: inputSanitizer.cleanForHTMLInjections(t.name),
+        reseller: inputSanitizer.cleanForHTMLInjections(t.reseller_name),
+        nbUsers: t.nb_users,
+        createdAt: t.created_at,
+        remainingDays: getRemainingDays(t.testing_expiration_date),
+      };
+    });
 
-      // every week, send a reminder to sales rep
-      let trialsBySalesRep: {
-        [salesRep: string]: SalesTrials;
-      } = {};
-      trials.forEach((t) => {
-        if (!trialsBySalesRep[t.salesRep]) {
-          trialsBySalesRep[t.salesRep] = {
-            sales: t.salesRep,
-            expired: [],
-            next7Days: [],
-            next14Days: [],
-          };
-        }
-        if (t.remainingDays <= 0) {
-          trialsBySalesRep[t.salesRep].expired.push({
-            id: t.id,
-            name: t.name,
-            reseller: t.reseller,
-            nbUsers: t.nbUsers,
-            createdAt: t.createdAt,
-            remainingDays: t.remainingDays,
-          });
-        }
-        if (t.remainingDays > 0 && t.remainingDays <= 7) {
-          trialsBySalesRep[t.salesRep].next7Days.push({
-            id: t.id,
-            name: t.name,
-            reseller: t.reseller,
-            nbUsers: t.nbUsers,
-            createdAt: t.createdAt,
-            remainingDays: t.remainingDays,
-          });
-        }
-        if (t.remainingDays > 7 && t.remainingDays <= 14) {
-          trialsBySalesRep[t.salesRep].next14Days.push({
-            id: t.id,
-            name: t.name,
-            reseller: t.reseller,
-            nbUsers: t.nbUsers,
-            createdAt: t.createdAt,
-            remainingDays: t.remainingDays,
-          });
-        }
-      });
-      await sendTrialEndingEmailToSalesRep(
-        Object.keys(trialsBySalesRep),
-        Object.values(trialsBySalesRep),
-      );
-    }
+    // every week, send a reminder to sales rep
+    let trialsBySalesRep: {
+      [salesRep: string]: SalesTrials;
+    } = {};
+    trials.forEach((t) => {
+      if (!trialsBySalesRep[t.salesRep]) {
+        trialsBySalesRep[t.salesRep] = {
+          sales: t.salesRep,
+          expired: [],
+          next7Days: [],
+          next14Days: [],
+        };
+      }
+      if (t.remainingDays <= 0) {
+        trialsBySalesRep[t.salesRep].expired.push({
+          id: t.id,
+          name: t.name,
+          reseller: t.reseller,
+          nbUsers: t.nbUsers,
+          createdAt: t.createdAt,
+          remainingDays: t.remainingDays,
+        });
+      }
+      if (t.remainingDays > 0 && t.remainingDays <= 7) {
+        trialsBySalesRep[t.salesRep].next7Days.push({
+          id: t.id,
+          name: t.name,
+          reseller: t.reseller,
+          nbUsers: t.nbUsers,
+          createdAt: t.createdAt,
+          remainingDays: t.remainingDays,
+        });
+      }
+      if (t.remainingDays > 7 && t.remainingDays <= 14) {
+        trialsBySalesRep[t.salesRep].next14Days.push({
+          id: t.id,
+          name: t.name,
+          reseller: t.reseller,
+          nbUsers: t.nbUsers,
+          createdAt: t.createdAt,
+          remainingDays: t.remainingDays,
+        });
+      }
+    });
+    await sendTrialEndingEmailToSalesRep(
+      Object.keys(trialsBySalesRep),
+      Object.values(trialsBySalesRep),
+    );
   } catch (e) {
     logError('doSendTrialEmailReminder', e);
   }
