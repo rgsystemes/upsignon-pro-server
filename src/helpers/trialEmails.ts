@@ -27,7 +27,7 @@ const salesDirector = env.IS_PRODUCTION
 
 export const sendTrialEmailReminders = (): void => {
   // this feature is for SAAS tests only
-  if (env.API_PUBLIC_HOSTNAME.endsWith('.upsignon.eu')) {
+  if (!env.API_PUBLIC_HOSTNAME.endsWith('.upsignon.eu')) {
     // this matches pro.upsignon.eu and pro-staging.upsignon.eu
     return;
   }
