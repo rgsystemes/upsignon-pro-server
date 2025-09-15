@@ -34,11 +34,15 @@ export const sendTrialEmailReminders = (): void => {
   // call function every day at 8am
   const nextCronDate = getNext8am();
   setTimeout(() => {
-    if (isMonday()) {
-      doSendTrialEmailReminder();
-    }
-    setInterval(doSendTrialEmailReminder, 24 * 3600 * 1000); // call it every 24 hours
+    doSendTrialEmailReminderOnMondays();
+    setInterval(doSendTrialEmailReminderOnMondays, 24 * 3600 * 1000); // call it every 24 hours
   }, nextCronDate.getTime() - Date.now()); // start the cron at the next 8am
+};
+
+const doSendTrialEmailReminderOnMondays = async () => {
+  if (isMonday()) {
+    await doSendTrialEmailReminder();
+  }
 };
 
 const doSendTrialEmailReminder = async (): Promise<void> => {
