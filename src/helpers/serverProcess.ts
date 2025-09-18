@@ -27,7 +27,7 @@ async function cronjob(randomDelay: number) {
 
 export const startServer = (app: any, then: any): void => {
   setupMSGraph();
-  const serverEnv = process.env.NODE_ENV === 'production' ? 'Production' : 'Dev';
+  const serverEnv = env.IS_PRODUCTION ? 'Production' : 'Dev';
   if (env.LOCALHOST_SSL_CERTIFICATE_KEY_PATH && env.LOCALHOST_SSL_CERTIFICATE_CRT_PATH) {
     const options = {
       key: fs.readFileSync(env.LOCALHOST_SSL_CERTIFICATE_KEY_PATH),

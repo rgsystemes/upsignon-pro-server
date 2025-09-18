@@ -127,7 +127,7 @@ app.post(
 // TODO(giregk): remove default bank id routes in 2026
 
 app.get('/:bankUUID/', (req, res) => {
-  var hostname = env.API_PUBLIC_HOSTNAME.replace(/\/$/, '');
+  var hostname = env.API_PUBLIC_HOSTNAME;
   return res
     .status(303)
     .redirect(

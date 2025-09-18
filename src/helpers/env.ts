@@ -40,7 +40,7 @@ export default {
   DB_PASS: POSTGRES_PASSWORD || DB_PASS,
   DB_BACKUP_DIR: DB_BACKUP_DIR,
   SERVER_PORT: SERVER_PORT ? Number.parseInt(SERVER_PORT) : 3000,
-  API_PUBLIC_HOSTNAME: API_PUBLIC_HOSTNAME || '',
+  API_PUBLIC_HOSTNAME: API_PUBLIC_HOSTNAME?.replace(/\/$/, '') || '',
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   SESSION_SECRET: SESSION_SECRET || require('crypto').randomBytes(64).toString('hex'),
   LOCALHOST_SSL_CERTIFICATE_KEY_PATH:
@@ -52,5 +52,5 @@ export default {
   SENDING_MAIL: SENDING_MAIL || `ne-pas-repondre@${DKIM_HOSTNAME}`,
   DKIM_KEY_SELECTOR,
   DKIM_PRIVATE_KEY,
-  STATUS_SERVER_URL: STATUS_SERVER_URL || 'https://app.upsignon.eu',
+  STATUS_SERVER_URL: (STATUS_SERVER_URL || 'https://app.upsignon.eu').replace(/\/$/, ''),
 };
