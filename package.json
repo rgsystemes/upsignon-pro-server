@@ -1,7 +1,7 @@
 {
   "name": "upsignon-pro-server",
   "version": "2.7.0",
-  "repository": "git@github.com:UpSignOn/UpSignOn-pro-server.git",
+  "repository": "git@github.com:rgsystemes/upsignon-pro-server.git",
   "license": "Unlicense",
   "scripts": {
     "build": "rm -rf compiled && tsc -p .",
@@ -20,7 +20,7 @@
     "jsonwebtoken": "^9.0.2",
     "jwks-rsa": "^3.2.0",
     "libsodium-wrappers": "^0.7.11",
-    "ms-entra-for-upsignon": "git+https://github.com/UpSignOn/ms-entra-for-upsignon",
+    "upsignon-ms-entra": "git+https://github.com/rgsystemes/upsignon-ms-entra",
     "nodemailer": "^7.0.3",
     "pg": "^8.16.0",
     "uuid": "^11.1.0"

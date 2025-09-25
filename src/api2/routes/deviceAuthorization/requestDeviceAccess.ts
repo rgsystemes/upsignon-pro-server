@@ -9,7 +9,7 @@ import {
 } from '../../../helpers/getDefaultSettingOrUserOverride';
 import { isAllowedOnPlatform } from '../../../helpers/isAllowedOnPlatform';
 import { getEmailAuthorizationStatus } from '../../helpers/emailAuthorization';
-import { MicrosoftGraph } from 'ms-entra-for-upsignon';
+import { MicrosoftGraph } from 'upsignon-ms-entra';
 import { getBankIds } from '../../helpers/bankUUID';
 import Joi from 'joi';
 import { SessionStore } from '../../../helpers/sessionStore';

@@ -2,7 +2,7 @@ import { isEmailAuthorizedWithPattern } from '../api2/helpers/emailAuthorization
 import { getNext1pmOr1am } from './dateHelper';
 import { db } from './db';
 import { logError } from './logger';
-import { MicrosoftGraph } from 'ms-entra-for-upsignon';
+import { MicrosoftGraph } from 'upsignon-ms-entra';
 
 export const syncPeriodicallyWithMicrosoftEntra = async (): Promise<void> => {
   performMicrosoftEntraSync();

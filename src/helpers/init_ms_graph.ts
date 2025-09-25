@@ -1,4 +1,4 @@
-import { EntraConfig, MicrosoftGraph } from 'ms-entra-for-upsignon';
+import { EntraConfig, MicrosoftGraph } from 'upsignon-ms-entra';
 import { db } from './db';
 
 export const setupMSGraph = () => {

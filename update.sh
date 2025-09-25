@@ -1,4 +1,5 @@
 #!/bin/bash
+git remote set-url origin git@github.com:rgsystemes/upsignon-pro-server.git
 git fetch origin production
 git reset --hard origin/production
 git clean -df

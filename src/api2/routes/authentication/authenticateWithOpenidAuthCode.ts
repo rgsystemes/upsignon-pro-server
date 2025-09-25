@@ -4,7 +4,7 @@ import { URLSearchParams } from 'url';
 import { logError } from '../../../helpers/logger';
 import { db } from '../../../helpers/db';
 import jwksClient from 'jwks-rsa';
-import { MicrosoftGraph } from 'ms-entra-for-upsignon';
+import { MicrosoftGraph } from 'upsignon-ms-entra';
 import { getBankIds } from '../../helpers/bankUUID';
 import { getEmailAuthorizationStatus } from '../../helpers/emailAuthorization';
 import { SessionStore } from '../../../helpers/sessionStore';

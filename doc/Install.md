@@ -184,7 +184,6 @@ NB: Let's Encrypt produit ses certificats dans le dossier `/etc/letsencrypt/live
 ## (Alternative) Installation d'un certificat géré manuellement
 
 - ajoutez vos fichiers de certificats SSL, par exemple dans le dossier /etc/nginx/ssl
-
   - `root@localhost:~# mkdir /etc/nginx/ssl/`
   - fichier certificat: /etc/nginx/ssl/upsignonpro.cer
     > ATTENTION, il est primordial que ce fichier contienne toute la chaine de certification. Autrement l'application mobile refusera d'exécuter les requêtes vers votre serveur. Vous pouvez tester que c'est bien le cas grâce au site [https://whatsmychaincert.com](https://whatsmychaincert.com)
@@ -337,7 +336,6 @@ openssl rsa -in private.key -pubout -out public.key
 ## Configuration DNS
 
 - Ajouter un enregistrement SPF pour améliorer la délivrabilité des emails. (Des enregistrements DKIM et DMARC seront également ajoutés à la fin de l'installation pour compléter cette configuration).
-
   - type: TXT
   - nom d'hôte: <upsignonpro.votre-domaine.fr>
   - valeur (en y mettant l'adresse IP de la machine): v=spf1 ip4:XXX.XXX.XXX.XXX -all
@@ -352,7 +350,6 @@ openssl rsa -in private.key -pubout -out public.key
 NB: "uso1" est une valeur arbitraire qui permet de distinguer plusieurs enregistrement DKIM liés au même (sous-)domaine pour désigner des clés différentes.
 
 - Ajoutez l'enregistrement DMARC suivant dans votre configuration DNS
-
   - type: TXT
   - nom d'hôte: `_dmarc.upsignonpro.votre-domaine.fr`
   - valeur: v=DMARC1; p=reject; aspf=s; adkim=s;
@@ -402,7 +399,7 @@ root@localhost:~# su - upsignonpro
 
 upsignonpro@localhost:~$ cd
 
-upsignonpro@localhost:~$ git clone --branch production https://github.com/UpSignOn/UpSignOn-pro-server.git upsignon-pro-server
+upsignonpro@localhost:~$ git clone --branch production https://github.com/rgsystemes/upsignon-pro-server.git upsignon-pro-server
 
 upsignonpro@localhost:~$ cd upsignon-pro-server
 
@@ -439,7 +436,7 @@ En tant qu'utilisateur upsignonpro
 ```bash
 upsignonpro@localhost:~$ cd
 
-upsignonpro@localhost:~$ git clone --branch production https://github.com/UpSignOn/upsignon-pro-dashboard.git
+upsignonpro@localhost:~$ git clone --branch production https://github.com/rgsystemes/upsignon-pro-dashboard.git
 
 upsignonpro@localhost:~$ cd upsignon-pro-dashboard
 ```
