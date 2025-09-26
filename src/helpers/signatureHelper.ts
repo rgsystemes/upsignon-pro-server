@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import env from './env';
+import { logError } from './logger';
 
 const wellKnownUpSignOnPublicKey = env.IS_PRODUCTION
   ? '-----BEGIN PUBLIC KEY-----\nMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEB/4zGfZRH715/kObqaWDL2nZR+ybUh/y\nx/wCHiLXX9VDzSh/qB+NC0KJ/rMPKXKhCCKgWCo/OBxieXarHJS6lg==\n-----END PUBLIC KEY-----\n'
@@ -48,6 +49,7 @@ export const verifySignatureMiddleware = (
     res.status(401).json({
       error: 'Missing signature or timestamp headers',
     });
+    logError('verifySignatureMiddleware Missing signature or timestamp headers');
     return;
   }
 
@@ -56,6 +58,7 @@ export const verifySignatureMiddleware = (
     res.status(400).json({
       error: 'Invalid timestamp format',
     });
+    logError('verifySignatureMiddleware Invalid timestamp format');
     return;
   }
 
@@ -67,6 +70,7 @@ export const verifySignatureMiddleware = (
     res.status(401).json({
       error: 'Request timestamp too old or too far in future',
     });
+    logError('verifySignatureMiddleware Request timestamp too old or too far in future');
     return;
   }
 
@@ -86,6 +90,7 @@ export const verifySignatureMiddleware = (
       res.status(401).json({
         error: 'Invalid signature',
       });
+      logError('verifySignatureMiddleware Invalid signature');
       return;
     }
 
