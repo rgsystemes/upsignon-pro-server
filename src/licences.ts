@@ -26,6 +26,11 @@ interface LicencesBody {
   bankLicences: BankLicence[];
 }
 
+// NB: Licence flows
+// - PUSH FLOW (licence update/creation): upsignon-adv-dashboard -> upsignon-pro-server/licences
+// - AUTO PULL FLOW (pro server cron and start): upsignon-pro-server -> upsignon-perso-server/pull-licences -> upsignon-adv-dashboard/pull-licences
+// - MANUAL PULL FLOW: upsignon-pro-dashboard/start-pull-licences -> upsignon-perso-server/pull-licences -> upsignon-adv-dashboard/pull-licences
+
 export const updateLicences = async (req: any, res: any) => {
   try {
     await updateLicencesInDb(req.body);
