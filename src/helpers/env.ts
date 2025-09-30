@@ -53,4 +53,5 @@ export default {
   DKIM_KEY_SELECTOR,
   DKIM_PRIVATE_KEY,
   STATUS_SERVER_URL: (STATUS_SERVER_URL || 'https://app.upsignon.eu').replace(/\/$/, ''),
+  IS_SAAS: API_PUBLIC_HOSTNAME?.replace(/\/$/, '') === 'pro.upsignon.eu',
 };
