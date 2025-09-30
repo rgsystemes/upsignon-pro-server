@@ -122,7 +122,7 @@ const doSendTrialEmailReminder = async (): Promise<void> => {
       }
     });
     await sendTrialEndingEmailToSalesRep(
-      Object.keys(trialsBySalesRep),
+      Object.keys(trialsBySalesRep).filter((e) => !!e),
       Object.values(trialsBySalesRep),
     );
   } catch (e) {
@@ -179,7 +179,7 @@ const sendTrialEndingEmailToSalesRep = async (
 
     await transporter.sendMail({
       from: emailConfig.EMAIL_SENDING_ADDRESS,
-      to: sales.indexOf(salesDirector) === -1 ? [...sales, salesDirector] : sales,
+      to: env.IS_SAAS && sales.indexOf(salesDirector) === -1 ? [...sales, salesDirector] : sales,
       subject: `[SALES] Expiration Trial UpSignon`,
       html: htmlMessage,
     });
