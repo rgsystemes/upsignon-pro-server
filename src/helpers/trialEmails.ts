@@ -145,7 +145,7 @@ const sendTrialEndingEmailToSalesRep = async (
 
     ${contentbySales
       .map((c) => {
-        return `<h3>${c.sales.replaceAll('@septeo.com', '')}</h3>
+        return `<h3>${c.sales ? c.sales.replaceAll('@septeo.com', '') : 'Non attribués'}</h3>
         ${
           c.expired.length > 0
             ? `<span>Expirés</span>
