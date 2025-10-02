@@ -122,7 +122,7 @@ const doSendTrialEmailReminder = async (): Promise<void> => {
       }
     });
     await sendTrialEndingEmailToSalesRep(
-      Object.keys(trialsBySalesRep).filter((e) => !!e),
+      Object.keys(trialsBySalesRep).filter((e) => e !== 'undefined'),
       Object.values(trialsBySalesRep),
     );
   } catch (e) {
