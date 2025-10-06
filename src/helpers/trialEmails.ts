@@ -122,7 +122,9 @@ const doSendTrialEmailReminder = async (): Promise<void> => {
       }
     });
     await sendTrialEndingEmailToSalesRep(
-      Object.keys(trialsBySalesRep).filter((e) => e !== 'undefined'),
+      Object.keys(trialsBySalesRep)
+        .filter((e) => e !== 'undefined')
+        .sort((s1, s2) => (s1 < s2 ? -1 : 1)),
       Object.values(trialsBySalesRep),
     );
   } catch (e) {
@@ -144,6 +146,7 @@ const sendTrialEndingEmailToSalesRep = async (
     <p style="background-color:#1E3758;color:white;padding: 0 5px;">Liste des comptes trial arrivant à expiration</p>
 
     ${contentbySales
+      .sort((s1, s2) => (s1.sales < s2.sales ? -1 : 1))
       .map((c) => {
         return `<h3>${c.sales ? c.sales.replaceAll('@septeo.com', '') : 'Non attribués'}</h3>
         ${
@@ -212,6 +215,7 @@ const getTrialsTable = (
     </thead>
     <tbody>
       ${trials
+        .sort((t1, t2) => (t1.name < t2.name ? -1 : 1))
         .map((t, i) => {
           const rowStyle = i % 2 === 0 ? 'background:#E7E7E7;' : 'background:#fff;';
           return `<tr style="${rowStyle}">
