@@ -54,6 +54,7 @@ import { setBrowserSetupUserPreference } from './api2/routes/browserSetupSecurit
 import { authenticateWithOpenidAuthCode } from './api2/routes/authentication/authenticateWithOpenidAuthCode';
 import { verifySignatureMiddleware } from './helpers/signatureHelper';
 import { forceStatusUpdate } from './helpers/serverStatus';
+import { getShamirConfigs } from './api2/routes/shamirRecovery/getShamirConfigs';
 
 const app = express();
 
@@ -255,6 +256,8 @@ app.post(
 app.post('/:bankUUID/api2/get-browser-setup-preference', getBrowserSetupPreference);
 app.post('/:bankUUID/api2/set-browser-setup-preference', setBrowserSetupUserPreference);
 
+// SHAMIR RECOVERY
+app.post(['/:bankUUID/api2/get-shamir-configs'], getShamirConfigs);
 if (module === require.main) {
   runMigrations()
     .then(() => libsodium.ready)
