@@ -32,28 +32,48 @@ async function exportDb(bankId, dbConnection) {
       'SELECT * FROM shared_vault_recipients WHERE bank_id=$1',
       [bankId],
     );
-    const shared_vaults = await dbConnection.query('SELECT * FROM shared_vaults WHERE bank_id=$1', [
-      bankId,
-    ]);
-    const url_list = await dbConnection.query('SELECT * FROM url_list WHERE bank_id=$1', [bankId]);
-    const user_devices = await dbConnection.query('SELECT * FROM user_devices WHERE bank_id=$1', [
-      bankId,
-    ]);
 
-    return {
-      admins: admins.rows,
-      admin_banks: admin_banks.rows,
-      allowed_emails: allowed_emails.rows,
-      // data_stats: data_stats.rows,
-      // password_reset_request: password_reset_request.rows,
-      shared_vault_recipients: shared_vault_recipients.rows,
-      shared_vaults: shared_vaults.rows,
-      user_devices: user_devices.rows,
-      users: users.rows,
-      url_list: url_list.rows,
-      bank_sso_config: bank_sso_config.rows,
-      changed_emails: changed_emails.rows,
-    };
+    const shared_vaults = await db.query('SELECT * FROM shared_vaults WHERE bank_id=$1', [bankId]);
+    const url_list = await db.query('SELECT * FROM url_list WHERE bank_id=$1', [bankId]);
+    const user_devices = await db.query('SELECT * FROM user_devices WHERE bank_id=$1', [bankId]);
+    const shamir_configs = await db.query('SELECT * FROM shamir_configs WHERE bank_id=$1', [
+      bankId,
+    ]);
+    const shamir_holders = await db.query(
+      'SELECT sh.* FROM shamir_holders sh JOIN shamir_configs sc ON sh.shamir_config_id = sc.id WHERE sc.bank_id=$1',
+      [bankId],
+    );
+    const shamir_shares = await db.query(
+      'SELECT ss.* FROM shamir_shares ss JOIN shamir_configs sc ON ss.shamir_config_id = sc.id WHERE sc.bank_id=$1',
+      [bankId],
+    );
+    const shamir_recovery_requests = await db.query(
+      'SELECT srr.* FROM shamir_recovery_requests srr JOIN user_devices ud ON srr.device_id = ud.id WHERE ud.bank_id=$1',
+      [bankId],
+    );
+
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify({
+        admins: admins.rows,
+        admin_banks: admin_banks.rows,
+        allowed_emails: allowed_emails.rows,
+        // data_stats: data_stats.rows,
+        // password_reset_request: password_reset_request.rows,
+        shared_vault_recipients: shared_vault_recipients.rows,
+        shared_vaults: shared_vaults.rows,
+        user_devices: user_devices.rows,
+        users: users.rows,
+        url_list: url_list.rows,
+        bank_sso_config: bank_sso_config.rows,
+        changed_emails: changed_emails.rows,
+        shamir_configs: shamir_configs.rows,
+        shamir_holders: shamir_holders.rows,
+        shamir_shares: shamir_shares.rows,
+        shamir_recovery_requests: shamir_recovery_requests.rows,
+      }),
+    );
+    await db.release();
   } catch (e) {
     console.log(e);
   }
