@@ -54,6 +54,14 @@ import { setBrowserSetupUserPreference } from './api2/routes/browserSetupSecurit
 import { authenticateWithOpenidAuthCode } from './api2/routes/authentication/authenticateWithOpenidAuthCode';
 import { verifySignatureMiddleware } from './helpers/signatureHelper';
 import { forceStatusUpdate } from './helpers/serverStatus';
+import { getShamirConfigs } from './api2/routes/shamirRecovery/getShamirConfigs';
+import { upsertShamirBackup } from './api2/routes/shamirRecovery/upsertShamirBackup';
+import { requestShamirRecovery } from './api2/routes/shamirRecovery/requestShamirRecovery';
+import { retrieveShamirRecoveriesToApprove } from './api2/routes/shamirRecovery/retrieveShamirRecoveriesToApprove';
+import { openShamirShares } from './api2/routes/shamirRecovery/openShamirShares';
+import { retrieveOpenShamirShares } from './api2/routes/shamirRecovery/retrieveOpenShamirShares';
+import { abortShamirRecovery } from './api2/routes/shamirRecovery/abortShamirRecovery';
+import { finishShamirRecovery } from './api2/routes/shamirRecovery/finishShamirRecovery';
 
 const app = express();
 
@@ -254,6 +262,19 @@ app.post(
 // BROWSER SETUP SAFE/UNSAFE CONFIG
 app.post('/:bankUUID/api2/get-browser-setup-preference', getBrowserSetupPreference);
 app.post('/:bankUUID/api2/set-browser-setup-preference', setBrowserSetupUserPreference);
+
+// SHAMIR RECOVERY
+app.post(['/:bankUUID/api2/get-shamir-configs'], getShamirConfigs);
+app.post(['/:bankUUID/api2/update-shamir-backup'], upsertShamirBackup);
+app.post(['/:bankUUID/api2/request-shamir-recovery'], requestShamirRecovery);
+app.post(
+  ['/:bankUUID/api2/retrieve-shamir-recoveries-to-approve'],
+  retrieveShamirRecoveriesToApprove,
+);
+app.post(['/:bankUUID/api2/open-shamir-shares'], openShamirShares);
+app.post(['/:bankUUID/api2/retrieve-open-shamir-shares'], retrieveOpenShamirShares);
+app.post(['/:bankUUID/api2/abort-shamir-recovery'], abortShamirRecovery);
+app.post(['/:bankUUID/api2/finish-shamir-recovery'], finishShamirRecovery);
 
 if (module === require.main) {
   runMigrations()
