@@ -1,13 +1,14 @@
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Request, Response } from 'express';
 import { db } from '../../helpers/db';
 import { logInfo } from '../../helpers/logger';
 import { inputSanitizer } from '../../helpers/sanitizer';
+import { IS_ACTIVE } from '../../helpers/serverStatus';
 import { SessionStore } from '../../helpers/sessionStore';
 import { getBankIds, BankIds } from './bankUUID';
+import Joi from 'joi';
 
 export const checkBasicAuth2 = async (
-  req: any,
+  req: Request,
   options?: {
     returningUserPublicKey?: true;
     returningData?: true;
@@ -133,4 +134,97 @@ WHERE
     granted: true,
     bankIds,
   };
+};
+
+export const checkDeviceAuthorizationOnly = async (
+  req: Request,
+  res: Response,
+): Promise<{ user_id: number; device_primary_id: number } | null> => {
+  // Authenticate device
+  if (!IS_ACTIVE) {
+    res.status(403);
+    return null;
+  }
+
+  const expectedScheme = Joi.object({
+    deviceSession: Joi.string().required(),
+    userEmail: Joi.string().email().lowercase().required(),
+    deviceId: Joi.string().required(),
+  }).unknown(true);
+
+  let validatedBody: { deviceSession: string; userEmail: string; deviceId: string };
+  try {
+    validatedBody = Joi.attempt(req.body, expectedScheme);
+  } catch (e) {
+    logInfo(req.body?.userEmail, e);
+    res.status(403).end();
+    return null;
+  }
+
+  const bankIds = await getBankIds(req);
+
+  const isSessionOK = await SessionStore.checkSession(validatedBody.deviceSession, {
+    userEmail: validatedBody.userEmail,
+    deviceUniqueId: validatedBody.deviceId,
+    bankId: bankIds.internalId,
+  });
+  if (!isSessionOK) {
+    logInfo(req.body?.userEmail, 'checkDeviceAuthorizationOnly fail: session not valid');
+    res.status(401).end();
+    return null;
+  }
+
+  // Request DB
+  const dbRes = await db.query(
+    `SELECT
+        users.id AS user_id,
+        user_devices.id AS device_primary_id,
+        user_devices.authorization_status AS authorization_status,
+        users.deactivated AS deactivated,
+        banks.stop_this_instance
+      FROM user_devices
+      INNER JOIN users ON user_devices.user_id = users.id
+      INNER JOIN banks ON banks.id = users.bank_id
+      WHERE
+        users.email=$1 AND
+        user_devices.device_unique_id = $2 AND
+        users.bank_id=$3`,
+    [validatedBody.userEmail, validatedBody.deviceId, bankIds.internalId],
+  );
+
+  if (!dbRes || dbRes.rowCount === 0) {
+    logInfo(req.body?.userEmail, 'checkDeviceAuthorizationOnly fail: device deleted');
+    res.status(403).json({ error: 'revoked' });
+    return null;
+  }
+  if (dbRes.rows[0].stop_this_instance) {
+    logInfo('instance stopped');
+    res.status(400).end();
+    return null;
+  }
+  if (dbRes.rows[0].authorization_status === 'REVOKED_BY_USER') {
+    logInfo(req.body?.userEmail, 'checkDeviceAuthorizationOnly fail: revoked by user');
+    res.status(403).json({ error: 'revoked' });
+    return null;
+  }
+  if (dbRes.rows[0].authorization_status === 'REVOKED_BY_ADMIN' || dbRes.rows[0].deactivated) {
+    logInfo(
+      req.body?.userEmail,
+      'checkDeviceAuthorizationOnly fail: device revoked by admin or user deactivated',
+    );
+    res.status(403).json({ error: 'revoked_by_admin' });
+    return null;
+  }
+
+  if (dbRes.rows[0].authorization_status !== 'AUTHORIZED') {
+    logInfo(
+      req.body?.userEmail,
+      'checkDeviceAuthorizationOnly fail: status',
+      dbRes.rows[0].authorization_status,
+    );
+    res.status(403).json({ authorizationStatus: dbRes.rows[0].authorization_status });
+    return null;
+  }
+
+  return dbRes.rows[0];
 };
