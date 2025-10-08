@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { db } from '../../../helpers/db';
 import { logError, logInfo } from '../../../helpers/logger';
 import { checkBasicAuth2 } from '../../helpers/authorizationChecks';
+import { isShamirRecoveryReady } from './helpers';
+import { sendRecoveryRequestReadyUserAlert } from './mailHelpers';
 import Joi from 'joi';
 
 export const openShamirShares = async (req: Request, res: Response): Promise<void> => {
@@ -68,6 +70,20 @@ export const openShamirShares = async (req: Request, res: Response): Promise<voi
       ],
     );
 
+    // send an email to the user if enough shares have been granted
+    const isReady = await isShamirRecoveryReady(
+      validatedBody.targetVaultId,
+      validatedBody.shamirConfigId,
+    );
+    if (isReady) {
+      const userRes = await db.query('SELECT email FROM users WHERE users.id=$1', [
+        validatedBody.targetVaultId,
+      ]);
+      const deviceRes = await db.query('SELECT device_name FROM user_devices WHERE id=$1', [
+        targetUserDeviceId,
+      ]);
+      await sendRecoveryRequestReadyUserAlert(userRes.rows[0].email, deviceRes.rows[0].device_name);
+    }
     res.status(200).end();
     return;
   } catch (e) {

@@ -2,7 +2,12 @@ import { Request, Response } from 'express';
 import { db } from '../../../helpers/db';
 import { logError, logInfo } from '../../../helpers/logger';
 import { checkDeviceAuthorizationOnly } from '../../helpers/authorizationChecks';
+import {
+  sendRecoveryRequestRecipientNotification,
+  sendRecoveryRequestUserAlert,
+} from './mailHelpers';
 import Joi from 'joi';
+import { findShamirHoldersUniqueEmailsForTargetUserId } from './helpers';
 
 export const requestShamirRecovery = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -66,6 +71,32 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
       `INSERT INTO shamir_recovery_requests (shamir_config_id, device_id, status) VALUES ($1,$2, 'PENDING')
       `,
       [configId, device_primary_id],
+    );
+    const userRes = await db.query(
+      'SELECT users.email, banks.name FROM users INNER JOIN banks ON users.bank_id=banks.id WHERE users.id=$1',
+      [user_id],
+    );
+    const deviceRes = await db.query(
+      'SELECT device_name, os_family, os_version, device_type FROM user_devices WHERE id=$1',
+      [device_primary_id],
+    );
+    const uniqueAdminEmails = await findShamirHoldersUniqueEmailsForTargetUserId(user_id, configId);
+    await sendRecoveryRequestUserAlert(
+      userRes.rows[0].email,
+      userRes.rows[0].name,
+      deviceRes.rows[0].device_name,
+      deviceRes.rows[0].os_family,
+      deviceRes.rows[0].os_version,
+      deviceRes.rows[0].device_type,
+    );
+    await sendRecoveryRequestRecipientNotification(
+      uniqueAdminEmails,
+      userRes.rows[0].email,
+      userRes.rows[0].name,
+      deviceRes.rows[0].device_name,
+      deviceRes.rows[0].os_family,
+      deviceRes.rows[0].os_version,
+      deviceRes.rows[0].device_type,
     );
     res.status(200).end();
     return;
