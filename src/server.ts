@@ -57,6 +57,7 @@ import { forceStatusUpdate } from './helpers/serverStatus';
 import { getShamirConfigs } from './api2/routes/shamirRecovery/getShamirConfigs';
 import { upsertShamirBackup } from './api2/routes/shamirRecovery/upsertShamirBackup';
 import { requestShamirRecovery } from './api2/routes/shamirRecovery/requestShamirRecovery';
+import { retrieveShamirRecoveriesToApprove } from './api2/routes/shamirRecovery/retrieveShamirRecoveriesToApprove';
 
 const app = express();
 
@@ -262,6 +263,11 @@ app.post('/:bankUUID/api2/set-browser-setup-preference', setBrowserSetupUserPref
 app.post(['/:bankUUID/api2/get-shamir-configs'], getShamirConfigs);
 app.post(['/:bankUUID/api2/update-shamir-backup'], upsertShamirBackup);
 app.post(['/:bankUUID/api2/request-shamir-recovery'], requestShamirRecovery);
+app.post(
+  ['/:bankUUID/api2/retrieve-shamir-recoveries-to-approve'],
+  retrieveShamirRecoveriesToApprove,
+);
+
 if (module === require.main) {
   runMigrations()
     .then(() => libsodium.ready)
