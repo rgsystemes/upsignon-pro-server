@@ -59,6 +59,7 @@ import { upsertShamirBackup } from './api2/routes/shamirRecovery/upsertShamirBac
 import { requestShamirRecovery } from './api2/routes/shamirRecovery/requestShamirRecovery';
 import { retrieveShamirRecoveriesToApprove } from './api2/routes/shamirRecovery/retrieveShamirRecoveriesToApprove';
 import { openShamirShares } from './api2/routes/shamirRecovery/openShamirShares';
+import { retrieveOpenShamirShares } from './api2/routes/shamirRecovery/retrieveOpenShamirShares';
 
 const app = express();
 
@@ -269,6 +270,7 @@ app.post(
   retrieveShamirRecoveriesToApprove,
 );
 app.post(['/:bankUUID/api2/open-shamir-shares'], openShamirShares);
+app.post(['/:bankUUID/api2/retrieve-open-shamir-shares'], retrieveOpenShamirShares);
 
 if (module === require.main) {
   runMigrations()
