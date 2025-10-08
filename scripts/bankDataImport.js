@@ -396,7 +396,7 @@ async function importFunction() {
     for (var i = 0; i < data.shamir_shares.length; i++) {
       const ss = data.shamir_shares[i];
       await db.query(
-        'INSERT INTO shamir_shares (vault_id, holder_vault_id, shamir_config_id, closed_shares, open_shares, created_at, opened_at) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+        'INSERT INTO shamir_shares (vault_id, holder_vault_id, shamir_config_id, closed_shares, open_shares, created_at, open_at) VALUES ($1,$2,$3,$4,$5,$6,$7)',
         [
           ss.newVaultId,
           ss.newHolderVaultId,
@@ -404,7 +404,7 @@ async function importFunction() {
           ss.closed_shares,
           ss.open_shares,
           ss.created_at,
-          ss.opened_at,
+          ss.open_at,
         ],
       );
     }

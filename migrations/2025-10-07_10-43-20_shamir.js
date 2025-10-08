@@ -29,7 +29,7 @@ exports.up = async function (db) {
         closed_shares TEXT[] NOT NULL,
         open_shares TEXT[],
         created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp(0),
-        opened_at TIMESTAMP WITH TIME ZONE,
+        open_at TIMESTAMP WITH TIME ZONE,
         PRIMARY KEY(vault_id, holder_vault_id, shamir_config_id)
     )`,
   );

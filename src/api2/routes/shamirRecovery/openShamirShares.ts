@@ -57,7 +57,7 @@ export const openShamirShares = async (req: Request, res: Response): Promise<voi
 
     await db.query(
       `UPDATE shamir_shares
-      SET open_shares=$1, opened_at=current_timestamp(0)
+      SET open_shares=$1, open_at=current_timestamp(0)
       WHERE vault_id=$2 AND holder_vault_id=$3 AND shamir_config_id=$4
       `,
       [
