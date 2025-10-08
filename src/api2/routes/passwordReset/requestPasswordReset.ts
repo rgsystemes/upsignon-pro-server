@@ -143,11 +143,13 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
         logInfo(req.body?.userEmail, 'requestPasswordReset2 OK (reset request created)');
         await sendPasswordResetRequestNotificationToAdmins(safeBody.userEmail, bankIds.internalId);
         return res.status(200).json({ resetStatus: 'pending_admin_check' });
-      } else if (
-        !resetRequest.reset_token_expiration_date ||
-        isExpired(resetRequest.reset_token_expiration_date)
-      ) {
-        // Start a new request
+      }
+
+      const isRequestExpired =
+        resetRequest.reset_token_expiration_date &&
+        isExpired(resetRequest.reset_token_expiration_date);
+
+      if (isRequestExpired || !resetRequest.reset_token_expiration_date) {
         await db.query(
           `UPDATE password_reset_request SET created_at=CURRENT_TIMESTAMP(0), status='PENDING_ADMIN_CHECK', granted_by=null, reset_token=null, reset_token_expiration_date=null WHERE id=$1 AND bank_id=$2`,
           [resetRequest.reset_request_id, bankIds.internalId],
@@ -155,10 +157,14 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
         logInfo(req.body?.userEmail, 'requestPasswordReset2 OK (reset request updated)');
         await sendPasswordResetRequestNotificationToAdmins(safeBody.userEmail, bankIds.internalId);
         return res.status(200).json({ resetStatus: 'pending_admin_check' });
-      } else if (resetRequest.reset_status === 'PENDING_ADMIN_CHECK') {
+      }
+
+      if (resetRequest.reset_status === 'PENDING_ADMIN_CHECK') {
         logInfo(req.body?.userEmail, 'requestPasswordReset2 OK (reset request still pending)');
         return res.status(200).json({ resetStatus: 'pending_admin_check' });
-      } else if (resetRequest.reset_status === 'ADMIN_AUTHORIZED') {
+      }
+
+      if (resetRequest.reset_status === 'ADMIN_AUTHORIZED') {
         logInfo(req.body?.userEmail, 'requestPasswordReset2 OK (mail sent)');
         return res.status(200).json({ resetStatus: 'mail_sent' });
       }
