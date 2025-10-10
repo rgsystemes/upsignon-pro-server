@@ -35,7 +35,7 @@ services:
       - postgres
 
   server:
-    image: ghcr.io/fluuflute/docker-uso/server:${SERVER_VERSION}
+    image: ghcr.io/rgsystemes/upsignon-pro-server/server:${SERVER_VERSION}
     container_name: uso.server
     environment:
       PG_USER: ${PG_USER}
@@ -67,7 +67,7 @@ services:
       - postgres
 
   dashboard:
-    image: ghcr.io/fluuflute/docker-uso/dashboard:${DASHBOARD_VERSION}
+    image: ghcr.io/rgsystemes/upsignon-pro-dashboard/dashboard:${DASHBOARD_VERSION}
     container_name: uso.dashboard
     environment:
       PG_USER: ${PG_USER}
