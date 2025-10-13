@@ -37,7 +37,7 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
     const configId = configIdRes.rowCount == 1 ? configIdRes.rows[0].id : null;
     if (!configId) {
       logError('requestShamirRecovery Shamir config not found.');
-      res.status(403).end();
+      res.status(403).json({ error: 'shamir_config_not_found' });
       return;
     }
 
