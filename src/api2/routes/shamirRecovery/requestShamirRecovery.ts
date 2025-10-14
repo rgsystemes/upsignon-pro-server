@@ -12,21 +12,21 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
 
     // abort if a previous procedure exists
     const previousRequestsRes = await db.query(
-      `SELECT *
+      `SELECT COUNT(srr.id) as count
       FROM shamir_recovery_requests as srr
       INNER JOIN user_devices as ud ON ud.id = srr.device_id
       INNER JOIN users as u ON u.id = ud.user_id
-      WHERE srr.status='PENDING' AND u.id=$1`,
+      WHERE srr.status = 'PENDING' AND u.id = $1`,
       [deviceAuthRes.vaultId],
     );
-    if (previousRequestsRes.rowCount != null && previousRequestsRes.rowCount > 0) {
+    if (previousRequestsRes.rows[0].count > 0) {
       res.status(403).json({ error: 'shamir_recovery_already_pending' });
       return;
     }
     const configIdRes = await db.query(
       `SELECT sc.id as id
     FROM shamir_configs as sc
-    INNER JOIN shamir_holders as sr ON sr.shamir_config_id=sc.id
+    INNER JOIN shamir_holders as sr ON sr.shamir_config_id = sc.id
     INNER JOIN shamir_shares as ss ON ss.holder_vault_id = sr.vault_id
     INNER JOIN users as u ON u.id = ss.vault_id
     WHERE u.id=$1
@@ -42,7 +42,7 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
     }
 
     await db.query(
-      `INSERT INTO shamir_recovery_requests (shamir_config_id, device_id, status) VALUES ($1,$2, 'PENDING')
+      `INSERT INTO shamir_recovery_requests (shamir_config_id, device_id, status) VALUES ($1, $2, 'PENDING')
       `,
       [configId, deviceAuthRes.devicePrimaryId],
     );
