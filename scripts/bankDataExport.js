@@ -42,15 +42,15 @@ async function exportDb() {
       bankId,
     ]);
     const shamir_holders = await db.query(
-      'SELECT sh.* FROM shamir_holders sh JOIN shamir_configs sc ON sh.shamir_config_id = sc.id WHERE sc.bank_id=$1',
+      'SELECT sh.* FROM shamir_holders sh INNER JOIN shamir_configs sc ON sh.shamir_config_id = sc.id WHERE sc.bank_id=$1',
       [bankId],
     );
     const shamir_shares = await db.query(
-      'SELECT ss.* FROM shamir_shares ss JOIN shamir_configs sc ON ss.shamir_config_id = sc.id WHERE sc.bank_id=$1',
+      'SELECT ss.* FROM shamir_shares ss INNER JOIN shamir_configs sc ON ss.shamir_config_id = sc.id WHERE sc.bank_id=$1',
       [bankId],
     );
     const shamir_recovery_requests = await db.query(
-      'SELECT srr.* FROM shamir_recovery_requests srr JOIN user_devices ud ON srr.device_id = ud.id WHERE ud.bank_id=$1',
+      'SELECT srr.* FROM shamir_recovery_requests srr INNER JOIN user_devices ud ON srr.device_id = ud.id WHERE ud.bank_id=$1',
       [bankId],
     );
     fs.writeFileSync(
