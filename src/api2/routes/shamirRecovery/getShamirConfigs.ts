@@ -44,7 +44,20 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
       `,
       [authRes.userId],
     );
-    res.status(200).json(shamirConfigsRes.rows);
+    res.status(200).json(
+      shamirConfigsRes.rows.map((sc) => ({
+        id: sc.id,
+        name: sc.name,
+        minShares: sc.minShares,
+        holders: sc.holders.map((h: any) => ({
+          id: h.id,
+          email: h.email,
+          pubKey: h.pub_key,
+          nbShares: h.nb_shares,
+        })),
+        needsUpdate: sc.needs_update,
+      })),
+    );
     return;
   } catch (e) {
     logError(req.body?.userEmail, 'getShamirConfigs', e);
