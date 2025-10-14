@@ -45,7 +45,23 @@ export const retrieveShamirRecoveriesToApprove = async (
       [basicAuth.userId],
     );
 
-    res.status(200).json({ pendingRecoveryRequests: pendingRecoveryRequestsRes.rows });
+    res.status(200).json({
+      pendingRecoveryRequests: pendingRecoveryRequestsRes.rows.map((prr) => ({
+        userVaultId: prr.user_vault_id,
+        email: prr.email,
+        deviceName: prr.device_name,
+        osFamily: prr.os_family,
+        deviceType: prr.device_type,
+        devicePublicKey: prr.device_public_key,
+        bankName: prr.bank_name,
+        configName: prr.config_name,
+        configMinShares: prr.config_min_shares,
+        nbShares: prr.nb_shares,
+        shamirConfigId: prr.shamir_config_id,
+        closedShares: prr.closed_shares,
+        requestedAt: prr.requested_at,
+      })),
+    });
     return;
   } catch (e) {
     logError(req.body?.userEmail, 'retrieveShamirRecoveriesToApprove', e);

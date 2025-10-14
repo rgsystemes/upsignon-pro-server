@@ -12,7 +12,12 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    // add orders to easily compare configurations
+    // - add orders to easily compare configurations
+    // - needs_update indicates wether the current shamir shares for a user are up to date with eventual configuration changes.
+    //   In particular, it is true when
+    //     - the shamir backup has not been created (COUNT(ss.*) = 0)
+    //     - a new shareholder is added to a configuration (COUNT(ss.*) FILTER(WHERE closed_shares IS NULL) > 0)
+    //     - the number of shares of a shareholder has been reduced (SUM(ARRAY_LENGTH(ss.closed_shares, 1)) < SUM(sh.nb_shares))
     const shamirConfigsRes = await db.query(
       `SELECT
         sc.id as id,
@@ -28,11 +33,12 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
         ) as holders,
         (COUNT(ss.*) = 0 OR COUNT(ss.*) FILTER(WHERE closed_shares IS NULL) > 0 OR SUM(ARRAY_LENGTH(ss.closed_shares, 1)) < SUM(sh.nb_shares)) AS needs_update
       FROM shamir_configs AS sc
-      INNER JOIN users AS u ON u.id=$1 AND u.bank_id=sc.bank_id
+      INNER JOIN users AS u ON u.bank_id=sc.bank_id
       LEFT JOIN shamir_holders AS sh ON sh.shamir_config_id=sc.id
       LEFT JOIN users AS hu ON hu.id=sh.vault_id
       LEFT JOIN shamir_shares AS ss ON ss.shamir_config_id=sc.id AND ss.vault_id=u.id AND ss.holder_vault_id=sh.vault_id
       WHERE sc.is_active = true
+      AND u.id=$1
       GROUP BY sc.id
       ORDER BY sc.id
       `,

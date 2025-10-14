@@ -48,6 +48,8 @@ export const upsertShamirBackup = async (req: Request, res: Response): Promise<v
       // remove previous shamir backup
       await db.query('DELETE FROM shamir_shares WHERE vault_id=$1', [basicAuth.userId]);
       for (let i = 0; i < validatedBody.holderShares.length; i++) {
+        // EXTRA SECURITY: before storing shamir shares, make sure we are complying with
+        // the expected number of shares per holder.
         const checkNbShares = await db.query(
           'SELECT nb_shares FROM shamir_holders WHERE vault_id=$1 AND shamir_config_id=$2',
           [validatedBody.holderShares[i].holderId, validatedBody.shamirConfigId],
