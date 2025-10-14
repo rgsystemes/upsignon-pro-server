@@ -64,7 +64,7 @@ export const retrieveOpenShamirShares = async (req: Request, res: Response): Pro
     if (totalOpenShares < minShares) {
       res.status(200).json({
         missingShares: minShares - totalOpenShares,
-        openShares: totalOpenShares,
+        nbOpenShares: totalOpenShares,
         holderStatuses: recoveryRequestRes.rows.map((h) => ({
           email: h.email,
           nbShares: h.nb_shares,
