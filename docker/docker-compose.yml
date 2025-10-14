@@ -19,7 +19,7 @@ services:
       PG_USER: ${PG_USER}
       PG_PASSWORD: ${PG_PASSWORD}
       PG_DB: pro
-      PG_BACKUP_FREQUENCY: ${PG_BACKUP_FREQUENCY}
+      PG_BACKUP_FREQUENCY: ${DB_BACKUP_FREQUENCY}
       MAX_PG_BACKUPS: ${MAX_PG_BACKUPS}
     volumes:
       - ${PG_BACKUPS_PATH}:/backup
@@ -35,13 +35,13 @@ services:
       - postgres
 
   server:
-    image: ghcr.io/rgsystemes/upsignon-pro-server/server:${SERVER_VERSION}
+    image: ghcr.io/rgsystemes/upsignon-pro-server/server:latest
     container_name: uso.server
     environment:
-      PG_USER: ${PG_USER}
-      PG_PASSWORD: ${PG_PASSWORD}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
       SERVER_DOMAIN: ${SERVER_DOMAIN}
-      SESSION_SECRET: ${SESSION_SECRET}
+      DASHBOARD_SESSION_SECRET: ${SESSION_SECRET}
       SERVER_PORT: ${SERVER_PORT}
       HTTP_PROXY: ${HTTP_PROXY}
     labels:
@@ -67,12 +67,12 @@ services:
       - postgres
 
   dashboard:
-    image: ghcr.io/rgsystemes/upsignon-pro-dashboard/dashboard:${DASHBOARD_VERSION}
+    image: ghcr.io/rgsystemes/upsignon-pro-dashboard/dashboard:latest
     container_name: uso.dashboard
     environment:
-      PG_USER: ${PG_USER}
-      PG_PASSWORD: ${PG_PASSWORD}
-      SESSION_SECRET: ${SESSION_SECRET}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
+      DASHBOARD_SESSION_SECRET: ${SESSION_SECRET}
       DASHBOARD_DOMAIN: ${DASHBOARD_DOMAIN}
       DASHBOARD_PORT: ${DASHBOARD_PORT}
       HTTP_PROXY: ${HTTP_PROXY}
