@@ -48,7 +48,7 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
       shamirConfigsRes.rows.map((sc) => ({
         id: sc.id,
         name: sc.name,
-        minShares: sc.minShares,
+        minShares: sc.min_shares,
         holders: sc.holders.map((h: any) => ({
           id: h.id,
           email: h.email,
