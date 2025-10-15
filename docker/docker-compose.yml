@@ -42,7 +42,7 @@ services:
       DB_PORT: 5432
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASSWORD}
-      PRO_API_PUBLIC_HOSTNAME: ${SERVER_DOMAIN}
+      PRO_API_PUBLIC_HOSTNAME: ${SERVER_URL}
       DASHBOARD_SESSION_SECRET: ${SESSION_SECRET}
       PRO_SERVER_PORT: ${SERVER_PORT}
       HTTP_PROXY: ${HTTP_PROXY}
@@ -51,7 +51,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.services.server.loadbalancer.server.port=${SERVER_PORT}
-      - traefik.http.routers.server.rule=Host(`${SERVER_DOMAIN}`)
+      - traefik.http.routers.server.rule=Host(`${SERVER_URL}`)
       - traefik.http.routers.server.entrypoints=websecure
       - traefik.http.routers.server.tls.certresolver=le
       - traefik.http.routers.server.middlewares=server-redirect,server-headers
@@ -74,16 +74,20 @@ services:
     image: ghcr.io/rgsystemes/upsignon-pro-dashboard/dashboard:latest
     container_name: uso.dashboard
     environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASSWORD}
       DASHBOARD_SESSION_SECRET: ${SESSION_SECRET}
-      DASHBOARD_DOMAIN: ${DASHBOARD_DOMAIN}
-      DASHBOARD_PORT: ${DASHBOARD_PORT}
+      PRO_DASHBOARD_PUBLIC_URL: ${DASHBOARD_URL}
+      PRO_DASHBOARD_PORT: ${DASHBOARD_PORT}
       HTTP_PROXY: ${HTTP_PROXY}
+      USE_POSTFIX: false
+      PRO_NODE_ENV: production
     labels:
       - traefik.enable=true
       - traefik.http.services.dashboard.loadbalancer.server.port=${DASHBOARD_PORT}
-      - traefik.http.routers.dashboard.rule=Host(`${DASHBOARD_DOMAIN}`)
+      - traefik.http.routers.dashboard.rule=Host(`${DASHBOARD_URL}`)
       - traefik.http.routers.dashboard.entrypoints=websecure
       - traefik.http.routers.dashboard.tls.certresolver=le
       - traefik.http.routers.dashboard.middlewares=dashboard-redirect,dashboard-headers

@@ -28,7 +28,7 @@ echo "Super Admin has been created successfully. The URL is valid for 5 minutes 
 
 # Initialize the database
 docker exec -it uso.postgres psql -U pro -d pro -c \
-  "INSERT INTO settings (key,value) VALUES ('PRO_SERVER_URL_CONFIG', '{\"url\":\"https://$SERVER_DOMAIN\"}');"
+  "INSERT INTO settings (key,value) VALUES ('PRO_SERVER_URL_CONFIG', '{\"url\":\"https://$SERVER_URL\"}');"
 docker exec -it uso.postgres psql -U pro -d pro -c \
   "INSERT INTO settings (key,value) VALUES ('EMAIL_CONFIG', '{\"EMAIL_HOST\":\"$SMTP_HOST\",\"EMAIL_PORT\":$SMTP_PORT,\"EMAIL_USER\":\"$SMTP_USER\", \"EMAIL_PASS\":\"$SMTP_PASSWORD\",\"EMAIL_SENDING_ADDRESS\":\"$SMTP_SENDING_USER\", \"EMAIL_ALLOW_INVALID_CERTIFICATE\":$SMTP_ALLOW_INVALID_CRT}');"
 

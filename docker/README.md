@@ -51,8 +51,8 @@ L’application s’appuie sur un fichier `.env` pour charger ses variables de c
 | Variable         | Valeur par défaut           | Description                                                                            |
 |------------------|-----------------------------|----------------------------------------------------------------------------------------|
 | SESSION_SECRET   | ✗                           | Chaîne de caractères aléatoire générée par le script `init.sh`                         |
-| SERVER_DOMAIN    | `server-uso.example.com`    | URL pour accéder à l’application Server                                                |
-| DASHBOARD_DOMAIN | `dashboard-uso.example.com` | URL pour accéder à l’application Dashboard                                             |
+| SERVER_URL    | `server-uso.example.com`    | URL pour accéder à l’application Server                                                |
+| DASHBOARD_URL | `dashboard-uso.example.com` | URL pour accéder à l’application Dashboard                                             |
 | SERVER_PORT      | 3000                        | Port utilisé par l’application Server                                                  |
 | DASHBOARD_PORT   | 3001                        | Port utilisé par l’application Dashboard                                               |
 | HTTP_PROXY       | ✗                           | Variable optionnelle pour définir le proxy HTTP. Format : `http://user:pass@host:port` |
