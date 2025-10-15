@@ -4,8 +4,8 @@ services:
     container_name: uso.postgres
     restart: always
     environment:
-      POSTGRES_USER: ${PG_USER}
-      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: pro
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -16,9 +16,9 @@ services:
     image: postgres:15.13
     container_name: uso.pg_backup
     environment:
-      PG_USER: ${PG_USER}
-      PG_PASSWORD: ${PG_PASSWORD}
-      PG_DB: pro
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: pro
       PG_BACKUP_FREQUENCY: ${DB_BACKUP_FREQUENCY}
       MAX_PG_BACKUPS: ${MAX_PG_BACKUPS}
     volumes:
@@ -26,7 +26,7 @@ services:
     command: >
       bash -c "sleep 10m
         while true; do
-          PGPASSWORD=${PG_PASSWORD} pg_dump -h postgres -U ${PG_USER} -Fc pro > /backup/$(date +%Y-%m-%d-%H-%M-%S).dump
+          PGPASSWORD=${DB_PASSWORD} pg_dump -h postgres -U ${DB_USER} -Fc ${DB_NAME} > /backup/$(date +%Y-%m-%d-%H-%M-%S).dump
           echo ""Backup done at $(date +%Y-%m-%d_%H:%M:%S)""
           ls -1 /backup/*.dump | head -n -${MAX_PG_BACKUPS} | xargs rm -f
           sleep ${PG_BACKUP_FREQUENCY}
@@ -38,12 +38,16 @@ services:
     image: ghcr.io/rgsystemes/upsignon-pro-server/server:latest
     container_name: uso.server
     environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASSWORD}
-      SERVER_DOMAIN: ${SERVER_DOMAIN}
+      PRO_API_PUBLIC_HOSTNAME: ${SERVER_DOMAIN}
       DASHBOARD_SESSION_SECRET: ${SESSION_SECRET}
-      SERVER_PORT: ${SERVER_PORT}
+      PRO_SERVER_PORT: ${SERVER_PORT}
       HTTP_PROXY: ${HTTP_PROXY}
+      USE_POSTFIX: false
+      PRO_NODE_ENV: production
     labels:
       - traefik.enable=true
       - traefik.http.services.server.loadbalancer.server.port=${SERVER_PORT}
