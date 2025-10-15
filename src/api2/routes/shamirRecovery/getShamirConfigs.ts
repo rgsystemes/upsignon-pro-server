@@ -25,7 +25,7 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
         sc.min_shares as min_shares,
         ARRAY_AGG(
           json_build_object(
-            'id', sh.id,
+            'id', sh.vault_id,
             'email', hu.email,
             'pub_key', hu.sharing_public_key_2,
             'nb_shares', sh.nb_shares
