@@ -22,13 +22,13 @@ export const retrieveShamirRecoveriesToApprove = async (
         ud.device_name,
         ud.os_family,
         ud.device_type,
-        ud.device_public_key_2 AS device_public_key,
         b.name AS bank_name,
         sc.name AS config_name,
         sc.min_shares AS config_min_shares,
         sh.nb_shares,
         ss.shamir_config_id,
         ss.closed_shares,
+        srr.public_key,
         srr.created_at AS requested_at
       FROM shamir_recovery_requests AS srr
       INNER JOIN user_devices AS ud ON ud.id = srr.device_id
@@ -53,7 +53,7 @@ export const retrieveShamirRecoveriesToApprove = async (
         deviceName: prr.device_name,
         osFamily: prr.os_family,
         deviceType: prr.device_type,
-        devicePublicKey: prr.device_public_key,
+        devicePublicKey: prr.public_key,
         bankName: prr.bank_name,
         configName: prr.config_name,
         configMinShares: prr.config_min_shares,

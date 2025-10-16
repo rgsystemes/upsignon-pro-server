@@ -1,12 +1,28 @@
 import { Request, Response } from 'express';
 import { db } from '../../../helpers/db';
-import { logError } from '../../../helpers/logger';
+import { logError, logInfo } from '../../../helpers/logger';
 import { authenticateDeviceWithChallenge } from '../../helpers/authorizationChecks';
+import Joi from 'joi';
 
 export const requestShamirRecovery = async (req: Request, res: Response): Promise<void> => {
   try {
     const deviceAuthRes = await authenticateDeviceWithChallenge(req, res, 'requestShamirRecovery');
     if (deviceAuthRes == null) {
+      return;
+    }
+
+    const expectedScheme = Joi.object({
+      publicKey: Joi.string().required(),
+    }).unknown();
+
+    let validatedBody: {
+      publicKey: string;
+    };
+    try {
+      validatedBody = Joi.attempt(req.body, expectedScheme);
+    } catch (err) {
+      logInfo(req.body?.userEmail, err);
+      res.status(403).end();
       return;
     }
 
@@ -41,10 +57,15 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
       return;
     }
 
+    // extra security
+    await db.query('UPDATE shamir_shares SET open_shares=null WHERE vault_id=$1', [
+      deviceAuthRes.vaultId,
+    ]);
+
     await db.query(
-      `INSERT INTO shamir_recovery_requests (shamir_config_id, device_id, status) VALUES ($1, $2, 'PENDING')
+      `INSERT INTO shamir_recovery_requests (shamir_config_id, device_id, public_key, status) VALUES ($1, $2, $3, 'PENDING')
       `,
-      [configId, deviceAuthRes.devicePrimaryId],
+      [configId, deviceAuthRes.devicePrimaryId, validatedBody.publicKey],
     );
     res.status(200).end();
     return;
