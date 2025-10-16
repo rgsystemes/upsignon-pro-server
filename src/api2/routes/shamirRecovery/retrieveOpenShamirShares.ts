@@ -75,7 +75,7 @@ export const retrieveOpenShamirShares = async (req: Request, res: Response): Pro
     }
     res.status(200).json({
       openShares: recoveryRequestRes.rows.reduce(
-        (acc, val) => [...acc, ...acc(val.open_shares || [])],
+        (acc, val) => [...acc, ...(val.open_shares || [])],
         [],
       ),
     });
