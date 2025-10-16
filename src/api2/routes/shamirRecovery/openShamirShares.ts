@@ -53,7 +53,6 @@ export const openShamirShares = async (req: Request, res: Response): Promise<voi
       res.status(403).json({ error: 'no_pending_recovery_request' });
       return;
     }
-    const targetUserDeviceId = verifyRecoveryRequests.rows[0].device_id;
 
     await db.query(
       `UPDATE shamir_shares
