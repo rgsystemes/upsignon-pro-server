@@ -40,7 +40,7 @@ export const retrieveOpenShamirShares = async (req: Request, res: Response): Pro
       INNER JOIN user_devices AS ud
         ON srr.device_id=ud.id
       INNER JOIN shamir_shares AS ss
-        ON ud.user_id=ss.vault_id AND ss.open_shares IS NOT NULL
+        ON ud.user_id=ss.vault_id
       INNER JOIN shamir_holders AS sh
         ON sh.vault_id=ss.holder_vault_id AND sh.shamir_config_id=ss.shamir_config_id
       INNER JOIN users AS u
@@ -57,7 +57,7 @@ export const retrieveOpenShamirShares = async (req: Request, res: Response): Pro
     }
 
     const totalOpenShares = recoveryRequestRes.rows.reduce(
-      (acc, val) => acc + val.open_shares.length,
+      (acc, val) => acc + (val.open_shares?.length || 0),
       0,
     );
 
@@ -68,14 +68,16 @@ export const retrieveOpenShamirShares = async (req: Request, res: Response): Pro
         holderStatuses: recoveryRequestRes.rows.map((h) => ({
           email: h.email,
           nbShares: h.nb_shares,
-          open: h.open_shares.length === h.nb_shares,
+          open: h.open_shares?.length === h.nb_shares,
         })),
       });
       return;
     }
-
     res.status(200).json({
-      openShares: recoveryRequestRes.rows.reduce((acc, val) => [...acc, val.open_shares], []),
+      openShares: recoveryRequestRes.rows.reduce(
+        (acc, val) => [...acc, ...acc(val.open_shares || [])],
+        [],
+      ),
     });
     return;
   } catch (e) {
