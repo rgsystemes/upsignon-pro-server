@@ -4,6 +4,7 @@ compiled
 logs
 .env*
 .env.*
+!docker/.env
 *.key
 *.crt
 *.csr
