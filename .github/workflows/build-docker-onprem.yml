@@ -1,0 +1,55 @@
+---
+name: Build USO for On-Premise
+on:
+  push:
+    branches:
+      - production
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - '.vscode/**'
+      - 'doc/**'
+
+jobs:
+  template:
+    runs-on: [self-hosted, dev]
+    outputs:
+      template_changed: ${{ steps.dot-env-template.outputs.template_changed }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Detect dot-env-template changes
+        id: dot-env-template
+        shell: bash
+        run: |
+          LAST_COMMIT=$(git log -n 1 --pretty=format:%H -- dot-env-template)
+          if [ $LAST_COMMIT ]; then
+            DIFF_COMMIT=$(git show $LAST_COMMIT -- dot-env-template)
+            echo "template_changed=$DIFF_COMMIT" >> $GITHUB_OUTPUT
+          fi
+      - name: Create an issue in devops repository
+        shell: bash
+        if: steps.dot-env-template.outputs.template_changed != ''
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.RGSUPVDEV_TOKEN }}" \
+            https://api.github.com/repos/rgsystemes/devops/issues \
+            -d '{
+              "title": "[USO] - dot-env-template updated",
+              "body": "${{ steps.dot-env-template.outputs.template_changed }}",
+              "labels": ["uso", "ansible", "planned"]
+            }'
+  build:
+    runs-on: [self-hosted, dev]
+    needs: template
+    if: needs.template.outputs.template_changed == ''
+    steps:
+      - name: Build USO for On-Premise
+        shell: bash
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.RGSUPVDEV_TOKEN }}" \
+            https://api.github.com/repos/rgsystemes/eel-ops/actions/workflows/ansible-roles.build-uso-onprem.yml/dispatches \
+            -d '{"ref":"master"}'
