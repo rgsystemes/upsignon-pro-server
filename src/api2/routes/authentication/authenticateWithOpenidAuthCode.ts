@@ -163,7 +163,7 @@ export const authenticateWithOpenidAuthCode = async (
         userEmail,
         bankIds.internalId,
       );
-      if (emailAuthStatusResponse.status == 'UNAUTHORIZED') {
+      if (emailAuthStatusResponse.status === 'UNAUTHORIZED') {
         res.status(400).json({ error: 'User is SSO authenticated but not allowed on this bank.' });
         return;
       }

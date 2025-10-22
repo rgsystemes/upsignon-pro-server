@@ -1,5 +1,6 @@
 import { db } from '../../helpers/db';
 import { MicrosoftGraph } from 'upsignon-ms-entra';
+import { logError } from '../../helpers/logger';
 
 type TEmailAuthorizationStatus = 'UNAUTHORIZED' | 'PATTERN_AUTHORIZED' | 'MS_ENTRA_AUTHORIZED';
 type TMsEntraId = string | null;
@@ -25,7 +26,7 @@ export const getEmailAuthorizationStatus = async (
   try {
     userMSEntraId = await MicrosoftGraph.getUserId(bankId, userEmail);
   } catch (e) {
-    console.error(e);
+    logError(e);
   }
   if (userMSEntraId) {
     try {
@@ -35,7 +36,7 @@ export const getEmailAuthorizationStatus = async (
       );
       if (isEntraAuthorized) return { status: 'MS_ENTRA_AUTHORIZED', msEntraId: userMSEntraId };
     } catch (e) {
-      console.error(e);
+      logError(e);
     }
   }
 
