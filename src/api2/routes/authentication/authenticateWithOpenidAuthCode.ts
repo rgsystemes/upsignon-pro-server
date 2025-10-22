@@ -4,7 +4,6 @@ import { URLSearchParams } from 'url';
 import { logError } from '../../../helpers/logger';
 import { db } from '../../../helpers/db';
 import jwksClient from 'jwks-rsa';
-import { MicrosoftGraph } from 'upsignon-ms-entra';
 import { getBankIds } from '../../helpers/bankUUID';
 import { getEmailAuthorizationStatus } from '../../helpers/emailAuthorization';
 import { SessionStore } from '../../../helpers/sessionStore';
@@ -160,13 +159,11 @@ export const authenticateWithOpenidAuthCode = async (
     ]);
     const existingVaultId = existingVaults.rows.length > 0 ? existingVaults.rows[0].id : null;
     if (!existingVaultId) {
-      const userMSEntraId = await MicrosoftGraph.getUserId(bankIds.internalId, userEmail);
-      const emailAuthStatus = await getEmailAuthorizationStatus(
+      const emailAuthStatusResponse = await getEmailAuthorizationStatus(
         userEmail,
-        userMSEntraId,
         bankIds.internalId,
       );
-      if (emailAuthStatus == 'UNAUTHORIZED') {
+      if (emailAuthStatusResponse.status == 'UNAUTHORIZED') {
         res.status(400).json({ error: 'User is SSO authenticated but not allowed on this bank.' });
         return;
       }
