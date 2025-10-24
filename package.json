@@ -5,7 +5,7 @@
   "license": "Unlicense",
   "scripts": {
     "build": "rm -rf compiled && tsc -p .",
-    "start": "pm2 del upsignon-pro-server && pm2 start ecosystem.config.js --only upsignon-pro-server",
+    "start": "yarn build && node ./compiled/server.js",
     "get-updates": "./update.sh",
     "lint": "eslint '*/**/*.{js,ts,tsx}' --quiet --fix",
     "test": "jest",
