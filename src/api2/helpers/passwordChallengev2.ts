@@ -1,5 +1,4 @@
 import libsodium from 'libsodium-wrappers';
-import { db } from '../../helpers/db';
 import { fromBase64, toBase64 } from './base64Convert';
 
 export const createPasswordChallengeV2 = (
@@ -40,13 +39,37 @@ export const createPasswordChallengeV2 = (
   throw Error('Calling createPasswordChallengeV2 with a data format that is not formatP002-');
 };
 
+export const shouldResetPasswordErrorCount = (
+  last_password_challenge_submission_date: Date | null,
+): boolean => {
+  if (last_password_challenge_submission_date == null) return false;
+  // return true if the last failed attempt is more than 1 hour old.
+  return Date.now() - last_password_challenge_submission_date.getTime() > 3600 * 1000;
+};
+export const getPasswordUnblockDate = (
+  last_password_challenge_submission_date: Date | null,
+  password_error_count: number,
+): Date | null => {
+  if (last_password_challenge_submission_date == null) return null;
+  const MAX_FREE_TRIALS = 3;
+
+  // Wait one minute for first next trial after 3, two more minutes for second next trial etc.
+  // This is exponential on purpose.
+  const minutesToWait = Math.max(0, password_error_count - MAX_FREE_TRIALS + 1);
+
+  if (minutesToWait === 0) return null;
+
+  const blockedUntil = new Date();
+  blockedUntil.setTime(
+    last_password_challenge_submission_date.getTime() + minutesToWait * 60 * 1000,
+  );
+  return blockedUntil;
+};
+
 export const checkPasswordChallengeV2 = async (
   encryptedData: string,
   passwordChallengeResponse: string,
-  passwordErrorCount: null | number,
-  deviceId: string,
-  bankId: number,
-): Promise<{ hasPassedPasswordChallenge: boolean; blockedUntil?: Date }> => {
+): Promise<{ hasPassedPasswordChallenge: boolean }> => {
   if (!encryptedData.startsWith('formatP002-') && !encryptedData.startsWith('formatP003-')) {
     throw Error(
       'Calling checkPasswordChallengeV2 with a data format that is not formatP002- nor formatP003-',
@@ -65,29 +88,7 @@ export const checkPasswordChallengeV2 = async (
     hashedPwdChallengeResponse,
   );
 
-  if (hasPassedPasswordChallenge) {
-    return { hasPassedPasswordChallenge: true };
-  }
-
-  // Add a time constraint to the number of failed attempts per device
-  const udpatedNumberOfFailedAttemtps = (passwordErrorCount || 0) + 1;
-
-  // 3 attempts with no delay, then 1 minute for each additional previous failed attempt
-  if (udpatedNumberOfFailedAttemtps % 3 !== 0) {
-    await db.query(
-      'UPDATE user_devices SET password_challenge_error_count=password_challenge_error_count+1, password_challenge_blocked_until=null WHERE id=$1 AND bank_id=$2',
-      [deviceId, bankId],
-    );
-    return { hasPassedPasswordChallenge: false };
-  } else {
-    const minRetryDate = new Date();
-    minRetryDate.setTime(Date.now() + udpatedNumberOfFailedAttemtps * 60 * 1000); // block for udpatedNumberOfFailedAttemtps minutes
-    await db.query(
-      'UPDATE user_devices SET password_challenge_error_count=password_challenge_error_count+1, password_challenge_blocked_until=$1 WHERE id=$2 AND bank_id=$3',
-      [minRetryDate.toISOString(), deviceId, bankId],
-    );
-    return { hasPassedPasswordChallenge: false, blockedUntil: minRetryDate };
-  }
+  return { hasPassedPasswordChallenge };
 };
 
 export const hashPasswordChallengeResultForSecureStorageV2 = (
