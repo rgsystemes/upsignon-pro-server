@@ -100,7 +100,7 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
       .items(
         Joi.object({
           id: Joi.number().positive().required(),
-          nb_licences: Joi.number().positive().required(),
+          nb_licences: Joi.number().required(),
           valid_from: Joi.string().isoDate().required(),
           valid_until: validUntilSchema,
           is_monthly: Joi.boolean().allow(null).default(false),
@@ -113,7 +113,7 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
       .items(
         Joi.object({
           id: Joi.number().positive().required(),
-          nb_licences: Joi.number().positive().required(),
+          nb_licences: Joi.number().required(),
           valid_from: Joi.string().isoDate().required(),
           valid_until: validUntilSchema,
           is_monthly: Joi.boolean().allow(null).default(false),
@@ -167,7 +167,8 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
         is_monthly=EXCLUDED.is_monthly,
         to_be_renewed=EXCLUDED.to_be_renewed,
         reseller_id=EXCLUDED.reseller_id,
-        bank_id=EXCLUDED.bank_id`,
+        bank_id=EXCLUDED.bank_id,
+        uses_pool=false`,
       [
         b.id,
         b.nb_licences,
