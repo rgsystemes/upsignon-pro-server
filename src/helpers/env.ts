@@ -40,6 +40,8 @@ if (!!USE_POSTFIX_BOOL && !!DKIM_PRIVATE_KEY_PATH) {
   DKIM_PRIVATE_KEY = fs.readFileSync(DKIM_PRIVATE_KEY_PATH);
 }
 
+const statusServerUrl = (STATUS_SERVER_URL || 'https://app.upsignon.eu').replace(/\/$/, '');
+
 export default {
   IS_PRODUCTION: NODE_ENV !== 'development',
   DB_HOST,
@@ -61,6 +63,7 @@ export default {
   SENDING_MAIL: SENDING_MAIL || `ne-pas-repondre@${DKIM_HOSTNAME}`,
   DKIM_KEY_SELECTOR,
   DKIM_PRIVATE_KEY,
-  STATUS_SERVER_URL: (STATUS_SERVER_URL || 'https://app.upsignon.eu').replace(/\/$/, ''),
+  STATUS_SERVER_URL: statusServerUrl,
+  IS_PROD_STATUS_SERVER_URL: statusServerUrl === 'https://app.upsignon.eu',
   IS_SAAS: API_PUBLIC_HOSTNAME?.replace(/\/$/, '') === 'pro.upsignon.eu',
 };

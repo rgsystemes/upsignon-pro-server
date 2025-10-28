@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import env from './env';
 import { logError } from './logger';
 
-const wellKnownUpSignOnPublicKey = env.IS_SAAS
+const wellKnownUpSignOnPublicKey = env.IS_PROD_STATUS_SERVER_URL
   ? '-----BEGIN PUBLIC KEY-----\nMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEB/4zGfZRH715/kObqaWDL2nZR+ybUh/y\nx/wCHiLXX9VDzSh/qB+NC0KJ/rMPKXKhCCKgWCo/OBxieXarHJS6lg==\n-----END PUBLIC KEY-----\n'
   : '-----BEGIN PUBLIC KEY-----\nMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEyQqX6RbASOpD9VqF7a/Z16yTA8Qssrfs\nH7ttDE4TAgaN+HXiTOrZ9y0Cba0i106lcfOTdignGYu2qRZEFKcMuQ==\n-----END PUBLIC KEY-----\n';
 
