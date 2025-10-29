@@ -126,10 +126,11 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
   const safeBody = Joi.attempt(unsafeLicencesObject, licencesSchema) as LicencesBody;
   const { resellerLicences, bankLicences } = safeBody;
 
+  const resellersRes = await db.query('SELECT id FROM resellers');
+  const resellerIds = resellersRes.rows.map((r) => r.id);
   for (let i = 0; i < resellerLicences.length; i++) {
     const r = resellerLicences[i];
-    const existenceRes = await db.query('SELECT 1 FROM resellers WHERE id=$1', [r.reseller_id]);
-    if (existenceRes.rows.length === 1) {
+    if (resellerIds.indexOf(r.reseller_id) !== -1) {
       const previousExtLicenceRes = await db.query(
         'SELECT reseller_id, bank_id, uses_pool FROM external_licences WHERE ext_id=$1',
         [r.id],
@@ -180,10 +181,12 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
       );
     }
   }
+
+  const banksRes = await db.query('SELECT id FROM banks');
+  const bankIds = banksRes.rows.map((r) => r.id);
   for (let i = 0; i < bankLicences.length; i++) {
     const b = bankLicences[i];
-    const existenceRes = await db.query('SELECT 1 FROM banks WHERE id=$1', [b.bank_id]);
-    if (existenceRes.rows.length === 1) {
+    if (bankIds.indexOf(b.bank_id) !== -1) {
       const previousExtLicenceRes = await db.query(
         'SELECT reseller_id, bank_id, uses_pool FROM external_licences WHERE ext_id=$1',
         [b.id],
