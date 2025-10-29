@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import { Request, Response } from 'express';
 import { db } from './helpers/db';
-import { logError } from './helpers/logger';
+import { logError, logInfo } from './helpers/logger';
 import env from './helpers/env';
 
 interface LicenceItem {
@@ -100,7 +100,7 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
       .items(
         Joi.object({
           id: Joi.number().positive().required(),
-          nb_licences: Joi.number().positive().required(),
+          nb_licences: Joi.number().required(),
           valid_from: Joi.string().isoDate().required(),
           valid_until: validUntilSchema,
           is_monthly: Joi.boolean().allow(null).default(false),
@@ -113,7 +113,7 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
       .items(
         Joi.object({
           id: Joi.number().positive().required(),
-          nb_licences: Joi.number().positive().required(),
+          nb_licences: Joi.number().required(),
           valid_from: Joi.string().isoDate().required(),
           valid_until: validUntilSchema,
           is_monthly: Joi.boolean().allow(null).default(false),
@@ -126,12 +126,37 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
   const safeBody = Joi.attempt(unsafeLicencesObject, licencesSchema) as LicencesBody;
   const { resellerLicences, bankLicences } = safeBody;
 
+  const resellersRes = await db.query('SELECT id FROM resellers');
+  const resellerIds = resellersRes.rows.map((r) => r.id);
   for (let i = 0; i < resellerLicences.length; i++) {
     const r = resellerLicences[i];
-    await db.query(
-      `INSERT INTO external_licences
+    if (resellerIds.indexOf(r.reseller_id) !== -1) {
+      const previousExtLicenceRes = await db.query(
+        'SELECT reseller_id, bank_id, uses_pool FROM external_licences WHERE ext_id=$1',
+        [r.id],
+      );
+      let willUsePool = true; // true by default for resellers
+      if (previousExtLicenceRes.rows.length > 0) {
+        const prevL = previousExtLicenceRes.rows[0];
+        if (prevL.bank_id) {
+          // the licence was previously associated directly to a bank, and now it's associated to a reseller
+          // Do reset uses_pool to true
+        } else if (prevL.reseller_id !== r.reseller_id) {
+          // the licence was previously associated to another reseller
+          // Do reset uses_pool to true
+          logInfo(
+            'updateLicencesInDb received a reseller changed licence -> deletion of internal licence attributions',
+          );
+          await db.query('DELETE FROM internal_licences WHERE external_licences_id=$1', [r.id]);
+        } else {
+          // Do not change the uses_pool value
+          willUsePool = prevL.uses_pool;
+        }
+      }
+      await db.query(
+        `INSERT INTO external_licences
         (ext_id, nb_licences, valid_from, valid_until, is_monthly, to_be_renewed, reseller_id, bank_id, uses_pool)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
         ON CONFLICT (ext_id) DO UPDATE SET
         nb_licences=EXCLUDED.nb_licences,
         valid_from=EXCLUDED.valid_from,
@@ -139,25 +164,45 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
         is_monthly=EXCLUDED.is_monthly,
         to_be_renewed=EXCLUDED.to_be_renewed,
         reseller_id=EXCLUDED.reseller_id,
-        bank_id=EXCLUDED.bank_id
+        bank_id=EXCLUDED.bank_id,
+        uses_pool=EXCLUDED.uses_pool
         `,
-      // NB: do not update uses_pool on conflict, keep the value defined by the user.
-      [
-        r.id,
-        r.nb_licences,
-        r.valid_from,
-        r.valid_until,
-        r.is_monthly,
-        r.to_be_renewed,
-        r.reseller_id,
-        null,
-      ],
-    );
+        [
+          r.id,
+          r.nb_licences,
+          r.valid_from,
+          r.valid_until,
+          r.is_monthly,
+          r.to_be_renewed,
+          r.reseller_id,
+          null,
+          willUsePool,
+        ],
+      );
+    }
   }
+
+  const banksRes = await db.query('SELECT id FROM banks');
+  const bankIds = banksRes.rows.map((r) => r.id);
   for (let i = 0; i < bankLicences.length; i++) {
     const b = bankLicences[i];
-    await db.query(
-      `INSERT INTO external_licences
+    if (bankIds.indexOf(b.bank_id) !== -1) {
+      const previousExtLicenceRes = await db.query(
+        'SELECT reseller_id, bank_id, uses_pool FROM external_licences WHERE ext_id=$1',
+        [b.id],
+      );
+      if (previousExtLicenceRes.rows.length > 0) {
+        const prevL = previousExtLicenceRes.rows[0];
+        if (prevL.reseller_id) {
+          // the licence was previously associated with a reseller, and now it's associated directly to a bank
+          logInfo(
+            'updateLicencesInDb received a reseller to bank changed licence -> deletion of internal licence attributions',
+          );
+          await db.query('DELETE FROM internal_licences WHERE external_licences_id=$1', [b.id]);
+        }
+      }
+      await db.query(
+        `INSERT INTO external_licences
         (ext_id, nb_licences, valid_from, valid_until, is_monthly, to_be_renewed, reseller_id, bank_id, uses_pool)
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,false)
         ON CONFLICT (ext_id) DO UPDATE SET
@@ -167,18 +212,20 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
         is_monthly=EXCLUDED.is_monthly,
         to_be_renewed=EXCLUDED.to_be_renewed,
         reseller_id=EXCLUDED.reseller_id,
-        bank_id=EXCLUDED.bank_id`,
-      [
-        b.id,
-        b.nb_licences,
-        b.valid_from,
-        b.valid_until,
-        b.is_monthly,
-        b.to_be_renewed,
-        null,
-        b.bank_id,
-      ],
-    );
+        bank_id=EXCLUDED.bank_id,
+        uses_pool=EXCLUDED.uses_pool`,
+        [
+          b.id,
+          b.nb_licences,
+          b.valid_from,
+          b.valid_until,
+          b.is_monthly,
+          b.to_be_renewed,
+          null,
+          b.bank_id,
+        ],
+      );
+    }
   }
 
   const allUpdatedLicenceIds = [
