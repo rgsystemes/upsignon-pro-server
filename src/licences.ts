@@ -139,16 +139,16 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
         const prevL = previousExtLicenceRes.rows[0];
         if (prevL.bank_id) {
           // the licence was previously associated directly to a bank, and now it's associated to a reseller
-          willUsePool = true;
-        } else if (prevL.reseller_id != r.reseller_id) {
+          // Do reset uses_pool to true
+        } else if (prevL.reseller_id !== r.reseller_id) {
           // the licence was previously associated to another reseller
+          // Do reset uses_pool to true
           logInfo(
             'updateLicencesInDb received a reseller changed licence -> deletion of internal licence attributions',
           );
           await db.query('DELETE FROM internal_licences WHERE external_licences_id=$1', [r.id]);
-          willUsePool = true;
         } else {
-          // do not change the will use pool value
+          // Do not change the uses_pool value
           willUsePool = prevL.uses_pool;
         }
       }
