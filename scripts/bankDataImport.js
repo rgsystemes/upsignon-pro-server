@@ -1,33 +1,14 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const bankId = parseInt(process.argv[2]);
-const filePath = process.argv[3];
-if (typeof bankId !== 'number') {
-  console.log('BankId parameter missing.');
-  console.log('Usage: node ./scripts/bankDataImport.js 2 path/to/data/file');
-  process.exit(1);
-}
-if (!filePath) {
-  console.log('File path parameter missing.');
-  console.log('Usage: node ./scripts/bankDataImport.js 2 path/to/data/file');
-  process.exit(1);
-}
-
 const path = require('path');
 const fs = require('fs');
 const db = require(path.join(__dirname, './dbMigrationConnect'));
 
-const dataString = fs.readFileSync(filePath);
-const data = JSON.parse(dataString);
-
-async function importFunction() {
-  await db.connect();
-
+async function importFunction(data, bankId, db, resellerId = null) {
   // ADMINS
   for (var i = 0; i < data.admins.length; i++) {
     const row = data.admins[i];
     await db.query(
-      'INSERT INTO admins (id, email, password_hash, created_at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING',
-      [row.id, row.email, row.password_hash, row.created_at],
+      'INSERT INTO admins (id, email, password_hash, created_at, reseller_id) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING',
+      [row.id, row.email, row.password_hash, row.created_at, resellerId],
     );
   }
 
@@ -295,7 +276,32 @@ async function importFunction() {
   //   );
   // }
 
+}
+
+async function main() {
+  const bankId = parseInt(process.argv[2]);
+  const filePath = process.argv[3];
+  if (typeof bankId !== 'number') {
+    console.log('BankId parameter missing.');
+    console.log('Usage: node ./scripts/bankDataImport.js 2 path/to/data/file');
+    process.exit(1);
+  }
+  if (!filePath) {
+    console.log('File path parameter missing.');
+    console.log('Usage: node ./scripts/bankDataImport.js 2 path/to/data/file');
+    process.exit(1);
+  }
+
+  const dataString = fs.readFileSync(filePath);
+  const data = JSON.parse(dataString);
+
+  await db.connect();
+  await importFunction(data, bankId, db);
   await db.release();
 }
 
-importFunction();
+if (require.main === module) {
+  main();
+}
+
+module.exports = { importFunction };

@@ -23,7 +23,7 @@ async function exportDb(bankId, db) {
     const url_list = await db.query('SELECT * FROM url_list WHERE bank_id=$1', [bankId]);
     const user_devices = await db.query('SELECT * FROM user_devices WHERE bank_id=$1', [bankId]);
 
-    return JSON.stringify({
+    return {
       admins: admins.rows,
       admin_banks: admin_banks.rows,
       allowed_emails: allowed_emails.rows,
@@ -34,7 +34,7 @@ async function exportDb(bankId, db) {
       user_devices: user_devices.rows,
       users: users.rows,
       url_list: url_list.rows,
-    });
+    };
   } catch (e) {
     console.log(e);
   }
@@ -58,7 +58,7 @@ async function main() {
 
   await db.connect();
   const data = await exportDb(bankId, db);
-  fs.writeFileSync(filePath, data);
+  fs.writeFileSync(filePath, JSON.stringify(data));
   await db.release();
 }
 
