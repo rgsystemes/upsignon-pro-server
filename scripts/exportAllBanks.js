@@ -11,6 +11,7 @@ async function exportAllBanks(db, outputDirectory) {
             let data = await exportDb(bank.id, db);
             data.bank = bank;
             fs.writeFileSync(path.join(outputDirectory, `bank_${bank.id}.json`), JSON.stringify(data));
+            await db.query('UPDATE banks SET redirect_url = $1 WHERE id = $2', ['https://pro.upsignon.eu/' + bank.public_id, bank.id]);
         } catch (error) {
             console.error(`Error exporting bank ${bank.id}:`, error);
         }
@@ -18,12 +19,9 @@ async function exportAllBanks(db, outputDirectory) {
 }
 
 async function main() {
-    const outputDirectory = process.argv[2];
-
-    if (!outputDirectory) {
-        console.log('Output directory parameter missing.');
-        console.log('Usage: node ./scripts/exportAllBanks.js path/to/output/directory');
-        process.exit(1);
+    const outputDirectory = path.join(__dirname, '../tmp_exports');
+    if (!fs.existsSync(outputDirectory)) {
+        fs.mkdirSync(outputDirectory);
     }
 
     await db.connect();
