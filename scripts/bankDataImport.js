@@ -2,11 +2,11 @@ const path = require('path');
 const fs = require('fs');
 const db = require(path.join(__dirname, './dbMigrationConnect'));
 
-async function importFunction(data, bankId, db, resellerId = null) {
+async function importFunction(data, bankId, dbConnection, resellerId = null) {
   // ADMINS
   for (var i = 0; i < data.admins.length; i++) {
     const row = data.admins[i];
-    await db.query(
+    await dbConnection.query(
       'INSERT INTO admins (id, email, password_hash, created_at, reseller_id) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING',
       [row.id, row.email, row.password_hash, row.created_at, resellerId],
     );
@@ -15,7 +15,7 @@ async function importFunction(data, bankId, db, resellerId = null) {
   // ADMIN BANKS
   for (var i = 0; i < data.admin_banks.length; i++) {
     const row = data.admin_banks[i];
-    await db.query('INSERT INTO admin_banks (admin_id, bank_id) VALUES ($1,$2)', [
+    await dbConnection.query('INSERT INTO admin_banks (admin_id, bank_id) VALUES ($1,$2)', [
       row.admin_id,
       bankId,
     ]);
@@ -24,7 +24,7 @@ async function importFunction(data, bankId, db, resellerId = null) {
   // ALLOWED EMAILS
   for (var i = 0; i < data.allowed_emails.length; i++) {
     const row = data.allowed_emails[i];
-    await db.query('INSERT INTO allowed_emails (pattern, bank_id) VALUES ($1,$2)', [
+    await dbConnection.query('INSERT INTO allowed_emails (pattern, bank_id) VALUES ($1,$2)', [
       row.pattern,
       bankId,
     ]);
@@ -33,7 +33,7 @@ async function importFunction(data, bankId, db, resellerId = null) {
   // USERS
   for (var i = 0; i < data.users.length; i++) {
     const u = data.users[i];
-    const insertedUser = await db.query(
+    const insertedUser = await dbConnection.query(
       `INSERT INTO users (
         email,
         created_at,
@@ -113,7 +113,7 @@ async function importFunction(data, bankId, db, resellerId = null) {
   // URL LIST
   for (var i = 0; i < data.url_list.length; i++) {
     const url = data.url_list[i];
-    await db.query(
+    await dbConnection.query(
       'INSERT INTO url_list (displayed_name, signin_url, bank_id, uses_basic_auth) VALUES ($1,$2,$3,$4)',
       [url.displayed_name, url.signin_url, bankId, url.uses_basic_auth],
     );
@@ -122,7 +122,7 @@ async function importFunction(data, bankId, db, resellerId = null) {
   // SHARED VAULTS
   for (var i = 0; i < data.shared_vaults.length; i++) {
     const sv = data.shared_vaults[i];
-    const insertedVault = await db.query(
+    const insertedVault = await dbConnection.query(
       `INSERT INTO shared_vaults (
         bank_id,
         name,
@@ -182,7 +182,7 @@ async function importFunction(data, bankId, db, resellerId = null) {
   // SHARED VAULT RECIPIENTS
   for (var i = 0; i < data.shared_vault_recipients.length; i++) {
     const svr = data.shared_vault_recipients[i];
-    await db.query(
+    await dbConnection.query(
       'INSERT INTO shared_vault_recipients (shared_vault_id, user_id, encrypted_shared_vault_key, is_manager, access_level, bank_id, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7)',
       [
         svr.newSharedVaultId,
@@ -198,7 +198,7 @@ async function importFunction(data, bankId, db, resellerId = null) {
   // USER DEVICES
   for (var i = 0; i < data.user_devices.length; i++) {
     const ud = data.user_devices[i];
-    await db.query(
+    await dbConnection.query(
       `INSERT INTO user_devices (
           user_id,
           device_name,
