@@ -1,0 +1,137 @@
+services:
+  postgres:
+    image: postgres:15.13
+    container_name: uso.postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: pro
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - 5432
+
+  pg_backup:
+    image: postgres:15.13
+    container_name: uso.pg_backup
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: pro
+      PG_BACKUP_FREQUENCY: ${DB_BACKUP_FREQUENCY}
+      MAX_PG_BACKUPS: ${MAX_PG_BACKUPS}
+    volumes:
+      - ${PG_BACKUPS_PATH}:/backup
+    command: >
+      bash -c "sleep 10m
+        while true; do
+          PGPASSWORD=${DB_PASSWORD} pg_dump -h postgres -U ${DB_USER} -Fc ${DB_NAME} > /backup/$(date +%Y-%m-%d-%H-%M-%S).dump
+          echo ""Backup done at $(date +%Y-%m-%d_%H:%M:%S)""
+          ls -1 /backup/*.dump | head -n -${MAX_PG_BACKUPS} | xargs rm -f
+          sleep ${PG_BACKUP_FREQUENCY}
+        done"
+    depends_on:
+      - postgres
+
+  server:
+    image: ghcr.io/rgsystemes/upsignon-pro-server/server:latest
+    container_name: uso.server
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
+      PRO_API_PUBLIC_HOSTNAME: ${SERVER_URL}
+      DASHBOARD_SESSION_SECRET: ${SESSION_SECRET}
+      PRO_SERVER_PORT: ${SERVER_PORT}
+      PERSO_SERVER_URL: https://app.upsignon.eu
+      HTTP_PROXY: ${HTTP_PROXY}
+      USE_POSTFIX: false
+      PRO_NODE_ENV: production
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.server.loadbalancer.server.port=${SERVER_PORT}
+      - traefik.http.routers.server.rule=Host(`${SERVER_URL}`)
+      - traefik.http.routers.server.entrypoints=websecure
+      - traefik.http.routers.server.tls.certresolver=le
+      - traefik.http.routers.server.middlewares=server-redirect,server-headers
+      - traefik.http.middlewares.server-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.server-headers.headers.customrequestheaders.X-Real-IP=true
+      - traefik.http.middlewares.server-headers.headers.customrequestheaders.X-Forwarded-Proto=https
+      - traefik.http.middlewares.server-headers.headers.customresponseheaders.X-Frame-Options=DENY
+      - traefik.http.middlewares.server-headers.headers.customresponseheaders.X-XSS-Protection=1; mode=block
+      - traefik.http.middlewares.server-headers.headers.customresponseheaders.X-DNS-Prefetch-Control=off
+      - traefik.http.middlewares.server-headers.headers.customresponseheaders.X-Download-Options=noopen
+      - traefik.http.middlewares.server-headers.headers.customresponseheaders.X-Content-Type-Options=nosniff
+      - traefik.http.middlewares.server-headers.headers.customresponseheaders.X-Permitted-Cross-Domain-Policies=none
+      - traefik.http.middlewares.server-headers.headers.customresponseheaders.Strict-Transport-Security=max-age=15552000; includeSubDomains; preload; always
+    expose:
+      - ${SERVER_PORT}
+    depends_on:
+      - postgres
+
+  dashboard:
+    image: ghcr.io/rgsystemes/upsignon-pro-dashboard/dashboard:latest
+    container_name: uso.dashboard
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
+      DASHBOARD_SESSION_SECRET: ${SESSION_SECRET}
+      PRO_DASHBOARD_PUBLIC_URL: ${DASHBOARD_URL}
+      PRO_DASHBOARD_PORT: ${DASHBOARD_PORT}
+      HTTP_PROXY: ${HTTP_PROXY}
+      USE_POSTFIX: false
+      PRO_NODE_ENV: production
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.dashboard.loadbalancer.server.port=${DASHBOARD_PORT}
+      - traefik.http.routers.dashboard.rule=Host(`${DASHBOARD_URL}`)
+      - traefik.http.routers.dashboard.entrypoints=websecure
+      - traefik.http.routers.dashboard.tls.certresolver=le
+      - traefik.http.routers.dashboard.middlewares=dashboard-redirect,dashboard-headers
+      - traefik.http.middlewares.dashboard-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.dashboard-headers.headers.customrequestheaders.X-Real-IP=true
+      - traefik.http.middlewares.dashboard-headers.headers.customrequestheaders.X-Forwarded-Proto=https
+      - traefik.http.middlewares.dashboard-headers.headers.customresponseheaders.X-Frame-Options=DENY
+      - traefik.http.middlewares.dashboard-headers.headers.customresponseheaders.X-XSS-Protection=1; mode=block
+      - traefik.http.middlewares.dashboard-headers.headers.customresponseheaders.X-DNS-Prefetch-Control=off
+      - traefik.http.middlewares.dashboard-headers.headers.customresponseheaders.X-Download-Options=noopen
+      - traefik.http.middlewares.dashboard-headers.headers.customresponseheaders.X-Content-Type-Options=nosniff
+      - traefik.http.middlewares.dashboard-headers.headers.customresponseheaders.X-Permitted-Cross-Domain-Policies=none
+      - traefik.http.middlewares.dashboard-headers.headers.customresponseheaders.Strict-Transport-Security=max-age=15552000; includeSubDomains; preload; always
+    expose:
+      - ${DASHBOARD_PORT}
+    depends_on:
+      - postgres
+      - server
+
+  traefik:
+    image: traefik:3.4.3
+    container_name: uso.traefik
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    command:
+      - --log.level=INFO
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.le.acme.httpchallenge=true
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.le.acme.email=${LETSENCRYPT_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    depends_on:
+      - postgres
+      - server
+      - dashboard
+
+volumes:
+  pgdata:
