@@ -6,6 +6,8 @@ async function exportDb(bankId, dbConnection) {
   try {
     const admins = await dbConnection.query('SELECT * FROM admins');
     const admin_banks = await dbConnection.query('SELECT * FROM admin_banks WHERE bank_id=$1', [bankId]);
+    const bank_sso_config = await dbConnection.query('SELECT * FROM bank_sso_config WHERE bank_id=$1', [bankId]);
+    const changed_emails = await dbConnection.query('SELECT * FROM changed_emails WHERE bank_id=$1', [bankId]);
     const allowed_emails = await dbConnection.query('SELECT * FROM allowed_emails WHERE bank_id=$1', [
       bankId,
     ]);
@@ -34,6 +36,8 @@ async function exportDb(bankId, dbConnection) {
       user_devices: user_devices.rows,
       users: users.rows,
       url_list: url_list.rows,
+      bank_sso_config: bank_sso_config.rows,
+      changed_emails: changed_emails.rows,
     };
   } catch (e) {
     console.log(e);

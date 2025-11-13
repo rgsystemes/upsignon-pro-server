@@ -53,7 +53,11 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
         sharing_public_key_2,
         allowed_to_export,
         allowed_offline_mobile,
-        allowed_offline_desktop) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING id`,
+        allowed_offline_desktop,
+        settings_override,
+        ms_entra_id,
+        deactivated
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22) RETURNING id`,
       [
         u.email,
         u.created_at,
@@ -74,6 +78,9 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
         u.allowed_to_export,
         u.allowed_offline_mobile,
         u.allowed_offline_desktop,
+        u.settings_override,
+        u.ms_entra_id,
+        u.deactivated,
       ],
     );
     const newId = insertedUser.rows[0].id;
@@ -137,8 +144,10 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
         nb_accounts_red,
         nb_accounts_orange,
         nb_accounts_green,
-        content_details
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id`,
+        content_details,
+        nb_accounts_medium,
+        nb_accounts_weak,
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id`,
       [
         bankId,
         sv.name,
@@ -154,6 +163,8 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
         sv.nb_accounts_orange,
         sv.nb_accounts_green,
         sv.content_details,
+        sv.nb_accounts_medium,
+        sv.nb_accounts_weak,
       ],
     );
     const newId = insertedVault.rows[0].id;
@@ -214,8 +225,10 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
           device_public_key_2,
           last_sync_date,
           install_type,
-          os_family
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+          os_family,
+          use_safe_browser_setup,
+          enrollment_method
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
       [
         ud.newUserId,
         ud.device_name,
@@ -232,8 +245,22 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
         ud.last_sync_date,
         ud.install_type,
         ud.os_family,
+        ud.use_safe_browser_setup,
+        ud.enrollment_method,
       ],
     );
+  }
+
+  // BANK SSO CONFIG
+  for (var i = 0; i < data.bank_sso_config.length; i++) {
+    const row = data.bank_sso_config[i];
+    await dbConnection.query('INSERT INTO bank_sso_config (bank_id, openid_configuration_url, client_id) VALUES ($1,$2,$3)', [bankId, row.openid_configuration_url, row.client_id]);
+  }
+
+  // CHANGED EMAILS
+  for (var i = 0; i < data.changed_emails.length; i++) {
+    const row = data.changed_emails[i];
+    await dbConnection.query('INSERT INTO changed_emails (old_email, new_email, user_id, aware_devices, created_at) VALUES ($1,$2,$3,$4,$5)', [row.old_email, row.new_email, row.user_id, row.aware_devices, row.created_at]);
   }
 
   // DATA STATS
