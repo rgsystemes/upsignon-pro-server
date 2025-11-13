@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           ENV_TS_CHANGED=$(git diff --name-only HEAD^ HEAD | grep src/helpers/env.ts)
-          if [ $ENV_TS_CHANGED ]; then
+          if [ -z $ENV_TS_CHANGED ]; then
             curl -X POST \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${{ secrets.RGSUPVDEV_TOKEN }}" \
