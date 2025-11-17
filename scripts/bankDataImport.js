@@ -115,6 +115,16 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
         return row;
       }
     });
+    data.changed_emails = data.changed_emails.map((row) => {
+      if (row.user_id === u.id) {
+        return {
+          ...row,
+          newUserId: newId,
+        };
+      } else {
+        return row;
+      }
+    });
   }
 
   // URL LIST
@@ -260,7 +270,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
   // CHANGED EMAILS
   for (var i = 0; i < data.changed_emails.length; i++) {
     const row = data.changed_emails[i];
-    await dbConnection.query('INSERT INTO changed_emails (old_email, new_email, user_id, aware_devices, created_at) VALUES ($1,$2,$3,$4,$5)', [row.old_email, row.new_email, row.user_id, row.aware_devices, row.created_at]);
+    await dbConnection.query('INSERT INTO changed_emails (old_email, new_email, user_id, aware_devices, created_at, bank_id) VALUES ($1,$2,$3,$4,$5,$6)', [row.old_email, row.new_email, row.newUserId, row.aware_devices, row.created_at, bankId]);
   }
 
   // DATA STATS
