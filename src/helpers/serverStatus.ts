@@ -43,7 +43,7 @@ export const sendStatusUpdate = async (): Promise<void> => {
       statsByReseller,
       hasDailyBackup,
       nodeVersion,
-      deviceStats,
+      deviceStats: deviceStats.rows,
     };
 
     await sendToUpSignOn(serverStatus);
