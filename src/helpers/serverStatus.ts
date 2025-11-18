@@ -194,7 +194,13 @@ const getStatsByReseller = async () => {
   const res = await db.query(`SELECT
       resellers.id,
       resellers.name,
-      COUNT(users.id) AS nb_vaults
+      COUNT(users.id) AS nb_vaults,
+      (SELECT COALESCE(
+        jsonb_agg(
+          jsonb_build_object('id', banks.id, 'name', banks.name)
+        ) FILTER (WHERE banks.id IS NOT NULL),
+        '[]'::jsonb
+      ) FROM banks WHERE banks.reseller_id = resellers.id) AS banks
     FROM resellers
     LEFT JOIN banks
       ON banks.reseller_id = resellers.id
