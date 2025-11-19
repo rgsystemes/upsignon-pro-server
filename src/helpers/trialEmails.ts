@@ -182,7 +182,10 @@ const sendTrialEndingEmailToSalesRep = async (
 
     await transporter.sendMail({
       from: emailConfig.EMAIL_SENDING_ADDRESS,
-      to: env.IS_SAAS && sales.indexOf(salesDirector) === -1 ? [...sales, salesDirector] : sales,
+      to:
+        env.IS_PROD_STATUS_SERVER_URL && sales.indexOf(salesDirector) === -1
+          ? [...sales, salesDirector]
+          : sales,
       subject: `[SALES] Expiration Trial UpSignon`,
       html: htmlMessage,
     });
