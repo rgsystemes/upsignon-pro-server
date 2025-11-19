@@ -100,5 +100,6 @@ export const verifySignatureMiddleware = (
     res.status(500).json({
       error: 'Signature verification failed',
     });
+    return;
   }
 };

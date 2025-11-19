@@ -35,8 +35,8 @@ export const updateLicences = async (req: any, res: any) => {
 };
 
 export const startLicencePulling = async (req: Request, res: Response) => {
-  const succeess = await pullLicences();
-  if (succeess) res.status(200).end();
+  const success = await pullLicences();
+  if (success) res.status(200).end();
   else res.status(400).end();
 };
 
