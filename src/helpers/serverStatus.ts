@@ -141,11 +141,17 @@ const getStats = async (): Promise<{ def: string[]; data: any[] }> => {
 
 const sendToUpSignOn = async (status: any) => {
   try {
+    const secretRes = await db.query("SELECT value FROM settings WHERE key='SECRET'");
+    if (secretRes.rowCount === 0) {
+      logError(`pullLicences error: no SECRET`);
+      return false;
+    }
+
     const url = `${env.STATUS_SERVER_URL}/pro-status`;
     logInfo(`ProxiedFetch to ${url}`);
     const response = await proxiedFetch(url, {
       method: 'POST',
-      body: JSON.stringify(status),
+      body: JSON.stringify({ ...status, secret: secretRes.rows[0].value }),
     });
 
     if (!response.ok) {
