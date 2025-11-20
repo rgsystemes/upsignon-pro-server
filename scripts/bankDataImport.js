@@ -156,7 +156,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
         nb_accounts_green,
         content_details,
         nb_accounts_medium,
-        nb_accounts_weak,
+        nb_accounts_weak
       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id`,
       [
         bankId,
@@ -264,13 +264,19 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
   // BANK SSO CONFIG
   for (var i = 0; i < data.bank_sso_config.length; i++) {
     const row = data.bank_sso_config[i];
-    await dbConnection.query('INSERT INTO bank_sso_config (bank_id, openid_configuration_url, client_id) VALUES ($1,$2,$3)', [bankId, row.openid_configuration_url, row.client_id]);
+    await dbConnection.query(
+      'INSERT INTO bank_sso_config (bank_id, openid_configuration_url, client_id) VALUES ($1,$2,$3)',
+      [bankId, row.openid_configuration_url, row.client_id],
+    );
   }
 
   // CHANGED EMAILS
   for (var i = 0; i < data.changed_emails.length; i++) {
     const row = data.changed_emails[i];
-    await dbConnection.query('INSERT INTO changed_emails (old_email, new_email, user_id, aware_devices, created_at, bank_id) VALUES ($1,$2,$3,$4,$5,$6)', [row.old_email, row.new_email, row.newUserId, row.aware_devices, row.created_at, bankId]);
+    await dbConnection.query(
+      'INSERT INTO changed_emails (old_email, new_email, user_id, aware_devices, created_at, bank_id) VALUES ($1,$2,$3,$4,$5,$6)',
+      [row.old_email, row.new_email, row.newUserId, row.aware_devices, row.created_at, bankId],
+    );
   }
 
   // DATA STATS
@@ -312,7 +318,6 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
   //     ],
   //   );
   // }
-
 }
 
 async function main() {
