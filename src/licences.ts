@@ -11,19 +11,12 @@ interface LicenceItem {
   valid_until: string | null;
   is_monthly: boolean;
   to_be_renewed: boolean;
-}
-
-interface ResellerLicence extends LicenceItem {
-  reseller_id: string;
-}
-
-interface BankLicence extends LicenceItem {
+  reseller_id?: string | null;
   bank_id: number | null;
 }
 
 interface LicencesBody {
-  resellerLicences: ResellerLicence[];
-  bankLicences: BankLicence[];
+  licences: LicenceItem[];
 }
 
 // NB: Licence flows
@@ -42,8 +35,8 @@ export const updateLicences = async (req: any, res: any) => {
 };
 
 export const startLicencePulling = async (req: Request, res: Response) => {
-  const succeess = await pullLicences();
-  if (succeess) res.status(200).end();
+  const success = await pullLicences();
+  if (success) res.status(200).end();
   else res.status(400).end();
 };
 
@@ -96,7 +89,7 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
       otherwise: Joi.string().isoDate().required(),
     });
   const licencesSchema = Joi.object({
-    resellerLicences: Joi.array()
+    licences: Joi.array()
       .items(
         Joi.object({
           id: Joi.number().positive().required(),
@@ -105,106 +98,49 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
           valid_until: validUntilSchema,
           is_monthly: Joi.boolean().allow(null).default(false),
           to_be_renewed: Joi.boolean().allow(null).default(false),
-          reseller_id: Joi.string().uuid().required(),
-        }),
-      )
-      .required(),
-    bankLicences: Joi.array()
-      .items(
-        Joi.object({
-          id: Joi.number().positive().required(),
-          nb_licences: Joi.number().required(),
-          valid_from: Joi.string().isoDate().required(),
-          valid_until: validUntilSchema,
-          is_monthly: Joi.boolean().allow(null).default(false),
-          to_be_renewed: Joi.boolean().allow(null).default(false),
+          reseller_id: Joi.string().uuid().allow(null),
           bank_id: Joi.number().allow(null),
         }),
       )
       .required(),
   });
   const safeBody = Joi.attempt(unsafeLicencesObject, licencesSchema) as LicencesBody;
-  const { resellerLicences, bankLicences } = safeBody;
+  const { licences } = safeBody;
 
   const resellersRes = await db.query('SELECT id FROM resellers');
   const resellerIds = resellersRes.rows.map((r) => r.id);
-  for (let i = 0; i < resellerLicences.length; i++) {
-    const r = resellerLicences[i];
-    if (resellerIds.indexOf(r.reseller_id) !== -1) {
-      const previousExtLicenceRes = await db.query(
-        'SELECT reseller_id, bank_id, uses_pool FROM external_licences WHERE ext_id=$1',
-        [r.id],
-      );
-      let willUsePool = true; // true by default for resellers
-      if (previousExtLicenceRes.rows.length > 0) {
-        const prevL = previousExtLicenceRes.rows[0];
-        if (prevL.bank_id) {
-          // the licence was previously associated directly to a bank, and now it's associated to a reseller
-          // Do reset uses_pool to true
-        } else if (prevL.reseller_id !== r.reseller_id) {
-          // the licence was previously associated to another reseller
-          // Do reset uses_pool to true
-          logInfo(
-            'updateLicencesInDb received a reseller changed licence -> deletion of internal licence attributions',
-          );
-          await db.query('DELETE FROM internal_licences WHERE external_licences_id=$1', [r.id]);
-        } else {
-          // Do not change the uses_pool value
-          willUsePool = prevL.uses_pool;
-        }
-      }
-      await db.query(
-        `INSERT INTO external_licences
-        (ext_id, nb_licences, valid_from, valid_until, is_monthly, to_be_renewed, reseller_id, bank_id, uses_pool)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-        ON CONFLICT (ext_id) DO UPDATE SET
-        nb_licences=EXCLUDED.nb_licences,
-        valid_from=EXCLUDED.valid_from,
-        valid_until=EXCLUDED.valid_until,
-        is_monthly=EXCLUDED.is_monthly,
-        to_be_renewed=EXCLUDED.to_be_renewed,
-        reseller_id=EXCLUDED.reseller_id,
-        bank_id=EXCLUDED.bank_id,
-        uses_pool=EXCLUDED.uses_pool
-        `,
-        [
-          r.id,
-          r.nb_licences,
-          r.valid_from,
-          r.valid_until,
-          r.is_monthly,
-          r.to_be_renewed,
-          r.reseller_id,
-          null,
-          willUsePool,
-        ],
-      );
-    }
-  }
-
   const banksRes = await db.query('SELECT id FROM banks');
-  const bankIds = banksRes.rows.map((r) => r.id);
-  for (let i = 0; i < bankLicences.length; i++) {
-    const b = bankLicences[i];
-    if (bankIds.indexOf(b.bank_id) !== -1) {
-      const previousExtLicenceRes = await db.query(
-        'SELECT reseller_id, bank_id, uses_pool FROM external_licences WHERE ext_id=$1',
-        [b.id],
+  const bankIds = banksRes.rows.map((b) => b.id);
+
+  for (let i = 0; i < licences.length; i++) {
+    const l = licences[i];
+    if (l.reseller_id && resellerIds.indexOf(l.reseller_id) === -1) {
+      continue;
+    }
+    if (l.bank_id && bankIds.indexOf(l.bank_id) === -1) {
+      continue;
+    }
+
+    const previousExtLicenceRes = await db.query(
+      'SELECT reseller_id, bank_id FROM external_licences WHERE ext_id=$1 limit 1',
+      [l.id],
+    );
+    const prevL = previousExtLicenceRes.rows[0];
+    if (prevL && prevL.reseller_id !== l.reseller_id) {
+      // the licence was previously associated to another reseller
+      logInfo(
+        'updateLicencesInDb received a reseller changed licence -> deletion of internal licence attributions',
       );
-      if (previousExtLicenceRes.rows.length > 0) {
-        const prevL = previousExtLicenceRes.rows[0];
-        if (prevL.reseller_id) {
-          // the licence was previously associated with a reseller, and now it's associated directly to a bank
-          logInfo(
-            'updateLicencesInDb received a reseller to bank changed licence -> deletion of internal licence attributions',
-          );
-          await db.query('DELETE FROM internal_licences WHERE external_licences_id=$1', [b.id]);
-        }
-      }
-      await db.query(
-        `INSERT INTO external_licences
-        (ext_id, nb_licences, valid_from, valid_until, is_monthly, to_be_renewed, reseller_id, bank_id, uses_pool)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,false)
+      await db.query('DELETE FROM internal_licences WHERE external_licences_id=$1', [l.id]);
+    }
+    if (l.bank_id) {
+      // clean up just in case
+      await db.query('DELETE FROM internal_licences WHERE external_licences_id=$1', [l.id]);
+    }
+    await db.query(
+      `INSERT INTO external_licences
+        (ext_id, nb_licences, valid_from, valid_until, is_monthly, to_be_renewed, reseller_id, bank_id)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
         ON CONFLICT (ext_id) DO UPDATE SET
         nb_licences=EXCLUDED.nb_licences,
         valid_from=EXCLUDED.valid_from,
@@ -212,28 +148,21 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
         is_monthly=EXCLUDED.is_monthly,
         to_be_renewed=EXCLUDED.to_be_renewed,
         reseller_id=EXCLUDED.reseller_id,
-        bank_id=EXCLUDED.bank_id,
-        uses_pool=EXCLUDED.uses_pool`,
-        [
-          b.id,
-          b.nb_licences,
-          b.valid_from,
-          b.valid_until,
-          b.is_monthly,
-          b.to_be_renewed,
-          null,
-          b.bank_id,
-        ],
-      );
-    }
+        bank_id=EXCLUDED.bank_id
+        `,
+      [
+        l.id,
+        l.nb_licences,
+        l.valid_from,
+        l.valid_until,
+        l.is_monthly,
+        l.to_be_renewed,
+        l.reseller_id,
+        l.bank_id,
+      ],
+    );
   }
-
-  const allUpdatedLicenceIds = [
-    ...resellerLicences.map((r: ResellerLicence) => r.id),
-    ...bankLicences.map((b: BankLicence) => b.id),
-  ];
-
   await db.query('DELETE FROM external_licences WHERE NOT(ext_id=ANY ($1::int[]))', [
-    allUpdatedLicenceIds,
+    licences.map((l) => l.id),
   ]);
 };

@@ -64,7 +64,7 @@ export const verifySignatureMiddleware = (
 
   // Check that the request is not too old (5 minutes max)
   const currentTime = Math.floor(Date.now() / 1000);
-  const maxAge = 5 * 60; // 5 minutes
+  const maxAge = 60; // 1 minutes
 
   if (Math.abs(currentTime - timestamp) > maxAge) {
     res.status(401).json({
@@ -100,5 +100,6 @@ export const verifySignatureMiddleware = (
     res.status(500).json({
       error: 'Signature verification failed',
     });
+    return;
   }
 };

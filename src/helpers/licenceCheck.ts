@@ -60,10 +60,11 @@ export const hasAvailableLicence = async (bankId: number): Promise<boolean> => {
   const resellers = await db.query(
     `SELECT
       r.id,
-      SUM(el.nb_licences) AS nb_licences
+      (COALESCE(SUM(el.nb_licences), 0) - COALESCE(SUM(il.nb_licences), 0)) AS nb_licences
     FROM resellers AS r
     INNER JOIN external_licences AS el ON r.id=el.reseller_id
-    WHERE el.uses_pool=true AND el.bank_id IS NULL
+    LEFT JOIN internal_licences AS il ON il.external_licences_id = el.ext_id
+    WHERE el.reseller_id IS NOT NULL AND el.bank_id IS NULL
     AND ${licenceValidityCondition}
     GROUP BY r.id
     `,
@@ -72,7 +73,7 @@ export const hasAvailableLicence = async (bankId: number): Promise<boolean> => {
     `SELECT
       SUM(el.nb_licences) AS nb_licences
     FROM external_licences AS el
-    WHERE el.uses_pool=true AND el.reseller_id IS NULL AND el.bank_id IS NULL
+    WHERE el.reseller_id IS NULL AND el.bank_id IS NULL
     AND ${licenceValidityCondition}
     `,
   );

@@ -43,7 +43,7 @@ export const sendStatusUpdate = async (): Promise<void> => {
       statsByReseller,
       hasDailyBackup,
       nodeVersion,
-      deviceStats,
+      deviceStats: deviceStats.rows,
     };
 
     await sendToUpSignOn(serverStatus);
@@ -141,11 +141,17 @@ const getStats = async (): Promise<{ def: string[]; data: any[] }> => {
 
 const sendToUpSignOn = async (status: any) => {
   try {
+    const secretRes = await db.query("SELECT value FROM settings WHERE key='SECRET'");
+    if (secretRes.rowCount === 0) {
+      logError(`pullLicences error: no SECRET`);
+      return false;
+    }
+
     const url = `${env.STATUS_SERVER_URL}/pro-status`;
     logInfo(`ProxiedFetch to ${url}`);
     const response = await proxiedFetch(url, {
       method: 'POST',
-      body: JSON.stringify(status),
+      body: JSON.stringify({ ...status, secret: secretRes.rows[0].value }),
     });
 
     if (!response.ok) {
@@ -194,7 +200,13 @@ const getStatsByReseller = async () => {
   const res = await db.query(`SELECT
       resellers.id,
       resellers.name,
-      COUNT(users.id) AS nb_vaults
+      COUNT(users.id) AS nb_vaults,
+      (SELECT COALESCE(
+        jsonb_agg(
+          jsonb_build_object('id', banks.id, 'name', banks.name)
+        ) FILTER (WHERE banks.id IS NOT NULL),
+        '[]'::jsonb
+      ) FROM banks WHERE banks.reseller_id = resellers.id) AS banks
     FROM resellers
     LEFT JOIN banks
       ON banks.reseller_id = resellers.id
