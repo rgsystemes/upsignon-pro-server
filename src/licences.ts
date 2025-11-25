@@ -122,7 +122,7 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
     }
 
     const previousExtLicenceRes = await db.query(
-      'SELECT reseller_id, bank_id FROM external_licences WHERE ext_id=$1 limit 1',
+      'SELECT reseller_id, bank_id, nb_licences FROM external_licences WHERE ext_id=$1 limit 1',
       [l.id],
     );
     const prevL = previousExtLicenceRes.rows[0];
@@ -136,6 +136,15 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
     if (l.bank_id) {
       // clean up just in case
       await db.query('DELETE FROM internal_licences WHERE external_licences_id=$1', [l.id]);
+    }
+    if (l.nb_licences < prevL.nb_licences) {
+      const internalLicences = await db.query(
+        'SELECT SUM(nb_licences)::int as nb_licences FROM internal_licences WHERE external_licences_id=$1',
+        [l.id],
+      );
+      if (l.nb_licences < internalLicences.rows[0].nb_licences) {
+        await db.query('DELETE FROM internal_licences WHERE external_licences_id=$1', [l.id]);
+      }
     }
     await db.query(
       `INSERT INTO external_licences
