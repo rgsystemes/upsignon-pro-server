@@ -20,10 +20,10 @@
     "jsonwebtoken": "^9.0.2",
     "jwks-rsa": "^3.2.0",
     "libsodium-wrappers": "^0.7.11",
-    "upsignon-ms-entra": "git+https://github.com/rgsystemes/upsignon-ms-entra",
     "nodemailer": "^7.0.5",
     "pg": "^8.16.3",
-    "uuid": "^11.1.0"
+    "upsignon-ms-entra": "git+https://github.com/rgsystemes/upsignon-ms-entra",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
@@ -31,9 +31,9 @@
     "@types/joi": "^17.2.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/libsodium-wrappers": "^0.7.14",
-    "@types/nodemailer": "^6.4.6",
+    "@types/nodemailer": "^7.0.4",
     "@types/pg": "^8.15.5",
-    "@types/uuid": "^10.0.0",
+    "@types/uuid": "^11.0.0",
     "@typescript-eslint/eslint-plugin": "^8.39.0",
     "@typescript-eslint/parser": "^8.39.0",
     "eslint": "^9.32.0",
