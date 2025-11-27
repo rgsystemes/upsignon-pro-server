@@ -40,7 +40,7 @@ export const getBankConfig = async (req: any, res: any): Promise<void> => {
           : null),
       bankName: bankRes.rows[0].name,
       preventUpdatePopup: bankRes.rows[0]?.settings?.PREVENT_UPDATE_POPUP || false,
-      ssoConfigs: bankRes.rows[0]?.sso_configs,
+      ssoConfigs: bankRes.rows[0]?.sso_configs.length == 0 ? null : bankRes.rows[0]?.sso_configs,
     });
   } catch (e) {
     logError('getBankConfig', e);
