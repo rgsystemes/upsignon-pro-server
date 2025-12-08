@@ -23,7 +23,7 @@
     "nodemailer": "^7.0.5",
     "pg": "^8.16.3",
     "upsignon-ms-entra": "git+https://github.com/rgsystemes/upsignon-ms-entra",
-    "uuid": "^13.0.0"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
@@ -33,7 +33,7 @@
     "@types/libsodium-wrappers": "^0.7.14",
     "@types/nodemailer": "^7.0.4",
     "@types/pg": "^8.15.5",
-    "@types/uuid": "^11.0.0",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.39.0",
     "@typescript-eslint/parser": "^8.39.0",
     "eslint": "^9.32.0",

@@ -2,7 +2,7 @@
 
 exports.up = function (db) {
   return db.query(
-    "INSERT INTO settings (key,value) VALUES ('SECRET', to_json(gen_random_uuid()::text))",
+    "INSERT INTO settings (key,value) VALUES ('SECRET', to_json(gen_random_uuid()::text)) ON CONFLICT DO NOTHING",
   );
 };
 
