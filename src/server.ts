@@ -48,10 +48,12 @@ import { checkUserPublicKey2 } from './api2/routes/sharingRecipients/checkUserPu
 import { updateDeviceMetaData2 } from './api2/routes/devices/updateDeviceMetaData';
 import { logEvent } from './api2/routes/audit/logEvent';
 import libsodium from 'libsodium-wrappers';
-import { updateLicences } from './licences';
+import { startLicencePulling, updateLicences } from './licences';
 import { getBrowserSetupPreference } from './api2/routes/browserSetupSecurity/getBrowserSetupPreference';
 import { setBrowserSetupUserPreference } from './api2/routes/browserSetupSecurity/setBrowserSetupUserPreference';
 import { authenticateWithOpenidAuthCode } from './api2/routes/authentication/authenticateWithOpenidAuthCode';
+import { verifySignatureMiddleware } from './helpers/signatureHelper';
+import { forceStatusUpdate } from './helpers/serverStatus';
 
 const app = express();
 
@@ -90,20 +92,46 @@ app.get('/', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.status(200).send('UpSignOn PRO server is running');
 });
-app.post('/licences', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  return updateLicences(req, res);
-});
+
+/// Called by SEPTEO IT SOLUTIONS servers to push licence updates
+/// This call is signed by SEPTEO IT SOLUTIONS
+app.post(
+  '/licences',
+  (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    next();
+  },
+  verifySignatureMiddleware,
+  updateLicences,
+);
+
+/// Called by the upsignon-pro-dashboard to pull licences from SEPTEO IT SOLUTIONS in order to avoid code duplication.
+app.post(
+  '/start-licence-pulling',
+  (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    next();
+  },
+  startLicencePulling,
+);
+app.post(
+  '/force-pro-status-update',
+  (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    next();
+  },
+  forceStatusUpdate,
+);
 
 // BANK ROUTING with or without bankUUID (default bankUUID used to be 1)
 // TODO(giregk): remove default bank id routes in 2026
 
 app.get('/:bankUUID/', (req, res) => {
-  var hostname = env.API_PUBLIC_HOSTNAME.replace(/\/$/, '');
+  var hostname = env.API_PUBLIC_HOSTNAME;
   return res
     .status(303)
     .redirect(
-      `https://app.upsignon.eu/pro-setup?url=${encodeURIComponent(`https://${hostname}${req.originalUrl}`)}`,
+      `${env.STATUS_SERVER_URL}/pro-setup?url=${encodeURIComponent(`https://${hostname}${req.originalUrl}`)}`,
     );
 });
 // API 2
@@ -234,7 +262,7 @@ if (module === require.main) {
       startServer(app, () => {
         logInfo(`You can try to open in your browser\n  - https://${env.API_PUBLIC_HOSTNAME}\n`);
         logInfo(
-          `Your setup link is https://upsignon.eu/pro-setup?url=https://${env.API_PUBLIC_HOSTNAME}`,
+          `Your setup link is ${env.STATUS_SERVER_URL}/pro-setup?url=https://${env.API_PUBLIC_HOSTNAME}`,
         );
       });
     });

@@ -75,6 +75,7 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
       `SELECT
         password_reset_request.id AS reset_request_id,
         password_reset_request.status AS reset_status,
+        password_reset_request.reset_token AS reset_token,
         password_reset_request.reset_token_expiration_date AS reset_token_expiration_date
       FROM password_reset_request
       WHERE
@@ -104,7 +105,20 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
           `,
           [authDbRes.rows[0].did, randomAuthorizationCode, expirationDate, bankIds.internalId],
         );
-      } else {
+        await sendPasswordResetRequestEmail(
+          safeBody.userEmail,
+          authDbRes.rows[0].device_name,
+          randomAuthorizationCode,
+          expirationDate,
+        );
+        logInfo(
+          req.body?.userEmail,
+          'requestPasswordReset2 OK (authorized by configuration - reset mail sent)',
+        );
+      } else if (
+        !resetRequest.reset_token_expiration_date ||
+        isExpired(resetRequest.reset_token_expiration_date)
+      ) {
         await db.query(
           `UPDATE password_reset_request SET
             created_at=CURRENT_TIMESTAMP(0),
@@ -120,14 +134,28 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
             bankIds.internalId,
           ],
         );
+        await sendPasswordResetRequestEmail(
+          safeBody.userEmail,
+          authDbRes.rows[0].device_name,
+          randomAuthorizationCode,
+          expirationDate,
+        );
+        logInfo(
+          req.body?.userEmail,
+          'requestPasswordReset2 OK (authorized by configuration - token regenerated and reset mail resent)',
+        );
+      } else {
+        await sendPasswordResetRequestEmail(
+          safeBody.userEmail,
+          authDbRes.rows[0].device_name,
+          resetRequest.reset_token,
+          resetRequest.reset_token_expiration_date,
+        );
+        logInfo(
+          req.body?.userEmail,
+          'requestPasswordReset2 OK (authorized by configuration - reset mail resent)',
+        );
       }
-      await sendPasswordResetRequestEmail(
-        safeBody.userEmail,
-        authDbRes.rows[0].device_name,
-        randomAuthorizationCode,
-        expirationDate,
-      );
-      logInfo(req.body?.userEmail, 'requestPasswordReset2 OK (reset mail sent)');
       return res.status(200).json({ resetStatus: 'mail_sent' });
     } else {
       // MANUAL VALIDATION IS ENABLED
@@ -140,7 +168,10 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
           `,
           [authDbRes.rows[0].did, bankIds.internalId],
         );
-        logInfo(req.body?.userEmail, 'requestPasswordReset2 OK (reset request created)');
+        logInfo(
+          req.body?.userEmail,
+          'requestPasswordReset2 OK (reset request created - needs admin grant)',
+        );
         await sendPasswordResetRequestNotificationToAdmins(safeBody.userEmail, bankIds.internalId);
         return res.status(200).json({ resetStatus: 'pending_admin_check' });
       } else if (
@@ -152,14 +183,26 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
           `UPDATE password_reset_request SET created_at=CURRENT_TIMESTAMP(0), status='PENDING_ADMIN_CHECK', granted_by=null, reset_token=null, reset_token_expiration_date=null WHERE id=$1 AND bank_id=$2`,
           [resetRequest.reset_request_id, bankIds.internalId],
         );
-        logInfo(req.body?.userEmail, 'requestPasswordReset2 OK (reset request updated)');
+        logInfo(
+          req.body?.userEmail,
+          'requestPasswordReset2 OK (reset request updated - needs new admin grant)',
+        );
         await sendPasswordResetRequestNotificationToAdmins(safeBody.userEmail, bankIds.internalId);
         return res.status(200).json({ resetStatus: 'pending_admin_check' });
       } else if (resetRequest.reset_status === 'PENDING_ADMIN_CHECK') {
-        logInfo(req.body?.userEmail, 'requestPasswordReset2 OK (reset request still pending)');
+        logInfo(
+          req.body?.userEmail,
+          'requestPasswordReset2 OK (reset request still pending admin grant)',
+        );
         return res.status(200).json({ resetStatus: 'pending_admin_check' });
       } else if (resetRequest.reset_status === 'ADMIN_AUTHORIZED') {
-        logInfo(req.body?.userEmail, 'requestPasswordReset2 OK (mail sent)');
+        await sendPasswordResetRequestEmail(
+          safeBody.userEmail,
+          authDbRes.rows[0].device_name,
+          resetRequest.reset_token,
+          resetRequest.reset_token_expiration_date,
+        );
+        logInfo(req.body?.userEmail, 'requestPasswordReset2 OK (mail resent)');
         return res.status(200).json({ resetStatus: 'mail_sent' });
       }
     }

@@ -4,12 +4,12 @@ import { URLSearchParams } from 'url';
 import { logError } from '../../../helpers/logger';
 import { db } from '../../../helpers/db';
 import jwksClient from 'jwks-rsa';
-import { MicrosoftGraph } from 'upsignon-ms-entra';
 import { getBankIds } from '../../helpers/bankUUID';
 import { getEmailAuthorizationStatus } from '../../helpers/emailAuthorization';
 import { SessionStore } from '../../../helpers/sessionStore';
 
 import { Request, Response } from 'express';
+import { proxiedFetch } from '../../../helpers/xmlHttpRequest';
 
 export const authenticateWithOpenidAuthCode = async (
   req: Request,
@@ -159,13 +159,11 @@ export const authenticateWithOpenidAuthCode = async (
     ]);
     const existingVaultId = existingVaults.rows.length > 0 ? existingVaults.rows[0].id : null;
     if (!existingVaultId) {
-      const userMSEntraId = await MicrosoftGraph.getUserId(bankIds.internalId, userEmail);
-      const emailAuthStatus = await getEmailAuthorizationStatus(
+      const emailAuthStatusResponse = await getEmailAuthorizationStatus(
         userEmail,
-        userMSEntraId,
         bankIds.internalId,
       );
-      if (emailAuthStatus == 'UNAUTHORIZED') {
+      if (emailAuthStatusResponse.status === 'UNAUTHORIZED') {
         res.status(400).json({ error: 'User is SSO authenticated but not allowed on this bank.' });
         return;
       }
@@ -203,11 +201,8 @@ const fetchOpenIdConfig = async (
   id_token_signing_alg_values_supported: jwt.Algorithm[];
 }> => {
   try {
-    const response = await fetch(openid_configuration_url, {
+    const response = await proxiedFetch(openid_configuration_url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
     });
 
     if (!response.ok) {
@@ -216,8 +211,7 @@ const fetchOpenIdConfig = async (
       throw new Error(errorMessage);
     }
 
-    const json = await response.json();
-    return json;
+    return JSON.parse(response.body);
   } catch (error) {
     logError('fetchOpenIdConfig error', error);
     throw error;
@@ -251,7 +245,7 @@ const postTokenEndpoint = async (params: {
       code_verifier: params.code_verifier,
     });
 
-    const response = await fetch(params.token_endpoint, {
+    const response = await proxiedFetch(params.token_endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -263,7 +257,7 @@ const postTokenEndpoint = async (params: {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const json = await response.json();
+    const json = JSON.parse(response.body);
     return json;
   } catch (error) {
     logError('postTokenEndpoint', error);

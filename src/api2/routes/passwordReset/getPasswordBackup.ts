@@ -147,7 +147,7 @@ export const getPasswordBackup2 = async (req: any, res: any) => {
       );
     }
     await db.query(
-      'UPDATE user_devices SET password_challenge_error_count=0, password_challenge_blocked_until=null WHERE device_unique_id=$1 AND bank_id=$2',
+      'UPDATE user_devices SET password_challenge_error_count=0, last_password_challenge_submission_date=null WHERE device_unique_id=$1 AND bank_id=$2',
       [safeBody.deviceId, bankIds.internalId],
     );
     logInfo(safeBody.userEmail, 'getPasswordBackup2 OK');

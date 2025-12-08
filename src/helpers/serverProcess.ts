@@ -9,19 +9,16 @@ import { syncPeriodicallyWithMicrosoftEntra } from './syncWithMicrosoftEntra';
 import { aggregateStatsDaily } from './dailyStats';
 import { setupMSGraph } from './init_ms_graph';
 import { sendTrialEmailReminders } from './trialEmails';
+import { pullLicences } from '../licences';
+import { setupGlobalAgent } from './xmlHttpRequest';
 
-if (env.HTTP_PROXY) {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const globalAgent = require('global-agent');
-  globalAgent.bootstrap();
-  // @ts-ignore
-  global.GLOBAL_AGENT.HTTP_PROXY = env.HTTP_PROXY;
-}
+setupGlobalAgent();
 
 async function cronjob(randomDelay: number) {
   await cleanOldRevokedDevices();
   await cleanOrphanSharedVaults();
   await getActivationStatus();
+  await pullLicences();
   setTimeout(async () => {
     await sendStatusUpdate();
     // randomize the time of the call in the next 5 minutes to avoid overloading the server
@@ -30,7 +27,7 @@ async function cronjob(randomDelay: number) {
 
 export const startServer = (app: any, then: any): void => {
   setupMSGraph();
-  const serverEnv = process.env.NODE_ENV === 'production' ? 'Production' : 'Dev';
+  const serverEnv = env.IS_PRODUCTION ? 'Production' : 'Dev';
   if (env.LOCALHOST_SSL_CERTIFICATE_KEY_PATH && env.LOCALHOST_SSL_CERTIFICATE_CRT_PATH) {
     const options = {
       key: fs.readFileSync(env.LOCALHOST_SSL_CERTIFICATE_KEY_PATH),
