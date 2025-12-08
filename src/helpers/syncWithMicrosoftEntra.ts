@@ -64,7 +64,10 @@ const performMicrosoftEntraSync = async (): Promise<void> => {
       // Then check their authorization
       let isMsEntraAllowed = false;
       if (u.ms_entra_id) {
-        if (assignedMSUsersByBank[u.bank_id].indexOf(u.ms_entra_id) >= 0) {
+        if (
+          assignedMSUsersByBank[u.bank_id] &&
+          assignedMSUsersByBank[u.bank_id].indexOf(u.ms_entra_id) >= 0
+        ) {
           isMsEntraAllowed = true;
         } else {
           try {
