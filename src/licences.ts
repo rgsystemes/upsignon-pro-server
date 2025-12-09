@@ -137,7 +137,7 @@ const updateLicencesInDb = async (unsafeLicencesObject: any) => {
       // clean up just in case
       await db.query('DELETE FROM internal_licences WHERE external_licences_id=$1', [l.id]);
     }
-    if (l.nb_licences < prevL.nb_licences) {
+    if (prevL && l.nb_licences < prevL.nb_licences) {
       const internalLicences = await db.query(
         'SELECT SUM(nb_licences)::int as nb_licences FROM internal_licences WHERE external_licences_id=$1',
         [l.id],
