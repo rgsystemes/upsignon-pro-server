@@ -1,7 +1,13 @@
 import { db } from '../../helpers/db';
 import { MicrosoftGraph } from 'upsignon-ms-entra';
+import { logError } from '../../helpers/logger';
 
 type TEmailAuthorizationStatus = 'UNAUTHORIZED' | 'PATTERN_AUTHORIZED' | 'MS_ENTRA_AUTHORIZED';
+type TMsEntraId = string | null;
+type TEmailAuthorizationResponse = {
+  status: TEmailAuthorizationStatus;
+  msEntraId: TMsEntraId;
+};
 
 export const isEmailAuthorizedWithPattern = (emailPattern: string, emailToCheck: string) => {
   if (emailPattern.indexOf('*@') === 0) {
@@ -13,19 +19,24 @@ export const isEmailAuthorizedWithPattern = (emailPattern: string, emailToCheck:
 
 export const getEmailAuthorizationStatus = async (
   userEmail: string,
-  userMSEntraId: string | null,
   bankId: number,
-): Promise<TEmailAuthorizationStatus> => {
+): Promise<TEmailAuthorizationResponse> => {
   // CHECK MICROSOFT ENTRA
+  let userMSEntraId = null;
+  try {
+    userMSEntraId = await MicrosoftGraph.getUserId(bankId, userEmail);
+  } catch (e) {
+    logError(e);
+  }
   if (userMSEntraId) {
     try {
       const isEntraAuthorized = await MicrosoftGraph.isUserAuthorizedForUpSignOn(
         bankId,
         userMSEntraId,
       );
-      if (isEntraAuthorized) return 'MS_ENTRA_AUTHORIZED';
+      if (isEntraAuthorized) return { status: 'MS_ENTRA_AUTHORIZED', msEntraId: userMSEntraId };
     } catch (e) {
-      console.error(e);
+      logError(e);
     }
   }
 
@@ -37,7 +48,7 @@ export const getEmailAuthorizationStatus = async (
     .map((p) => p.pattern)
     .some((emailPattern) => isEmailAuthorizedWithPattern(emailPattern, userEmail));
 
-  if (isAuthorizedByPattern) return 'PATTERN_AUTHORIZED';
+  if (isAuthorizedByPattern) return { status: 'PATTERN_AUTHORIZED', msEntraId: userMSEntraId };
 
-  return 'UNAUTHORIZED';
+  return { status: 'UNAUTHORIZED', msEntraId: userMSEntraId };
 };

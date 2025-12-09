@@ -3,7 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import { db } from './db';
 import childProcess from 'child_process';
-import { logError } from './logger';
+import { logError, logInfo } from './logger';
+import { proxiedFetch } from './xmlHttpRequest';
+
+export const forceStatusUpdate = async (req: any, res: any) => {
+  await sendStatusUpdate();
+  res.status(200).end();
+};
 
 export const sendStatusUpdate = async (): Promise<void> => {
   try {
@@ -14,9 +20,10 @@ export const sendStatusUpdate = async (): Promise<void> => {
         resolve(stdout?.toString().trim() || 'unknown');
       });
     });
-    const licenseCountResult = await db.query('SELECT COUNT(*) FROM users');
+    const nbVaultsResult = await db.query('SELECT COUNT(*) FROM users');
+    const nbVaults = nbVaultsResult.rows[0].count;
     const statsByBank = await getStatsByBank();
-    const licenseCount = licenseCountResult.rows[0].count;
+    const statsByReseller = await getStatsByReseller();
     const userAppVersionsResult = await db.query(
       `SELECT DISTINCT(app_version) FROM user_devices WHERE authorization_status='AUTHORIZED' ORDER BY app_version DESC`,
     );
@@ -29,14 +36,14 @@ export const sendStatusUpdate = async (): Promise<void> => {
     const serverStatus = {
       serverUrl: env.API_PUBLIC_HOSTNAME,
       serverVersion,
-      licenseCount,
+      nbVaults,
       userAppVersions,
       securityGraph: JSON.stringify(stats),
-      statsByGroup: statsByBank, // DEPRECATED: TODO remove in next version
-      statsByBank: statsByBank,
+      statsByBank,
+      statsByReseller,
       hasDailyBackup,
       nodeVersion,
-      deviceStats,
+      deviceStats: deviceStats.rows,
     };
 
     await sendToUpSignOn(serverStatus);
@@ -134,16 +141,17 @@ const getStats = async (): Promise<{ def: string[]; data: any[] }> => {
 
 const sendToUpSignOn = async (status: any) => {
   try {
-    const url = env.IS_PRODUCTION
-      ? 'https://app.upsignon.eu/pro-status'
-      : 'http://localhost:8080/pro-status';
+    const secretRes = await db.query("SELECT value FROM settings WHERE key='SECRET'");
+    if (secretRes.rowCount === 0) {
+      logError(`pullLicences error: no SECRET`);
+      return false;
+    }
 
-    const response = await fetch(url, {
+    const url = `${env.STATUS_SERVER_URL}/pro-status`;
+    logInfo(`ProxiedFetch to ${url}`);
+    const response = await proxiedFetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(status),
+      body: JSON.stringify({ ...status, secret: secretRes.rows[0].value }),
     });
 
     if (!response.ok) {
@@ -158,7 +166,18 @@ const sendToUpSignOn = async (status: any) => {
 
 const getStatsByBank = async () => {
   const res = await db.query(
-    'SELECT banks.id, banks.name, banks.created_at, banks.nb_licences_sold, banks.stop_this_instance, banks.settings, (SELECT COUNT(users.id) FROM users WHERE users.bank_id=banks.id) AS nb_users FROM banks',
+    `SELECT
+      banks.id,
+      banks.name,
+      banks.created_at,
+      banks.stop_this_instance,
+      banks.settings,
+      banks.reseller_id,
+      COUNT(users.id) AS nb_users
+    FROM banks
+    LEFT JOIN users
+      ON users.bank_id=banks.id
+    GROUP BY banks.id`,
   );
   return JSON.stringify(
     res.rows.map((r) => {
@@ -177,6 +196,25 @@ const getStatsByBank = async () => {
   );
 };
 
+const getStatsByReseller = async () => {
+  const res = await db.query(`SELECT
+      resellers.id,
+      resellers.name,
+      COUNT(users.id) AS nb_vaults,
+      (SELECT COALESCE(
+        jsonb_agg(
+          jsonb_build_object('id', banks.id, 'name', banks.name)
+        ) FILTER (WHERE banks.id IS NOT NULL),
+        '[]'::jsonb
+      ) FROM banks WHERE banks.reseller_id = resellers.id) AS banks
+    FROM resellers
+    LEFT JOIN banks
+      ON banks.reseller_id = resellers.id
+    LEFT JOIN users
+      ON banks.id = users.bank_id
+    GROUP BY resellers.id`);
+  return JSON.stringify(res.rows);
+};
 const getHasDailyBackup = () => {
   if (!env.DB_BACKUP_DIR) return false;
   const yesterday = new Date();
@@ -201,25 +239,18 @@ const getHasDailyBackup = () => {
 
 const fetchActivationStatus = async (): Promise<boolean> => {
   try {
-    if (!env.IS_PRODUCTION) {
-      return true;
-    }
-
-    const response = await fetch('https://app.upsignon.eu/pro-activation-status', {
+    const url = `${env.STATUS_SERVER_URL}/pro-activation-status`;
+    logInfo(`ProxiedFetch to ${url}`);
+    const response = await proxiedFetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ url: env.API_PUBLIC_HOSTNAME }),
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
-    const resBody = await response.json();
     console.log('Get Activation status');
-    return !!resBody.isActive;
+    return !!JSON.parse(response.body).isActive;
   } catch (e) {
     logError('getActivationStatus', e);
     throw e;
@@ -233,11 +264,11 @@ const interval = null;
 export const getActivationStatus = async () => {
   try {
     IS_ACTIVE = await fetchActivationStatus();
-    if (!IS_ACTIVE) {
-      console.log('==================== LICENCES DEACTIVATED, please contact our support.');
-    }
   } catch (e) {
     IS_ACTIVE = false;
+  }
+  if (!IS_ACTIVE) {
+    console.log('==================== LICENCES DEACTIVATED, please contact our support.');
   }
   if (!IS_ACTIVE && interval == null) {
     setInterval(

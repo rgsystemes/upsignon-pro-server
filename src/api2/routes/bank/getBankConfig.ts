@@ -1,4 +1,5 @@
 import { db } from '../../../helpers/db';
+import env from '../../../helpers/env';
 import { logError, logInfo } from '../../../helpers/logger';
 import { getBankIds } from '../../helpers/bankUUID';
 
@@ -35,11 +36,11 @@ export const getBankConfig = async (req: any, res: any): Promise<void> => {
       newUrl:
         bankRes.rows[0].redirect_url ||
         (bankIds.usesDeprecatedIntId
-          ? `https://${process.env.API_PUBLIC_HOSTNAME}/${bankIds.publicId}`
+          ? `https://${env.API_PUBLIC_HOSTNAME}/${bankIds.publicId}`
           : null),
       bankName: bankRes.rows[0].name,
       preventUpdatePopup: bankRes.rows[0]?.settings?.PREVENT_UPDATE_POPUP || false,
-      ssoConfigs: bankRes.rows[0]?.sso_configs,
+      ssoConfigs: bankRes.rows[0]?.sso_configs.length == 0 ? null : bankRes.rows[0]?.sso_configs,
     });
   } catch (e) {
     logError('getBankConfig', e);
