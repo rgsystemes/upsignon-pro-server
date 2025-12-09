@@ -39,10 +39,11 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
+      DB_NAME: pro
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASSWORD}
       PRO_API_PUBLIC_HOSTNAME: ${SERVER_URL}
-      DASHBOARD_SESSION_SECRET: ${SESSION_SECRET}
+      PRO_SESSION_SECRET: ${SESSION_SECRET}
       PRO_SERVER_PORT: ${SERVER_PORT}
       PERSO_SERVER_URL: https://app.upsignon.eu
       HTTP_PROXY: ${HTTP_PROXY}
@@ -76,6 +77,7 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
+      DB_NAME: pro
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASSWORD}
       DASHBOARD_SESSION_SECRET: ${SESSION_SECRET}
