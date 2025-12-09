@@ -71,7 +71,7 @@ services:
       - postgres
 
   dashboard:
-    image: ghcr.io/rgsystemes/upsignon-pro-dashboard/dashboard:latest
+    image: ghcr.io/rgsystemes/upsignon-pro-server/dashboard:latest
     container_name: uso.dashboard
     environment:
       DB_HOST: postgres
