@@ -41,10 +41,10 @@ L’application s’appuie sur un fichier `.env` pour charger ses variables de c
 
 | Variable            | Valeur par défaut | Description                                                                                                                    |
 |---------------------|-------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| PG_PASSWORD         | ✗                 | Mot de passe pour la base PostgreSQL                                                                                           |
-| PG_BACKUP_FREQUENCY | 1d                | Fréquence des sauvegardes de la base de données. Utilisez `s` pour secondes, `m` pour minutes, `h` pour heures, `d` pour jours |
-| MAX_PG_BACKUPS      | 7                 | Nombre maximum de sauvegardes à conserver                                                                                      |
-| PG_BACKUPS_PATH     | ./backup          | Répertoire où les sauvegardes seront stockées                                                                                  |
+| DB_PASSWORD         | ✗                 | Mot de passe pour la base PostgreSQL                                                                                           |
+| DB_BACKUP_FREQUENCY | 1d                | Fréquence des sauvegardes de la base de données. Utilisez `s` pour secondes, `m` pour minutes, `h` pour heures, `d` pour jours |
+| MAX_DB_BACKUPS      | 7                 | Nombre maximum de sauvegardes à conserver                                                                                      |
+| DB_BACKUPS_PATH     | ./backup          | Répertoire où les sauvegardes seront stockées                                                                                  |
 
 ### Application
 
