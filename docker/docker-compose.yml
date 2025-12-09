@@ -18,18 +18,17 @@ services:
     environment:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: pro
-      PG_BACKUP_FREQUENCY: ${DB_BACKUP_FREQUENCY}
-      MAX_PG_BACKUPS: ${MAX_PG_BACKUPS}
+      DB_BACKUP_FREQUENCY: ${DB_BACKUP_FREQUENCY}
+      MAX_DB_BACKUPS: ${MAX_DB_BACKUPS}
     volumes:
-      - ${PG_BACKUPS_PATH}:/backup
+      - ${DB_BACKUPS_PATH}:/backup
     command: >
       bash -c "sleep 10m
         while true; do
-          PGPASSWORD=${DB_PASSWORD} pg_dump -h postgres -U ${DB_USER} -Fc ${DB_NAME} > /backup/$(date +%Y-%m-%d-%H-%M-%S).dump
+          PGPASSWORD=${DB_PASSWORD} pg_dump -h postgres -U ${DB_USER} -Fc pro > /backup/$(date +%Y-%m-%d-%H-%M-%S).dump
           echo ""Backup done at $(date +%Y-%m-%d_%H:%M:%S)""
-          ls -1 /backup/*.dump | head -n -${MAX_PG_BACKUPS} | xargs rm -f
-          sleep ${PG_BACKUP_FREQUENCY}
+          ls -1 /backup/*.dump | head -n -${MAX_DB_BACKUPS} | xargs rm -f
+          sleep ${DB_BACKUP_FREQUENCY}
         done"
     depends_on:
       - postgres
