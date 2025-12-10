@@ -110,7 +110,7 @@ services:
       - server
 
   traefik:
-    image: traefik:3.4.3
+    image: traefik:3.6.4
     container_name: uso.traefik
     restart: always
     ports:
