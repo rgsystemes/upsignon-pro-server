@@ -36,6 +36,7 @@ services:
   server:
     image: ghcr.io/rgsystemes/upsignon-pro-server/server:latest
     container_name: uso.server
+    pull_policy: always
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -74,6 +75,7 @@ services:
   dashboard:
     image: ghcr.io/rgsystemes/upsignon-pro-server/dashboard:latest
     container_name: uso.dashboard
+    pull_policy: always
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
