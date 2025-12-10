@@ -10,6 +10,7 @@ exports.up = async function (db) {
     ADD COLUMN IF NOT EXISTS change_signatures JSONB`);
   await db.query(`ALTER TABLE shamir_recovery_requests
     ADD COLUMN expiry_date TIMESTAMP WITH TIMEZONE`);
+  await db.query(`ALTER TYPE shamir_status ADD VALUE 'EXPIRED'`);
 };
 
 exports.down = async function (db) {
@@ -20,4 +21,5 @@ exports.down = async function (db) {
     DROP COLUMN IF EXISTS change_signature`);
   await db.query(`ALTER TABLE shamir_configs ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT true`);
   await db.query('ALTER TABLE shamir_recovery_requests DROP COLUMN expiry_date');
+  await db.query(`ALTER TYPE shamir_status DROP VALUE 'EXPIRED'`);
 };
