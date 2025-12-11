@@ -115,6 +115,38 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
         return row;
       }
     });
+
+    // Update shamir related data with new user IDs
+    if (data.shamir_holders) {
+      data.shamir_holders = data.shamir_holders.map((row) => {
+        if (row.vault_id === u.id) {
+          return {
+            ...row,
+            newVaultId: newId,
+          };
+        } else {
+          return row;
+        }
+      });
+    }
+
+    if (data.shamir_shares) {
+      data.shamir_shares = data.shamir_shares.map((row) => {
+        if (row.vault_id === u.id) {
+          return {
+            ...row,
+            newVaultId: newId,
+          };
+        } else if (row.holder_vault_id === u.id) {
+          return {
+            ...row,
+            newHolderVaultId: newId,
+          };
+        } else {
+          return row;
+        }
+      });
+    }
     data.changed_emails = data.changed_emails.map((row) => {
       if (row.user_id === u.id) {
         return {
@@ -219,7 +251,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
   // USER DEVICES
   for (var i = 0; i < data.user_devices.length; i++) {
     const ud = data.user_devices[i];
-    await dbConnection.query(
+    const insertedRes = await dbConnection.query(
       `INSERT INTO user_devices (
           user_id,
           device_name,
@@ -238,7 +270,8 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
           os_family,
           use_safe_browser_setup,
           enrollment_method
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+         RETURNING id`,
       [
         ud.newUserId,
         ud.device_name,
@@ -259,6 +292,19 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
         ud.enrollment_method,
       ],
     );
+    const newDeviceId = insertedRes.rows[0].id;
+    if (data.shamir_recovery_requests) {
+      data.shamir_recovery_requests = data.shamir_recovery_requests.map((row) => {
+        if (row.device_id === ud.id) {
+          return {
+            ...row,
+            newDeviceId: newDeviceId,
+          };
+        } else {
+          return row;
+        }
+      });
+    }
   }
 
   // BANK SSO CONFIG
@@ -283,7 +329,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
   // let's drop this import since the curve will change from before due to potential missing refrences for deleted users and shared_vaults
   // for (var i = 0; i < data.data_stats.length; i++) {
   //   const row = data.data_stats[i];
-  //   await db.query(
+  //   await dbConnection.query(
   //     `INSERT INTO data_stats (
   //       user_id,
   //       date,
@@ -318,6 +364,99 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
   //     ],
   //   );
   // }
+  
+  // SHAMIR CONFIGS
+  if (data.shamir_configs) {
+    for (var i = 0; i < data.shamir_configs.length; i++) {
+      const sc = data.shamir_configs[i];
+      const insertedConfig = await dbConnection.query(
+        'INSERT INTO shamir_configs (name, min_shares, is_active, bank_id, created_at) VALUES ($1,$2,$3,$4,$5) RETURNING id',
+        [sc.name, sc.min_shares, sc.is_active, bankId, sc.created_at],
+      );
+      const newConfigId = insertedConfig.rows[0].id;
+
+      // Update mappings for shamir_holders and shamir_shares
+      if (data.shamir_holders) {
+        data.shamir_holders = data.shamir_holders.map((row) => {
+          if (row.shamir_config_id === sc.id) {
+            return {
+              ...row,
+              newShamirConfigId: newConfigId,
+            };
+          } else {
+            return row;
+          }
+        });
+      }
+
+      if (data.shamir_shares) {
+        data.shamir_shares = data.shamir_shares.map((row) => {
+          if (row.shamir_config_id === sc.id) {
+            return {
+              ...row,
+              newShamirConfigId: newConfigId,
+            };
+          } else {
+            return row;
+          }
+        });
+      }
+
+      if (data.shamir_recovery_requests) {
+        data.shamir_recovery_requests = data.shamir_recovery_requests.map((row) => {
+          if (row.shamir_config_id === sc.id) {
+            return {
+              ...row,
+              newShamirConfigId: newConfigId,
+            };
+          } else {
+            return row;
+          }
+        });
+      }
+    }
+  }
+
+  // SHAMIR HOLDERS
+  if (data.shamir_holders) {
+    for (var i = 0; i < data.shamir_holders.length; i++) {
+      const sh = data.shamir_holders[i];
+      const insertedHolder = await dbConnection.query(
+        'INSERT INTO shamir_holders (vault_id, shamir_config_id, nb_shares, created_at) VALUES ($1,$2,$3,$4) RETURNING id',
+        [sh.newVaultId, sh.newShamirConfigId, sh.nb_shares, sh.created_at],
+      );
+    }
+  }
+
+  // SHAMIR SHARES
+  if (data.shamir_shares) {
+    for (var i = 0; i < data.shamir_shares.length; i++) {
+      const ss = data.shamir_shares[i];
+      await dbConnection.query(
+        'INSERT INTO shamir_shares (vault_id, holder_vault_id, shamir_config_id, closed_shares, open_shares, created_at, open_at) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+        [
+          ss.newVaultId,
+          ss.newHolderVaultId,
+          ss.newShamirConfigId,
+          ss.closed_shares,
+          ss.open_shares,
+          ss.created_at,
+          ss.open_at,
+        ],
+      );
+    }
+  }
+
+  // SHAMIR RECOVERY REQUESTS
+  if (data.shamir_recovery_requests) {
+    for (var i = 0; i < data.shamir_recovery_requests.length; i++) {
+      const srr = data.shamir_recovery_requests[i];
+      await dbConnection.query(
+        'INSERT INTO shamir_recovery_requests (device_id, shamir_config_id, created_at, completed_at, status) VALUES ($1,$2,$3,$4,$5)',
+        [srr.newDeviceId, srr.newShamirConfigId, srr.created_at, srr.completed_at, srr.status],
+      );
+    }
+  }
 }
 
 async function main() {
