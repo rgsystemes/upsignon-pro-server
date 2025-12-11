@@ -157,38 +157,6 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
         return row;
       }
     });
-
-    // Update shamir related data with new user IDs
-    if (data.shamir_holders) {
-      data.shamir_holders = data.shamir_holders.map((row) => {
-        if (row.vault_id === u.id) {
-          return {
-            ...row,
-            newVaultId: newId,
-          };
-        } else {
-          return row;
-        }
-      });
-    }
-
-    if (data.shamir_shares) {
-      data.shamir_shares = data.shamir_shares.map((row) => {
-        if (row.vault_id === u.id) {
-          return {
-            ...row,
-            newVaultId: newId,
-          };
-        } else if (row.holder_vault_id === u.id) {
-          return {
-            ...row,
-            newHolderVaultId: newId,
-          };
-        } else {
-          return row;
-        }
-      });
-    }
   }
 
   // URL LIST

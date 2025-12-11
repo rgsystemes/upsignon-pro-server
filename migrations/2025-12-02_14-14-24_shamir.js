@@ -49,8 +49,18 @@ exports.up = async function (db) {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP(0),
         completed_at TIMESTAMP WITH TIME ZONE,
         status shamir_status,
-        expiry_date TIMESTAMP WITH TIMEZONE
+        expiry_date TIMESTAMP WITH TIME ZONE
     )`,
   );
+  await db.query('COMMIT');
+};
+
+exports.down = async function (db) {
+  await db.query('BEGIN');
+  await db.query('DROP TABLE IF EXISTS shamir_recovery_requests');
+  await db.query('DROP TABLE IF EXISTS shamir_shares');
+  await db.query('DROP TABLE IF EXISTS shamir_holders');
+  await db.query('DROP TABLE IF EXISTS shamir_configs');
+  await db.query('DROP TYPE IF EXISTS shamir_status');
   await db.query('COMMIT');
 };

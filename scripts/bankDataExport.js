@@ -53,10 +53,6 @@ async function exportDb(bankId, dbConnection) {
       'SELECT srr.* FROM shamir_recovery_requests srr INNER JOIN user_devices ud ON srr.device_id = ud.id WHERE ud.bank_id=$1',
       [bankId],
     );
-    const shamir_configs = await dbConnection.query(
-      'SELECT * FROM shamir_configs WHERE bank_id=$1',
-      [bankId],
-    );
     return {
       admins: admins.rows,
       admin_banks: admin_banks.rows,
