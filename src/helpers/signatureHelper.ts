@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import env from './env';
 import { logError } from './logger';
 
-const wellKnownUpSignOnPublicKey = env.IS_PRODUCTION
+const wellKnownUpSignOnPublicKey = env.IS_PROD_STATUS_SERVER_URL
   ? '-----BEGIN PUBLIC KEY-----\nMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEB/4zGfZRH715/kObqaWDL2nZR+ybUh/y\nx/wCHiLXX9VDzSh/qB+NC0KJ/rMPKXKhCCKgWCo/OBxieXarHJS6lg==\n-----END PUBLIC KEY-----\n'
   : '-----BEGIN PUBLIC KEY-----\nMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEyQqX6RbASOpD9VqF7a/Z16yTA8Qssrfs\nH7ttDE4TAgaN+HXiTOrZ9y0Cba0i106lcfOTdignGYu2qRZEFKcMuQ==\n-----END PUBLIC KEY-----\n';
 
@@ -64,7 +64,7 @@ export const verifySignatureMiddleware = (
 
   // Check that the request is not too old (5 minutes max)
   const currentTime = Math.floor(Date.now() / 1000);
-  const maxAge = 5 * 60; // 5 minutes
+  const maxAge = 60; // 1 minutes
 
   if (Math.abs(currentTime - timestamp) > maxAge) {
     res.status(401).json({
@@ -100,5 +100,6 @@ export const verifySignatureMiddleware = (
     res.status(500).json({
       error: 'Signature verification failed',
     });
+    return;
   }
 };
