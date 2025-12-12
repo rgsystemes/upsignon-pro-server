@@ -22,6 +22,7 @@ export const retrieveOpenShamirShares = async (req: Request, res: Response): Pro
         ON srr.shamir_config_id=sc.id
       WHERE
         srr.status='PENDING'
+        AND srr.expiry_date > current_timestamp(0)
         AND srr.device_id=$1`,
       [deviceAuthRes.devicePrimaryId],
     );
@@ -47,6 +48,7 @@ export const retrieveOpenShamirShares = async (req: Request, res: Response): Pro
         ON u.id = sh.vault_id
       WHERE
         srr.status='PENDING'
+        AND srr.expiry_date > current_timestamp(0)
         AND srr.device_id=$1
         AND ss.holder_vault_id != $2`,
       [deviceAuthRes.devicePrimaryId, deviceAuthRes.vaultId],

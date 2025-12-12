@@ -364,7 +364,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
   //     ],
   //   );
   // }
-  
+
   // SHAMIR CONFIGS
   if (data.shamir_configs) {
     for (var i = 0; i < data.shamir_configs.length; i++) {
