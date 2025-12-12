@@ -39,6 +39,7 @@ export const retrieveShamirRecoveriesToApprove = async (
       INNER JOIN shamir_holders AS sh ON sh.vault_id=ss.holder_vault_id AND sh.shamir_config_id=ss.shamir_config_id
       WHERE
         srr.status='PENDING'
+        AND srr.expiry_date > current_timestamp(0)
         AND (ss.open_shares IS NULL OR ARRAY_LENGTH(ss.open_shares, 1) < ARRAY_LENGTH(ss.closed_shares, 1))
         AND ud.authorization_status = 'AUTHORIZED'
         AND ss.holder_vault_id = $1

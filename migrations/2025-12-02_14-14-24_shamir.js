@@ -37,9 +37,7 @@ exports.up = async function (db) {
         PRIMARY KEY(vault_id, holder_vault_id, shamir_config_id)
     )`,
   );
-  await db.query(
-    `CREATE TYPE shamir_status AS ENUM ('PENDING', 'ABORTED', 'EXPIRED', 'COMPLETED')`,
-  );
+  await db.query(`CREATE TYPE shamir_status AS ENUM ('PENDING', 'ABORTED', 'COMPLETED')`);
   await db.query(
     `CREATE TABLE IF NOT EXISTS shamir_recovery_requests (
         id SERIAL PRIMARY KEY,

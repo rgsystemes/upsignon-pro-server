@@ -32,7 +32,7 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
       FROM shamir_recovery_requests as srr
       INNER JOIN user_devices as ud ON ud.id = srr.device_id
       INNER JOIN users as u ON u.id = ud.user_id
-      WHERE srr.status = 'PENDING' AND u.id = $1`,
+      WHERE srr.status = 'PENDING' AND u.id = $1 AND srr.expiry_date > current_timestamp(0)`,
       [deviceAuthRes.vaultId],
     );
     if (previousRequestsRes.rows[0].count > 0) {
@@ -63,8 +63,7 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
     ]);
 
     await db.query(
-      `INSERT INTO shamir_recovery_requests (shamir_config_id, device_id, public_key, status) VALUES ($1, $2, $3, 'PENDING')
-      `,
+      `INSERT INTO shamir_recovery_requests (shamir_config_id, device_id, public_key, status, expiry_date) VALUES ($1, $2, $3, 'PENDING', CURRENT_TIMESTAMP(0) + INTERVAL '7 days')`,
       [configId, deviceAuthRes.devicePrimaryId, validatedBody.publicKey],
     );
     res.status(200).end();
