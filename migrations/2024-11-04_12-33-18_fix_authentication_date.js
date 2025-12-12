@@ -7,9 +7,6 @@ exports.up = async function (db) {
   await db.query(
     'ALTER TABLE user_devices ALTER password_challenge_blocked_until TYPE timestamp with time zone;',
   );
-  await db.query(
-    'ALTER TABLE device_sessions ALTER expiration_time TYPE timestamp with time zone;',
-  );
 };
 
 exports.down = function (db) {};

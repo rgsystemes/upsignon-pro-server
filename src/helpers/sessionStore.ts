@@ -25,14 +25,6 @@ async function cleanSessions() {
 }
 
 async function init() {
-  try {
-    await db.query(
-      'CREATE TABLE IF NOT EXISTS device_sessions (session_id VARCHAR PRIMARY KEY, session_data JSON NOT NULL, expiration_time TIMESTAMP(0) NOT NULL)',
-    );
-  } catch (e) {
-    logError(e);
-    throw e;
-  }
   setInterval(cleanSessions, 600000); // 10 minutes
 }
 

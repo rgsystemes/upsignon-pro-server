@@ -5,6 +5,9 @@ exports.up = async function (db) {
   await db.query(
     'CREATE TABLE IF NOT EXISTS admin_sessions (session_id VARCHAR PRIMARY KEY, session_data JSONB NOT NULL, expiration_time TIMESTAMP(0) NOT NULL)',
   );
+  await db.query(
+    'CREATE TABLE IF NOT EXISTS device_sessions (session_id VARCHAR PRIMARY KEY, session_data JSON NOT NULL, expiration_time TIMESTAMP(0) WITH TIME ZONE NOT NULL)',
+  );
 };
 
 exports.down = async function (db) {
