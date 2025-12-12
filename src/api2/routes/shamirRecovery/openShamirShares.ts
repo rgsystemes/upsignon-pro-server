@@ -46,7 +46,8 @@ export const openShamirShares = async (req: Request, res: Response): Promise<voi
       WHERE
         shamir_config_id=$1
         AND user_devices.user_id=$2
-        AND status='PENDING'`,
+        AND status='PENDING'
+        AND expiry_date > current_timestamp(0)`,
       [validatedBody.shamirConfigId, validatedBody.targetVaultId],
     );
     if (verifyRecoveryRequests.rowCount == null || verifyRecoveryRequests.rowCount == 0) {
