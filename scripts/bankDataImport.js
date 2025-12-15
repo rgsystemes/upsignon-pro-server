@@ -274,7 +274,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
   for (var i = 0; i < data.changed_emails.length; i++) {
     const row = data.changed_emails[i];
     await dbConnection.query(
-      'INSERT INTO changed_emails (old_email, new_email, user_id, aware_devices, created_at, bank_id) VALUES ($1,$2,$3,$4,$5,$6)',
+      'INSERT INTO changed_emails (old_email, new_email, user_id, aware_devices, created_at, bank_id) VALUES ($1,$2,$3,to_json($4::int[]),$5,$6)',
       [row.old_email, row.new_email, row.newUserId, row.aware_devices, row.created_at, bankId],
     );
   }

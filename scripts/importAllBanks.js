@@ -25,7 +25,7 @@ async function importAllBanks(dbConnection, inputDirectory, resellerId) {
       );
       if (insertedBank.rowCount > 0) {
         const newBankId = insertedBank.rows[0].id;
-        console.log(`Imported bank ${bank.name} with id ${newBankId}`);
+        console.log(`Import bank ${bank.name} with id ${newBankId}`);
         await importFunction(data, newBankId, dbConnection, resellerId);
       } else {
         throw new Error('Bank not found');
