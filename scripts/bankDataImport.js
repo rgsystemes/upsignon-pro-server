@@ -6,10 +6,17 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
   // ADMINS
   for (var i = 0; i < data.admins.length; i++) {
     const row = data.admins[i];
-    await dbConnection.query(
-      'INSERT INTO admins (id, email, password_hash, created_at, reseller_id) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING',
-      [row.id, row.email, row.password_hash, row.created_at, resellerId],
-    );
+    if (row.admin_role === 'superadmin') {
+      await dbConnection.query(
+        'INSERT INTO admins (id, email, password_hash, created_at, reseller_id) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING',
+        [row.id, row.email, row.password_hash, row.created_at, reseller_id],
+      );
+    } else {
+      await dbConnection.query(
+        'INSERT INTO admins (id, email, password_hash, created_at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING',
+        [row.id, row.email, row.password_hash, row.created_at],
+      );
+    }
   }
 
   // ADMIN BANKS
