@@ -50,6 +50,12 @@ services:
       HTTP_PROXY: ${HTTP_PROXY}
       USE_POSTFIX: false
       PRO_NODE_ENV: production
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_SENDING_USER: ${SMTP_SENDING_USER}
+      SMTP_ALLOW_INVALID_CRT: ${SMTP_ALLOW_INVALID_CRT}
     labels:
       - traefik.enable=true
       - traefik.http.services.server.loadbalancer.server.port=${SERVER_PORT}
