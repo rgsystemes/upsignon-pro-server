@@ -1,3 +1,5 @@
+// See doc/DBTransfer.md
+
 const path = require('path');
 const fs = require('fs');
 const db = require(path.join(__dirname, './dbMigrationConnect'));

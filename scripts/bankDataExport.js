@@ -1,3 +1,5 @@
+// See doc/DBTransfer.md
+
 const path = require('path');
 const db = require(path.join(__dirname, './dbMigrationConnect'));
 const fs = require('fs');
@@ -5,12 +7,21 @@ const fs = require('fs');
 async function exportDb(bankId, dbConnection) {
   try {
     const admins = await dbConnection.query('SELECT * FROM admins');
-    const admin_banks = await dbConnection.query('SELECT * FROM admin_banks WHERE bank_id=$1', [bankId]);
-    const bank_sso_config = await dbConnection.query('SELECT * FROM bank_sso_config WHERE bank_id=$1', [bankId]);
-    const changed_emails = await dbConnection.query('SELECT * FROM changed_emails WHERE bank_id=$1', [bankId]);
-    const allowed_emails = await dbConnection.query('SELECT * FROM allowed_emails WHERE bank_id=$1', [
+    const admin_banks = await dbConnection.query('SELECT * FROM admin_banks WHERE bank_id=$1', [
       bankId,
     ]);
+    const bank_sso_config = await dbConnection.query(
+      'SELECT * FROM bank_sso_config WHERE bank_id=$1',
+      [bankId],
+    );
+    const changed_emails = await dbConnection.query(
+      'SELECT * FROM changed_emails WHERE bank_id=$1',
+      [bankId],
+    );
+    const allowed_emails = await dbConnection.query(
+      'SELECT * FROM allowed_emails WHERE bank_id=$1',
+      [bankId],
+    );
     // const data_stats = await db.query('SELECT * FROM data_stats WHERE bank_id=$1', [bankId]);
     // const password_reset_request = await db.query(
     //   'SELECT * FROM password_reset_request WHERE bank_id=$1',
@@ -21,9 +32,13 @@ async function exportDb(bankId, dbConnection) {
       'SELECT * FROM shared_vault_recipients WHERE bank_id=$1',
       [bankId],
     );
-    const shared_vaults = await dbConnection.query('SELECT * FROM shared_vaults WHERE bank_id=$1', [bankId]);
+    const shared_vaults = await dbConnection.query('SELECT * FROM shared_vaults WHERE bank_id=$1', [
+      bankId,
+    ]);
     const url_list = await dbConnection.query('SELECT * FROM url_list WHERE bank_id=$1', [bankId]);
-    const user_devices = await dbConnection.query('SELECT * FROM user_devices WHERE bank_id=$1', [bankId]);
+    const user_devices = await dbConnection.query('SELECT * FROM user_devices WHERE bank_id=$1', [
+      bankId,
+    ]);
 
     return {
       admins: admins.rows,

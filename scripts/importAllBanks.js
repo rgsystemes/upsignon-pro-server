@@ -1,3 +1,5 @@
+// See doc/DBTransferForResellers.md
+
 const { importFunction } = require('./bankDataImport');
 const path = require('path');
 const db = require(path.join(__dirname, './dbMigrationConnect'));
