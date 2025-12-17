@@ -1,16 +1,33 @@
 import { Request, Response } from 'express';
 import { db } from '../../../helpers/db';
-import { logError } from '../../../helpers/logger';
-import { authenticateDeviceWithChallenge } from '../../helpers/authorizationChecks';
+import { logError, logInfo } from '../../../helpers/logger';
+import { checkDeviceAuth } from '../../helpers/authorizationChecks';
 
-export const retrieveOpenShamirShares = async (req: Request, res: Response): Promise<void> => {
+export const getShamirStatus = async (req: Request, res: Response): Promise<void> => {
   try {
-    const deviceAuthRes = await authenticateDeviceWithChallenge(
-      req,
-      res,
-      'retrieveOpenShamirShares',
+    const deviceAuth = await checkDeviceAuth(req);
+    if (!deviceAuth.granted) {
+      logInfo(req.body?.userEmail, 'abortShamirRecovery fail: device auth not granted');
+      res.status(401).end();
+      return;
+    }
+    const { vaultId, deviceId } = deviceAuth;
+
+    const setupResult = await db.query(
+      `SELECT
+      support_email
+      FROM shamir_shares
+      INNER JOIN shamir_configs as sc
+        ON sc.id=shamir_shares.shamir_config_id
+      WHERE
+        vault_id=$1
+      GROUP BY sc.id
+      `,
+      [vaultId],
     );
-    if (deviceAuthRes == null) {
+
+    if (setupResult.rows.length === 0) {
+      res.status(200).json({ status: 'not_setup' });
       return;
     }
 
@@ -24,11 +41,11 @@ export const retrieveOpenShamirShares = async (req: Request, res: Response): Pro
         srr.status='PENDING'
         AND srr.expiry_date > current_timestamp(0)
         AND srr.device_id=$1`,
-      [deviceAuthRes.devicePrimaryId],
+      [deviceId],
     );
     const minShares = configRes.rows[0]?.min_shares;
     if (!minShares) {
-      res.status(401).json({ error: 'no_pending_recovery_request' });
+      res.status(200).json({ status: 'no_pending_recovery_request' });
       return;
     }
     const recoveryRequestRes = await db.query(
@@ -51,10 +68,10 @@ export const retrieveOpenShamirShares = async (req: Request, res: Response): Pro
         AND srr.expiry_date > current_timestamp(0)
         AND srr.device_id=$1
         AND ss.holder_vault_id != $2`,
-      [deviceAuthRes.devicePrimaryId, deviceAuthRes.vaultId],
+      [deviceId, vaultId],
     );
     if (recoveryRequestRes.rows.length == 0) {
-      res.status(401).json({ error: 'no_pending_recovery_request' });
+      res.status(200).json({ status: 'no_pending_recovery_request' });
       return;
     }
 
@@ -65,6 +82,7 @@ export const retrieveOpenShamirShares = async (req: Request, res: Response): Pro
 
     if (totalOpenShares < minShares) {
       res.status(200).json({
+        status: 'pending',
         missingShares: minShares - totalOpenShares,
         nbOpenShares: totalOpenShares,
         holderStatuses: recoveryRequestRes.rows.map((h) => ({
@@ -76,6 +94,7 @@ export const retrieveOpenShamirShares = async (req: Request, res: Response): Pro
       return;
     }
     res.status(200).json({
+      status: 'ready',
       openShares: recoveryRequestRes.rows.reduce(
         (acc, val) => [...acc, ...(val.open_shares || [])],
         [],
