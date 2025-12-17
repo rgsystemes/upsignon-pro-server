@@ -37,6 +37,7 @@ services:
     image: ghcr.io/rgsystemes/upsignon-pro-server/server:latest
     container_name: uso.server
     pull_policy: always
+    restart: always
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -82,6 +83,7 @@ services:
     image: ghcr.io/rgsystemes/upsignon-pro-server/dashboard:latest
     container_name: uso.dashboard
     pull_policy: always
+    restart: always
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -89,7 +91,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASSWORD}
       DASHBOARD_SESSION_SECRET: ${SESSION_SECRET}
-      PRO_DASHBOARD_PUBLIC_URL: ${DASHBOARD_URL}
+      PRO_DASHBOARD_PUBLIC_URL: https://${DASHBOARD_URL}
       PRO_DASHBOARD_PORT: ${DASHBOARD_PORT}
       HTTP_PROXY: ${HTTP_PROXY}
       USE_POSTFIX: false
