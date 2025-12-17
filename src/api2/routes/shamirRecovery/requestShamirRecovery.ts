@@ -1,15 +1,18 @@
 import { Request, Response } from 'express';
 import { db } from '../../../helpers/db';
 import { logError, logInfo } from '../../../helpers/logger';
-import { authenticateDeviceWithChallenge } from '../../helpers/authorizationChecks';
 import Joi from 'joi';
+import { checkDeviceAuth } from '../../helpers/authorizationChecks';
 
 export const requestShamirRecovery = async (req: Request, res: Response): Promise<void> => {
   try {
-    const deviceAuthRes = await authenticateDeviceWithChallenge(req, res, 'requestShamirRecovery');
-    if (deviceAuthRes == null) {
+    const deviceAuth = await checkDeviceAuth(req);
+    if (!deviceAuth.granted) {
+      logInfo(req.body?.userEmail, 'requestShamirRecovery fail: device auth not granted');
+      res.status(401).end();
       return;
     }
+    const { vaultId, deviceId } = deviceAuth;
 
     const expectedScheme = Joi.object({
       publicKey: Joi.string().required(),
@@ -33,7 +36,7 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
       INNER JOIN user_devices as ud ON ud.id = srr.device_id
       INNER JOIN users as u ON u.id = ud.user_id
       WHERE srr.status = 'PENDING' AND u.id = $1 AND srr.expiry_date > current_timestamp(0)`,
-      [deviceAuthRes.vaultId],
+      [vaultId],
     );
     if (previousRequestsRes.rows[0].count > 0) {
       res.status(403).json({ error: 'shamir_recovery_already_pending' });
@@ -48,7 +51,7 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
     WHERE u.id=$1
     LIMIT 1
     `,
-      [deviceAuthRes.vaultId],
+      [vaultId],
     );
     const configId = configIdRes.rowCount == 1 ? configIdRes.rows[0].id : null;
     if (!configId) {
@@ -58,13 +61,11 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
     }
 
     // extra security
-    await db.query('UPDATE shamir_shares SET open_shares=null WHERE vault_id=$1', [
-      deviceAuthRes.vaultId,
-    ]);
+    await db.query('UPDATE shamir_shares SET open_shares=null WHERE vault_id=$1', [vaultId]);
 
     await db.query(
       `INSERT INTO shamir_recovery_requests (shamir_config_id, device_id, public_key, status, expiry_date) VALUES ($1, $2, $3, 'PENDING', CURRENT_TIMESTAMP(0) + INTERVAL '7 days')`,
-      [configId, deviceAuthRes.devicePrimaryId, validatedBody.publicKey],
+      [configId, deviceId, validatedBody.publicKey],
     );
     res.status(200).end();
     return;
