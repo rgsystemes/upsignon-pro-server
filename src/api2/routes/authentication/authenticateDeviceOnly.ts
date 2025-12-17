@@ -60,7 +60,7 @@ export const authenticateDeviceOnly = async (req: Request, res: Response): Promi
       res.status(401).end();
       return;
     }
-    const deviceOnlySession = SessionStore.createSession({
+    const deviceOnlySession = await SessionStore.createSession({
       userEmail: safeBody.userEmail,
       deviceUniqueId: safeBody.deviceId,
       bankId: bankIds.internalId,

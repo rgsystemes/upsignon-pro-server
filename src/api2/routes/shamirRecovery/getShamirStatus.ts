@@ -7,7 +7,7 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
   try {
     const deviceAuth = await checkDeviceAuth(req);
     if (!deviceAuth.granted) {
-      logInfo(req.body?.userEmail, 'abortShamirRecovery fail: device auth not granted');
+      logInfo(req.body?.userEmail, 'getShamirStatus fail: device auth not granted');
       res.status(401).end();
       return;
     }
@@ -102,7 +102,7 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
     });
     return;
   } catch (e) {
-    logError(req.body?.userEmail, 'retrieveOpenShamirShares', e);
+    logError(req.body?.userEmail, 'getShamirStatus', e);
     res.status(400).end();
     return;
   }
