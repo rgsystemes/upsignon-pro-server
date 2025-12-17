@@ -184,7 +184,7 @@ export const checkDeviceAuth = async (
   const idsRes = await db.query(
     `SELECT
           user_devices.id AS id,
-          users.id AS vaultid,
+          users.id AS vaultid
         FROM user_devices
           INNER JOIN users ON user_devices.user_id = users.id
         WHERE
