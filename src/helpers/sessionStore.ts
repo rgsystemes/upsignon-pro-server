@@ -9,6 +9,7 @@ type SessionData = {
   userEmail: string;
   deviceUniqueId: string;
   bankId: number;
+  deviceOnly?: boolean;
 };
 type OpenIdSessionData = {
   userEmail: string;
@@ -77,6 +78,9 @@ async function createOpenIdSession(
 async function checkSession(
   untrustedSession: string,
   untrustedSessionData: SessionData,
+  options: {
+    deviceOnlyAuthAllowed: boolean;
+  },
 ): Promise<boolean> {
   if (typeof untrustedSession !== 'string') return false;
   const sessionId = untrustedSession.split('.')[0];
@@ -95,9 +99,13 @@ async function checkSession(
     expectedSessionData.deviceUniqueId === untrustedSessionData.deviceUniqueId &&
     (expectedSessionData.bankId === untrustedSessionData.bankId ||
       // for backwards compatibility
-      expectedSessionData.groupId === untrustedSessionData.bankId)
+      expectedSessionData.groupId === untrustedSessionData.bankId) &&
+    (options.deviceOnlyAuthAllowed ||
+      // use != true for backwards compatibiliy will undefined values
+      expectedSessionData.deviceOnly != true)
   );
 }
+
 async function checkOpenIdSession(
   untrustedSession: string,
   untrustedSessionData: { userEmail: string; bankId: number },
