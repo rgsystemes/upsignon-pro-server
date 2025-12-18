@@ -35,7 +35,7 @@ Afin d’anticiper la mise en service des différents services, veuillez prépar
 
 ## Configuration des variables d'environnement
 
-L’application s’appuie sur un fichier `.env` pour charger ses variables de configuration. Avant de lancer le script de démarrage, assurez-vous d’avoir correctement défini les variables nécessaires dans ce fichier.
+L’application s’appuie sur un fichier [.env](.env) pour charger ses variables de configuration. Avant de lancer le script de démarrage, assurez-vous d’avoir correctement défini les variables nécessaires dans ce fichier.
 
 ### PostgreSQL
 
