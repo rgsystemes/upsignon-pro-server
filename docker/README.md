@@ -8,18 +8,17 @@ Pour assurer de bonnes performances de la stack, la machine doit disposer au min
 
 * **vCPU :** 4
 * **RAM :** 8 Go
-* **Stockage :** 100 Go SSD
-* **Réseau :** Connexion ≥ 1 Gbps
+* **Stockage :** 50 Go SSD
 
 ## Tableau des flux
 
-| Source             | Destination   | Protocole / Port      | Description                                       |
-|--------------------|-------------- |-----------------------|---------------------------------------------------|
-| Internet           | Traefik       | TCP 80 / 443          | Redirection automatique des applications en HTTPS |
-| Traefik            | Server        | TCP 3000 (Par défaut) | Upsignon Server                                   |
-| Traefik            | Dashboard     | TCP 3001 (Par défaut) | Upsignon Dashboard                                |
-| Server & Dashboard | PostgreSQL    | TCP 5432              | Connexion à la base de données                    |
-| Traefik            | Let’s Encrypt | TCP 80 / 443          | Renouvellement automatique des certificats TLS    |
+| Source                         | Destination   | Protocole / Port      | Description                                       |
+|--------------------------------|-------------- |-----------------------|---------------------------------------------------|
+| Internet                       | Traefik       | TCP 80 / 443          | Redirection automatique des applications en HTTPS |
+| Traefik                        | Server        | TCP 3000 (Par défaut) | Upsignon Server                                   |
+| Traefik                        | Dashboard     | TCP 3001 (Par défaut) | Upsignon Dashboard                                |
+| Server & Dashboard & DB backup | PostgreSQL    | TCP 5432              | Connexion à la base de données                    |
+| Traefik                        | Let’s Encrypt | TCP 80                | Renouvellement automatique des certificats TLS    |
 
 ## Prérequis d’installation
 
@@ -29,9 +28,9 @@ L'application nécessite les éléments suivants :
 
 ## Configuration DNS
 
-Afin d’anticiper la mise en service des différents services, veuillez préparer les enregistrements DNS de type **A** pour votre domaine, pointant vers l’adresse IP de votre machine :
-* Un enregistrement pour accéder à l'application **Upsignon server**.
-* Un enregistrement pour accéder à l'application **Upsignon dashboard**.
+Avant la mise en service, veuillez configurer le(s) enregistrement(s) DNS de type **A** de votre domaine vers l’adresse IP de votre machine. Vous pouvez choisir soit :
+* **Un enregistrement unique** pour accéder aux applications **Upsignon server** et **Upsignon dashboard** ;
+* **Deux enregistrements distincts**, un pour chaque application ;
 
 ## Configuration des variables d'environnement
 
@@ -48,14 +47,16 @@ L’application s’appuie sur un fichier [.env](.env) pour charger ses variable
 
 ### Application
 
-| Variable         | Valeur par défaut           | Description                                                                            |
-|------------------|-----------------------------|----------------------------------------------------------------------------------------|
-| SESSION_SECRET   | ✗                           | Chaîne de caractères aléatoire générée par le script `init.sh`                         |
-| SERVER_URL       | `server-uso.example.com`    | URL pour accéder à l’application Server                                                |
-| DASHBOARD_URL    | `dashboard-uso.example.com` | URL pour accéder à l’application Dashboard                                             |
-| SERVER_PORT      | 3000                        | Port utilisé par l’application Server                                                  |
-| DASHBOARD_PORT   | 3001                        | Port utilisé par l’application Dashboard                                               |
-| HTTP_PROXY       | ✗                           | Variable optionnelle pour définir le proxy HTTP. Format : `http://user:pass@host:port` |
+| Variable             | Valeur par défaut           | Description                                                                                                 |
+|----------------------|-----------------------------|-------------------------------------------------------------------------------------------------------------|
+| SESSION_SECRET       | ✗                           | Chaîne de caractères aléatoire générée par le script `init.sh`                                              |
+| SERVER_DOMAIN        | `server-uso.example.com`    | URL pour accéder à l’application **Upsignon Server**                                                        |
+| DASHBOARD_DOMAIN     | `dashboard-uso.example.com` | URL pour accéder à l’application **Upsignon Dashboard**                                                     |
+| DASHBOARD_PREFIX_URL | `/`                         | Préfixe d’URL sous lequel l’application **Upsignon Dashboard** est accessible (exemple : `/`, `/dashboard`) |
+| SERVER_PORT          | 3000                        | Port utilisé par l’application **Upsignon Server**                                                          |
+| DASHBOARD_PORT       | 3001                        | Port utilisé par l’application **Upsignon Dashboard**                                                       |
+| HTTP_PROXY           | ✗                           | Variable optionnelle pour définir le proxy HTTP. **Format :** `http://user:pass@host:port`                  |
+
 ### SMTP
 
 | Variable               | Valeur par défaut | Description                                                                              |
@@ -71,8 +72,8 @@ L’application s’appuie sur un fichier [.env](.env) pour charger ses variable
 
 ## Démarrage de l'application Upsignon
 
-1. Vérifier que les **enregistrements DNS** ont bien été déclarés.
-2. Configurer les **variables d'environnement** dans le fichier `.env`.
+1. Vérifier que le(s) **enregistrement(s) DNS** ont bien été déclarés.
+2. Configurer les **variables d'environnement** dans le fichier [.env](.env).
 3. Exécuter le **script de démarrage** :
 ```
 sudo ./init.sh
