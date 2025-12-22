@@ -59,8 +59,8 @@ services:
       SMTP_ALLOW_INVALID_CRT: ${SMTP_ALLOW_INVALID_CRT}
     labels:
       - traefik.enable=true
-      - traefik.http.services.server.loadbalancer.server.port=${SERVER_PORT} && PathPrefix(`/`)
-      - traefik.http.routers.server.rule=Host(`${SERVER_DOMAIN}`)
+      - traefik.http.services.server.loadbalancer.server.port=${SERVER_PORT}
+      - traefik.http.routers.server.rule=Host(`${SERVER_DOMAIN}`) && PathPrefix(`/`)
       - traefik.http.routers.server.entrypoints=websecure
       - traefik.http.routers.server.tls.certresolver=le
       - traefik.http.routers.server.middlewares=server-redirect,server-headers
@@ -98,11 +98,12 @@ services:
       PRO_NODE_ENV: production
     labels:
       - traefik.enable=true
-      - traefik.http.services.dashboard.loadbalancer.server.port=${DASHBOARD_PORT} && PathPrefix(`${DASHBOARD_PREFIX_URL}`)
-      - traefik.http.routers.dashboard.rule=Host(`${DASHBOARD_DOMAIN}`)
+      - traefik.http.services.dashboard.loadbalancer.server.port=${DASHBOARD_PORT}
+      - traefik.http.routers.dashboard.rule=Host(`${DASHBOARD_DOMAIN}`) && PathPrefix(`${DASHBOARD_PREFIX_URL}`)
       - traefik.http.routers.dashboard.entrypoints=websecure
       - traefik.http.routers.dashboard.tls.certresolver=le
-      - traefik.http.routers.dashboard.middlewares=dashboard-redirect,dashboard-headers
+      - traefik.http.routers.dashboard.middlewares=dashboard-strip,dashboard-redirect,dashboard-headers
+      - traefik.http.middlewares.dashboard-strip.stripprefix.prefixes=${DASHBOARD_PREFIX_URL}
       - traefik.http.middlewares.dashboard-redirect.redirectscheme.scheme=https
       - traefik.http.middlewares.dashboard-headers.headers.customrequestheaders.X-Real-IP=true
       - traefik.http.middlewares.dashboard-headers.headers.customrequestheaders.X-Forwarded-Proto=https
