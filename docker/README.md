@@ -41,9 +41,9 @@ L’application s’appuie sur un fichier [.env](.env) pour charger ses variable
 | Variable            | Valeur par défaut | Description                                                                                                                    |
 |---------------------|-------------------|--------------------------------------------------------------------------------------------------------------------------------|
 | DB_PASSWORD         | ✗                 | Mot de passe pour la base PostgreSQL                                                                                           |
-| DB_BACKUP_FREQUENCY | 1d                | Fréquence des sauvegardes de la base de données. Utilisez `s` pour secondes, `m` pour minutes, `h` pour heures, `d` pour jours |
-| MAX_DB_BACKUPS      | 7                 | Nombre maximum de sauvegardes à conserver                                                                                      |
-| DB_BACKUPS_PATH     | ./backup          | Répertoire où les sauvegardes seront stockées                                                                                  |
+| DB_BACKUP_FREQUENCY | `1d`              | Fréquence des sauvegardes de la base de données. Utilisez `s` pour secondes, `m` pour minutes, `h` pour heures, `d` pour jours |
+| MAX_DB_BACKUPS      | `7`               | Nombre maximum de sauvegardes à conserver                                                                                      |
+| DB_BACKUPS_PATH     | `./backup`        | Répertoire où les sauvegardes seront stockées                                                                                  |
 
 ### Application
 
@@ -53,8 +53,9 @@ L’application s’appuie sur un fichier [.env](.env) pour charger ses variable
 | SERVER_DOMAIN        | `server-uso.example.com`    | URL pour accéder à l’application **Upsignon Server**                                                        |
 | DASHBOARD_DOMAIN     | `dashboard-uso.example.com` | URL pour accéder à l’application **Upsignon Dashboard**                                                     |
 | DASHBOARD_PREFIX_URL | `/`                         | Préfixe d’URL sous lequel l’application **Upsignon Dashboard** est accessible (exemple : `/`, `/dashboard`) |
-| SERVER_PORT          | 3000                        | Port utilisé par l’application **Upsignon Server**                                                          |
-| DASHBOARD_PORT       | 3001                        | Port utilisé par l’application **Upsignon Dashboard**                                                       |
+| SERVER_PORT          | `3000`                      | Port utilisé par l’application **Upsignon Server**                                                          |
+| DASHBOARD_PORT       | `3001`                      | Port utilisé par l’application **Upsignon Dashboard**                                                       |
+| ACCESS_ALLOWED_IPS   | `0.0.0.0/0,::/0`            | Liste des adresses IP autorisées à accéder aux services (toutes autorisées par défaut)                      |
 | HTTP_PROXY           | ✗                           | Variable optionnelle pour définir le proxy HTTP. **Format :** `http://user:pass@host:port`                  |
 
 ### SMTP
@@ -66,7 +67,7 @@ L’application s’appuie sur un fichier [.env](.env) pour charger ses variable
 | SMTP_USER              | ✗                 | Nom d’utilisateur ou identifiant pour l’authentification auprès du SMTP                  |
 | SMTP_PASSWORD          | ✗                 | Mot de passe associé au compte SMTP pour l’envoi sécurisé des emails                     |
 | SMTP_SENDING_USER      | ✗                 | Adresse email qui apparaîtra comme l’expéditeur des messages envoyés                     |
-| SMTP_ALLOW_INVALID_CRT | false             | Autorise ou non l’utilisation de certificats SSL/TLS invalides pour le SMTP              |
+| SMTP_ALLOW_INVALID_CRT | `false`           | Autorise ou non l’utilisation de certificats SSL/TLS invalides pour le SMTP              |
 | LETSENCRYPT_EMAIL      | ✗                 | Adresse email utilisée pour l’enregistrement et la gestion des certificats Let’s Encrypt |
 
 
