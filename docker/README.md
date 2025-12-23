@@ -4,7 +4,7 @@
 
 ## Configuration minimale requise
 
-Pour assurer de bonnes performances de la stack, la machine doit disposer au minimum des ressources suivantes :
+Pour assurer de bonnes performances de la stack, la machine doit disposer au **minimum** des ressources suivantes :
 
 * **vCPU :** 4
 * **RAM :** 8 Go
@@ -20,23 +20,29 @@ Pour assurer de bonnes performances de la stack, la machine doit disposer au min
 | Server & Dashboard & DB backup | PostgreSQL    | TCP 5432              | Connexion à la base de données                                  |
 | Traefik                        | Let’s Encrypt | TCP 443               | Génération et renouvellement automatique des certificats TLS    |
 
+## Configuration DNS
+
+Avant la mise en service, veuillez configurer le(s) enregistrement(s) DNS de type **A** de votre domaine vers l’adresse IP de votre machine. Vous pouvez choisir soit :
+* **Un enregistrement unique** pour accéder aux applications **Upsignon server** et **Upsignon dashboard** de type :
+  * https://upsignonpro.votre-domaine.fr
+  * https://upsignonpro.votre-domaine.fr/admin
+* **Deux enregistrements distincts**, un pour chaque application, de type :
+  * https://upsignonpro.votre-domaine.fr
+  * https://upsignonpro-admin.votre-domaine.fr
+
+Nous devons déclarer vos urls dans notre base de données pour qu'elles soit autorisées. Envoyez-nous les deux urls que vous aurez choisies, chemin compris, par email [BS-SEPTEOITSOLUTIONS-Support@septeo.com](mailto:BS-SEPTEOITSOLUTIONS-Support@septeo.com) avant de commencer l'installation pour ne pas perdre de temps.
+
 ## Prérequis d’installation
 
 L'application nécessite les éléments suivants :
 * **Git :** Consultez la [documentation officielle](https://git-scm.com/downloads) correspondant à votre système d'exploitation
 * **Docker :** Consultez la [documentation officielle](https://docs.docker.com/engine/install) correspondant à votre système d'exploitation
 
-## Configuration DNS
-
-Avant la mise en service, veuillez configurer le(s) enregistrement(s) DNS de type **A** de votre domaine vers l’adresse IP de votre machine. Vous pouvez choisir soit :
-* **Un enregistrement unique** pour accéder aux applications **Upsignon server** et **Upsignon dashboard** ;
-* **Deux enregistrements distincts**, un pour chaque application ;
-
 ## Configuration des variables d'environnement
 
 L’application s’appuie sur un fichier [.env](.env) pour charger ses variables de configuration. Avant de lancer le script de démarrage, assurez-vous d’avoir correctement défini les variables nécessaires dans ce fichier.
 
-### PostgreSQL
+### Base de données
 
 | Variable            | Valeur par défaut | Description                                                                                                                    |
 |---------------------|-------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -58,7 +64,7 @@ L’application s’appuie sur un fichier [.env](.env) pour charger ses variable
 | ACCESS_ALLOWED_IPS   | `0.0.0.0/0,::/0`            | Liste des adresses IP autorisées à accéder aux services (toutes autorisées par défaut)                      |
 | HTTP_PROXY           | ✗                           | Variable optionnelle pour définir le proxy HTTP. **Format :** `http://user:pass@host:port`                  |
 
-### SMTP
+### Envoi d'emails
 
 | Variable               | Valeur par défaut | Description                                                                              |
 |------------------------|-------------------|------------------------------------------------------------------------------------------|
@@ -71,15 +77,41 @@ L’application s’appuie sur un fichier [.env](.env) pour charger ses variable
 | LETSENCRYPT_EMAIL      | ✗                 | Adresse email utilisée pour l’enregistrement et la gestion des certificats Let’s Encrypt |
 
 
-## Démarrage de l'application Upsignon
+## Mise en route de l'application Upsignon
 
-1. Vérifier que le(s) **enregistrement(s) DNS** ont bien été déclarés.
+1. Vérifier que le(s) **enregistrement(s) DNS** ont bien été [déclarés](README.md#configuration-dns).
 2. Configurer les **variables d'environnement** dans le fichier [.env](.env).
-3. Exécuter le **script de démarrage** :
+3. Lancer le [script de démarrage](init.sh) en tant que **root** :
 ```
-sudo ./init.sh
+./init.sh
 ```
-4. À la fin de l’exécution du script, un **lien vers la console d’administration** sera généré. Ce lien sera valide durant *5 minutes*. Si ce délai est dépassé, veuillez lancer le script `super_admin.sh` situé dans le dossier **scripts** pour regénérer un lien.
+
+### Première connexion à la console d'administration
+
+À la fin de l’exécution du script, un **lien en vers la console d’administration** sera généré avec les droits de superadministrateur. Ce lien sera valide durant *5 minutes*. Une fois ce délai dépassé, vous pourrez regénérer un lien de connexion temporaire à la console d'administration en exécutant le script [super_admin.sh](scripts/super_admin.sh) :
+```
+./scripts/super_admin.sh
+```
+
+### Backup de la base de données
+
+Un container docker `uso.pg_backup` est utilisé pour réaliser des backups de votre base de données. [La configuration des backups](README.md#base-de-données) est automatiquement initialisée à partir des variables définies dans le fichier [.env](.env).
+Vous pouvez **modifier ces paramètres** à tout moment en modifiant les variables dans le fichier [.env](.env) et redéployer l'application en exécutant :
+```
+docker compose up -d
+```
+
+### Configuration de l'envoi de mails
+
+Lors du premier démarrage de l’application, [la configuration de l'envoi d'email](README.md#envoi-demails) est automatiquement initialisée à partir des variables définies dans le fichier [.env](.env).
+Vous pouvez **modifier ces paramètres** à tout moment depuis la console d’administration, dans l’onglet *Paramètres* -> *Paramètres*. Il est également possible de **tester l’envoi d’emails** en renseignant une adresse de destination. Un email test sera alors envoyé afin de valider la configuration de l'envoi d'emails.
+
+### Ajout d'une première banque de coffres-fort
+
+Dans la console d'administration, vous pouvez ajouter votre première banque de coffre-forts :
+* Dans l'onglet *Paramètres* -> *Paramètres*, vérifiez 
+
+TO DO
 5. Dans la console, ouvrez l’onglet **Paramètres**, puis créez une **banque de coffres-forts**. Un e-mail vous sera envoyé : cliquez sur le lien qu’il contient ou scannez le QR code. Vous serez alors redirigé vers la **page de téléchargement de l’application**.
 6. **Téléchargez et installez l’application** adaptée à votre système d’exploitation, puis cliquez sur le bouton afin de configurer votre espace depuis l’application.
 7. Dans l'application, saisissez votre adresse e-mail. Vous recevrez un email de confirmation contenant un **code**. Saisissez ce code pour **activer ce périphérique**.
@@ -89,6 +121,3 @@ sudo ./init.sh
 ## Scripts supplémentaires
 
 * **pg_restore.sh** : Script permettant de restaurer la base de données à partir d’un snapshot sélectionné. Il offre également la possibilité de créer une nouvelle base de données dédiée avant d’y restaurer le snapshot.
-* **super_admin.sh** : Script permettant de régénérer un lien vers la console d’administration Super Admin si le précédent (valide 5 minutes) a expiré.
-
-Les scripts doivent être exécutés depuis le répertoire où ils sont stockés.
