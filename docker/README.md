@@ -12,13 +12,13 @@ Pour assurer de bonnes performances de la stack, la machine doit disposer au min
 
 ## Tableau des flux
 
-| Source                         | Destination   | Protocole / Port      | Description                                       |
-|--------------------------------|-------------- |-----------------------|---------------------------------------------------|
-| Internet                       | Traefik       | TCP 80 / 443          | Redirection automatique des applications en HTTPS |
-| Traefik                        | Server        | TCP 3000 (Par défaut) | Upsignon Server                                   |
-| Traefik                        | Dashboard     | TCP 3001 (Par défaut) | Upsignon Dashboard                                |
-| Server & Dashboard & DB backup | PostgreSQL    | TCP 5432              | Connexion à la base de données                    |
-| Traefik                        | Let’s Encrypt | TCP 80                | Renouvellement automatique des certificats TLS    |
+| Source                         | Destination   | Protocole / Port      | Description                                                     |
+|--------------------------------|-------------- |-----------------------|-----------------------------------------------------------------|
+| Internet                       | Traefik       | TCP 443               | Applications uniquement en HTTPS                                |
+| Traefik                        | Server        | TCP 3000 (Par défaut) | Upsignon Server                                                 |
+| Traefik                        | Dashboard     | TCP 3001 (Par défaut) | Upsignon Dashboard                                              |
+| Server & Dashboard & DB backup | PostgreSQL    | TCP 5432              | Connexion à la base de données                                  |
+| Traefik                        | Let’s Encrypt | TCP 443               | Génération et renouvellement automatique des certificats TLS    |
 
 ## Prérequis d’installation
 
