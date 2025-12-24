@@ -53,16 +53,16 @@ L’application s’appuie sur un fichier [.env](.env) pour charger ses variable
 
 ### Application
 
-| Variable             | Valeur par défaut           | Description                                                                                                 |
-|----------------------|-----------------------------|-------------------------------------------------------------------------------------------------------------|
-| SESSION_SECRET       | ✗                           | Chaîne de caractères aléatoire générée par le script `init.sh`                                              |
-| SERVER_DOMAIN        | `server-uso.example.com`    | URL pour accéder à l’application **Upsignon Server**                                                        |
-| DASHBOARD_DOMAIN     | `dashboard-uso.example.com` | URL pour accéder à l’application **Upsignon Dashboard**                                                     |
-| DASHBOARD_PREFIX_URL | `/`                         | Préfixe d’URL sous lequel l’application **Upsignon Dashboard** est accessible (exemple : `/`, `/dashboard`) |
-| SERVER_PORT          | `3000`                      | Port utilisé par l’application **Upsignon Server**                                                          |
-| DASHBOARD_PORT       | `3001`                      | Port utilisé par l’application **Upsignon Dashboard**                                                       |
-| ACCESS_ALLOWED_IPS   | `0.0.0.0/0,::/0`            | Liste des adresses IP autorisées à accéder aux services (toutes autorisées par défaut)                      |
-| HTTP_PROXY           | ✗                           | Variable optionnelle pour définir le proxy HTTP. **Format :** `http://user:pass@host:port`                  |
+| Variable                  | Valeur par défaut           | Description                                                                                                 |
+|---------------------------|-----------------------------|-------------------------------------------------------------------------------------------------------------|
+| SESSION_SECRET            | ✗                           | Chaîne de caractères aléatoire générée par le script `init.sh`                                              |
+| SERVER_DOMAIN             | `server-uso.example.com`    | URL pour accéder à l’application **Upsignon Server**                                                        |
+| DASHBOARD_DOMAIN          | `dashboard-uso.example.com` | URL pour accéder à l’application **Upsignon Dashboard**                                                     |
+| DASHBOARD_URL_PATH_PREFIX | `/`                         | Préfixe d’URL sous lequel l’application **Upsignon Dashboard** est accessible (exemple : `/`, `/dashboard`) |
+| SERVER_PORT               | `3000`                      | Port utilisé par l’application **Upsignon Server**                                                          |
+| DASHBOARD_PORT            | `3001`                      | Port utilisé par l’application **Upsignon Dashboard**                                                       |
+| ACCESS_ALLOWED_IPS        | `0.0.0.0/0,::/0`            | Liste des adresses IP autorisées à accéder aux services (toutes autorisées par défaut)                      |
+| HTTP_PROXY                | ✗                           | Variable optionnelle pour définir le proxy HTTP. **Format :** `http://user:pass@host:port`                  |
 
 ### Envoi d'emails
 
@@ -79,9 +79,9 @@ L’application s’appuie sur un fichier [.env](.env) pour charger ses variable
 
 ## Mise en route de l'application Upsignon
 
-1. Vérifier que le(s) **enregistrement(s) DNS** ont bien été [déclarés](README.md#configuration-dns).
-2. Configurer les **variables d'environnement** dans le fichier [.env](.env).
-3. Lancer le [script de démarrage](init.sh) en tant que **root** :
+* Vérifier que le(s) **enregistrement(s) DNS** ont bien été [déclarés](README.md#configuration-dns).
+* Configurer les **variables d'environnement** dans le fichier [.env](.env).
+* Lancer le [script de démarrage](init.sh) en tant que **root** :
 ```
 ./init.sh
 ```
@@ -95,7 +95,7 @@ L’application s’appuie sur un fichier [.env](.env) pour charger ses variable
 
 ### Backup de la base de données
 
-Un container docker `uso.pg_backup` est utilisé pour réaliser des backups de votre base de données. [La configuration des backups](README.md#base-de-données) est automatiquement initialisée à partir des variables définies dans le fichier [.env](.env).
+Un container docker `uso.pg_backup` est utilisé pour réaliser des backups de votre base de données. [La configuration des backups](README.md#base-de-données) est automatiquement initialisée à partir des variables définies dans le fichier [.env](.env).  
 Vous pouvez **modifier ces paramètres** à tout moment en modifiant les variables dans le fichier [.env](.env) et redéployer l'application en exécutant :
 ```
 docker compose up -d
@@ -103,21 +103,30 @@ docker compose up -d
 
 ### Configuration de l'envoi de mails
 
-Lors du premier démarrage de l’application, [la configuration de l'envoi d'email](README.md#envoi-demails) est automatiquement initialisée à partir des variables définies dans le fichier [.env](.env).
+Lors du premier démarrage de l’application, [la configuration de l'envoi d'email](README.md#envoi-demails) est automatiquement initialisée à partir des variables définies dans le fichier [.env](.env).  
 Vous pouvez **modifier ces paramètres** à tout moment depuis la console d’administration, dans l’onglet *Paramètres* -> *Paramètres*. Il est également possible de **tester l’envoi d’emails** en renseignant une adresse de destination. Un email test sera alors envoyé afin de valider la configuration de l'envoi d'emails.
 
 ### Ajout d'une première banque de coffres-fort
 
 Dans la console d'administration, vous pouvez ajouter votre première banque de coffre-forts :
-* Dans l'onglet *Paramètres* -> *Paramètres*, vérifiez 
+* Dans l'onglet *Paramètres* -> *Paramètres*, vérifiez que votre serveur Upsignon PRO est en cours d'exécution.
+* Dans l'onglet *Paramètres* -> *Banques de coffres-fort*, vous pouvez créer votre première banque. En cliquant sur le **bloc Super-Admin orange**, situé en haut à gauche de la page, vous accéderez à la liste de vos banques. Ouvrez la banque que vous venez de créer et naviguez ensuite vers l'onglet *Paramètres* de cette banque.
+* Vous voyez alors un **lien de configuration**. Ce lien devra être utilisé par tous vos utilisateurs pour configurer leur application.
 
-TO DO
-5. Dans la console, ouvrez l’onglet **Paramètres**, puis créez une **banque de coffres-forts**. Un e-mail vous sera envoyé : cliquez sur le lien qu’il contient ou scannez le QR code. Vous serez alors redirigé vers la **page de téléchargement de l’application**.
-6. **Téléchargez et installez l’application** adaptée à votre système d’exploitation, puis cliquez sur le bouton afin de configurer votre espace depuis l’application.
-7. Dans l'application, saisissez votre adresse e-mail. Vous recevrez un email de confirmation contenant un **code**. Saisissez ce code pour **activer ce périphérique**.
-8. Définissez un **mot de passe maître** qui vous permettra d’accéder à votre coffre-fort.
-9. Par défaut, l’adresse e-mail associée au coffre-fort n’a pas les droits Super Admin. Depuis la console d’administration, vous pouvez attribuer à ce compte **le rôle Super-Admin** ou **ajouter un autre administrateur** (Super-Admin ou non).
+### Création de votre coffre-fort UpsignOn PRO
 
-## Scripts supplémentaires
+Toujours dans la console d'administration :
+* Ouvrez la banque que vous venez de créer et naviguez ensuite dans l'onglet *Paramètres* -> *Autorisations*. Ajoutez **votre adresse email** (ou ***@votre-domaine.fr**) à la liste des adresses email autorisées pour cette banque.
+* Installez [l'application UpSignOn](https://upsignon.eu/fr/downloads) sur votre poste.
+* Dans l'onglet *Lien de configuration*, cliquez sur le **lien de configuration** ou scannez le **QR code**.
+* Si tout est bien configuré, vous devriez pouvoir **créer votre espace UpSignOn PRO** dans l'application en suivant les instructions.
 
-* **pg_restore.sh** : Script permettant de restaurer la base de données à partir d’un snapshot sélectionné. Il offre également la possibilité de créer une nouvelle base de données dédiée avant d’y restaurer le snapshot.
+### Configuration de la connexion à la console directement via UpSignOn
+
+Le mot de passe que vous avez utilisé précédemment pour vous connecter était **temporaire**. Grâce à UpSignOn, vous allez pouvoir vous connecter très simplement à votre console d'administration :
+* Lorsque votre espace aura été correctement créé, revenez sur la page *Super-Admin* dans votre console d'administration. Dans l'onglet *Paramètres* -> *Administrateurs*, utilisez le **formulaire d'ajout d'un administrateur** pour ajouter votre adresse email (en vous laissant le **rôle Super-Admin**). Vous pouvez remettre une adresse email qui existe déjà dans la liste.
+* Vous devriez alors recevoir **un email** (vérifiez éventuellement vos spams) qui vous permettra d'importer votre compte super-admin dans UpSignOn.
+* Ouvrez le lien que vous aurez reçu par mail puis **suivez les instructions** dans l'application.
+
+Grâce à UpSignOn, vous pouvez maintenant vous connecter en un clic à votre compte super-admin et renouveler votre mot de passe directement depuis l'application.  
+Il ne vous reste plus qu'à configurer UpSignOn via votre dashboard selon vos besoins, à inviter d'autres administrateurs et à diffuser le lien de configuration à tous vos collègues.
