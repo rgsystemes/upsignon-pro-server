@@ -100,7 +100,7 @@ L’application s’appuie sur un fichier [.env](.env) pour charger ses variable
 Un container docker `uso.pg_backup` est utilisé pour réaliser des backups de votre base de données. [La configuration des backups](README.md#base-de-données) est automatiquement initialisée à partir des variables définies dans le fichier [.env](.env).  
 Vous pouvez **modifier ces paramètres** à tout moment en modifiant les variables dans le fichier [.env](.env) et redéployer l'application en exécutant :
 ```
-docker compose up -d
+docker compose up -f docker-compose-<le/certs>.yml -d
 ```
 
 ### Configuration de l'envoi de mails

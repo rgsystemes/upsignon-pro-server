@@ -8,7 +8,7 @@ elif [ ! -d "/var/lib/docker" ]; then
   exit 1
 fi
 
-if [ $1 == "--help" ] || [ $1 == "-h" ]; then
+if [[ $1 == "--help" ]] || [[ $1 == "-h" ]]; then
   echo "Usage: ./init.sh"
   echo ""
   echo "This script initializes and starts the Upsignon Pro application using Docker."
@@ -18,13 +18,13 @@ if [ $1 == "--help" ] || [ $1 == "-h" ]; then
   echo "  -le           [MANDATORY] Specify to use Let's Encrypt for TLS certificates"
   echo "  -certs        [MANDATORY] Specify to use custom TLS certificates"
   exit 0
-elif [ $1 == "-le" ]; then
+elif [[ $1 == "-le" ]]; then
   echo "Using Let's Encrypt for TLS certificates..."
   CRT=le
-elif [ $1 == "-certs" ]; then
+elif [[ $1 == "-certs" ]]; then
   echo "Using custom TLS certificates..."
   CRT=certs
-elif [ $1 != "-le" ] && [ $1 != "-certs" ]; then
+elif [[ $1 != "-le" ]] && [[ $1 != "-certs" ]]; then
   echo "Invalid argument. Use --help or -h for usage information."
   exit 1
 fi
