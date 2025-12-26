@@ -32,7 +32,7 @@ fi
 echo "Start Upsignon..."
 SESSION_SECRET=$(openssl rand -hex 30)
 sed -i "s/SESSION_SECRET.*/SESSION_SECRET=$SESSION_SECRET/" .env
-docker compose up -f docker-compose-$CRT.yml -d
+docker compose -f docker-compose-$CRT.yml up -d
 
 echo "Initializing the application..."
 source .env
