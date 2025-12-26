@@ -46,7 +46,7 @@ L’application s’appuie sur un fichier [.env](.env) pour charger ses variable
 
 | Variable            | Valeur par défaut | Description                                                                                                                    |
 |---------------------|-------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| DB_PASSWORD         | ✗                 | Mot de passe pour la base PostgreSQL                                                                                           |
+| DB_PASSWORD         | ✗                 | Mot de passe pour la base de données                                                                                           |
 | DB_BACKUP_FREQUENCY | `1d`              | Fréquence des sauvegardes de la base de données. Utilisez `s` pour secondes, `m` pour minutes, `h` pour heures, `d` pour jours |
 | MAX_DB_BACKUPS      | `7`               | Nombre maximum de sauvegardes à conserver                                                                                      |
 | DB_BACKUPS_PATH     | `./backup`        | Répertoire où les sauvegardes seront stockées                                                                                  |
@@ -81,9 +81,11 @@ L’application s’appuie sur un fichier [.env](.env) pour charger ses variable
 
 * Vérifier que le(s) **enregistrement(s) DNS** ont bien été [déclarés](README.md#configuration-dns).
 * Configurer les **variables d'environnement** dans le fichier [.env](.env).
-* Lancer le [script de démarrage](init.sh) en tant que **root** :
+* Si vous avez des certificats personnalisés, déposez vos certificats dans le dossier [certs](certs).
+* Le script `init.sh` permet d’initialiser et de démarrer automatiquement l’application **UpsignOn Pro** à l’aide de Docker. Il doit impérativement être exécuté avec les droits **root** et nécessite que **Docker soit installé et en cours d’exécution** sur la machine. Lors de l’exécution, le client doit choisir le mode de gestion des certificats TLS en passant l’un des paramètres obligatoires suivants : `-le` pour utiliser **Let’s Encrypt** ou `-certs` pour utiliser des **certificats TLS personnalisés** :
 ```
-./init.sh
+./init.sh -le # Let's Encrypt
+./init.sh -certs # Certificats personnalisés
 ```
 
 ### Première connexion à la console d'administration
