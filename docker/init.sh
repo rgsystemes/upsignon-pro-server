@@ -54,11 +54,11 @@ if [[ $SSL == "certs" ]]; then
       fi
     done
     echo "✅ Traefik TLS configuration generated at $CERT_FILE"
-fi
   else
     echo "⚠️ No .crt files found in the $SSL directory. Please add your TLS certificates before proceeding. Script stopped."
     exit 1
   fi
+fi
 
 # Start UpsignOn by Septeo
 echo "Start UpsignOn by Septeo..."
