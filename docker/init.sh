@@ -1,5 +1,6 @@
 #! /bin/bash
 
+# Requirements
 if [ $EUID -ne 0 ]; then
   echo "Please run the script as root..."
   exit 1
@@ -8,6 +9,7 @@ elif [ ! -d "/var/lib/docker" ]; then
   exit 1
 fi
 
+# Script parameters
 if [[ $1 == "--help" ]] || [[ $1 == "-h" ]]; then
   echo "Usage: ./init.sh"
   echo ""
@@ -29,9 +31,31 @@ elif [[ $1 != "-le" ]] && [[ $1 != "-certs" ]]; then
   exit 1
 fi
 
-echo "Start Upsignon..."
+# Prepare environment
 SESSION_SECRET=$(openssl rand -hex 30)
 sed -i "s/SESSION_SECRET.*/SESSION_SECRET=$SESSION_SECRET/" .env
+
+# Generate Traefik TLS configuration if using custom certificates
+if [[ $CRT == "certs" ]]; then
+  CRT_FILE=$CRT/tls.yml
+  echo "tls:" > $CRT_FILE
+
+  echo "  certificates:" >> $CRT_FILE
+  for crt in $CRT/*.crt; do
+    [[ -e "$crt" ]] || continue
+
+    if [[ -f $key ]]; then
+      echo "    - certFile: /$crt" >> $CRT_FILE
+      echo "      keyFile: /${crt%.crt}.key" >> $CRT_FILE
+    else
+      echo "⚠️ Missing key for $crt (skipped)"
+    fi
+  done
+  echo "✅ Traefik TLS configuration generated at $CRT_FILE"
+fi
+
+# Start UpsignOn by Septeo
+echo "Start UpsignOn by Septeo..."
 docker compose -f docker-compose-$CRT.yml up -d
 
 echo "Initializing the application..."
