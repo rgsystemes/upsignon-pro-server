@@ -22,10 +22,10 @@ if [[ $1 == "--help" ]] || [[ $1 == "-h" ]]; then
   exit 0
 elif [[ $1 == "-le" ]]; then
   echo "Using Let's Encrypt for TLS certificates..."
-  CRT=le
+  SSL=le
 elif [[ $1 == "-certs" ]]; then
   echo "Using custom TLS certificates..."
-  CRT=certs
+  SSL=certs
 elif [[ $1 != "-le" ]] && [[ $1 != "-certs" ]]; then
   echo "Invalid argument. Use --help or -h for usage information."
   exit 1
@@ -36,27 +36,33 @@ SESSION_SECRET=$(openssl rand -hex 30)
 sed -i "s/SESSION_SECRET.*/SESSION_SECRET=$SESSION_SECRET/" .env
 
 # Generate Traefik TLS configuration if using custom certificates
-if [[ $CRT == "certs" ]]; then
-  CRT_FILE=$CRT/tls.yml
-  echo "tls:" > $CRT_FILE
+if [[ $SSL == "certs" ]]; then
 
-  echo "  certificates:" >> $CRT_FILE
-  for crt in $CRT/*.crt; do
-    [[ -e "$crt" ]] || continue
+  # Check for .crt files in the certs directory
+  shopt -s nullglob && CERTS=($SSL/*.crt)
+  if [[ $CERTS ]]; then
+    CERT_FILE=$SSL/tls.yml
+    echo -e "tls:\n  certificates:" > $CERT_FILE
 
-    if [[ -f $key ]]; then
-      echo "    - certFile: /$crt" >> $CRT_FILE
-      echo "      keyFile: /${crt%.crt}.key" >> $CRT_FILE
-    else
-      echo "⚠️ Missing key for $crt (skipped)"
-    fi
-  done
-  echo "✅ Traefik TLS configuration generated at $CRT_FILE"
+    for cert in $CERTS; do
+      key="${cert%.crt}.key"; if [[ -f $key ]]; then
+        echo "    - certFile: /$cert" >> $CERT_FILE
+        echo "      keyFile: /$key" >> $CERT_FILE
+      else
+        echo "⚠️ No $key file found in the $SSL directory. Please add your private key before proceeding. Script stopped."
+        exit 1
+      fi
+    done
+    echo "✅ Traefik TLS configuration generated at $CERT_FILE"
 fi
+  else
+    echo "⚠️ No .crt files found in the $SSL directory. Please add your TLS certificates before proceeding. Script stopped."
+    exit 1
+  fi
 
 # Start UpsignOn by Septeo
 echo "Start UpsignOn by Septeo..."
-docker compose -f docker-compose-$CRT.yml up -d
+docker compose -f docker-compose-$SSL.yml up -d
 
 echo "Initializing the application..."
 source .env
