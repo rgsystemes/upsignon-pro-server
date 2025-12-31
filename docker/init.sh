@@ -45,7 +45,7 @@ if [[ $SSL == "certs" ]]; then
     echo -e "tls:\n  certificates:" > $CERT_FILE
 
     # Add each certificate and its corresponding key to the TLS configuration
-    for cert in $CERTS; do
+    for cert in ${CERTS[@]}; do
       key="${cert%.crt}.key"; if [[ -f $key ]]; then
         echo "    - certFile: /$cert" >> $CERT_FILE
         echo "      keyFile: /$key" >> $CERT_FILE
