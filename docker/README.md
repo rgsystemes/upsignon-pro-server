@@ -24,13 +24,13 @@ Pour assurer de bonnes performances de la stack, la machine doit disposer au **m
 
 Avant la mise en service, veuillez configurer le(s) enregistrement(s) DNS de type **A** de votre domaine vers l’adresse IP de votre machine. Vous pouvez choisir soit :
 * **Un enregistrement unique** pour accéder aux applications **UpsignOn server** et **UpsignOn dashboard** de type :
-  * https://upsignonpro.votre-domaine.fr
-  * https://upsignonpro.votre-domaine.fr/admin
+  * `https://upsignonpro.votre-domaine.fr`
+  * `https://upsignonpro.votre-domaine.fr/admin`
 * **Deux enregistrements distincts**, un pour chaque application, de type :
-  * https://upsignonpro.votre-domaine.fr
-  * https://upsignonpro-admin.votre-domaine.fr
+  * `https://upsignonpro.votre-domaine.fr`
+  * `https://upsignonpro-admin.votre-domaine.fr`
 
-Nous devons déclarer vos urls dans notre base de données pour qu'elles soit autorisées. Envoyez-nous les deux urls que vous aurez choisies, chemin compris, par email [BS-SEPTEOITSOLUTIONS-Support@septeo.com](mailto:BS-SEPTEOITSOLUTIONS-Support@septeo.com) avant de commencer l'installation pour ne pas perdre de temps.
+Nous devons déclarer vos urls dans notre base de données pour qu'elles soit **autorisées**. Envoyez-nous **les deux urls** que vous aurez choisies, chemin compris, par email [BS-SEPTEOITSOLUTIONS-Support@septeo.com](mailto:BS-SEPTEOITSOLUTIONS-Support@septeo.com) avant de commencer l'installation pour ne pas perdre de temps.
 
 ## Prérequis d’installation
 
@@ -40,67 +40,73 @@ L'application nécessite les éléments suivants :
 
 ## Récupération du projet
 
-Lors de la première installation, clonez le dépôt Git à l’aide de la commande suivante :
+Lors de la première installation, clonez le **dépôt Git** à l’aide de la commande suivante :
 ```bash
 git clone https://github.com/rgsystemes/upsignon-pro-server.git
 ```
 
 ## Certificats SSL
 
-L’application prend en charge l’utilisation de certificats SSL afin de sécuriser les communications.  
+L’application prend en charge **l’utilisation de certificats SSL** afin de sécuriser les communications.  
 Les clients peuvent soit utiliser des certificats générés automatiquement via **Let’s Encrypt**, soit fournir leurs **certificats personnalisés** (certificat et clé privée).  
-Pour **Let'Encrypt**, aucune action n'est requise de votre part.  
+Pour **Let's Encrypt**, aucune action n'est requise de votre part.  
 En ce qui concerne les **certificats personnalisés**, plusieurs règles sont à respecter :
 * Les fichiers doivent être placés dans le dossier [certs](certs).
 * Le certificat et la clé privée doivent porter **le même nom**.
 * Les extensions doivent être respectivement `.crt` pour le certificat et `.key` pour la clé privée. Exemple : 
   * `upsignonpro.crt`
   * `upsignonpro.key`
+* Il est possible d’ajouter **plusieurs certificats personnalisés** dans le dossier [certs](certs) (un couple certificat/clé par nom), afin de prendre en charge plusieurs domaines ou sous-domaines.
 
 ## Configuration des variables d'environnement
 
-L’application s’appuie sur un fichier [.env](.env) pour charger ses variables de configuration. Avant de lancer le script de démarrage, assurez-vous d’avoir correctement défini les variables nécessaires dans ce fichier.
+L’application s’appuie sur un fichier [.env](.env) pour charger ses variables de configuration. Avant de lancer le script de démarrage [init.sh](init.sh), assurez-vous d’avoir correctement défini les variables nécessaires dans ce fichier.
 
 ### Base de données
 
 | Variable            | Valeur par défaut | Description                                                                                                                    |
 |---------------------|-------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| DB_PASSWORD         | ✗                 | Mot de passe pour la base de données                                                                                           |
-| DB_BACKUP_FREQUENCY | `1d`              | Fréquence des sauvegardes de la base de données. Utilisez `s` pour secondes, `m` pour minutes, `h` pour heures, `d` pour jours |
-| MAX_DB_BACKUPS      | `7`               | Nombre maximum de sauvegardes à conserver                                                                                      |
-| DB_BACKUPS_PATH     | `./backup`        | Répertoire où les sauvegardes seront stockées                                                                                  |
+| DB_PASSWORD         | ✗                 | Doit contenir le mot de passe utilisé pour accéder à la base de données. Veillez à utiliser un **mot de passe fort** et à ne pas le partager. |
+| DB_BACKUP_FREQUENCY | `1d`              | Définit la **fréquence** à laquelle les sauvegardes automatiques de la base de données sont effectuées. Le format attendu est un nombre suivi d’une unité : **s** → secondes, **m** → minutes, **h** → heures, **d** → jours. Exemple : **12h** pour une sauvegarde toutes les 12 heures. |
+| MAX_DB_BACKUPS      | `7`               | Spécifie le **nombre maximal de sauvegardes** conservées. Lorsque cette limite est atteinte, les sauvegardes les plus anciennes sont automatiquement supprimées. |
+| DB_BACKUPS_PATH     | `./backup`        | Indique le chemin du répertoire où seront **stockées les sauvegardes** de la base de données. |
 
 ### Application
 
 | Variable                  | Valeur par défaut           | Description                                                                                                 |
 |---------------------------|-----------------------------|-------------------------------------------------------------------------------------------------------------|
-| SESSION_SECRET            | ✗                           | Chaîne de caractères aléatoire générée automatiquement par le script `init.sh`                              |
-| SERVER_DOMAIN             | `server-uso.example.com`    | URL pour accéder à l’application **UpsignOn Server**                                                        |
-| DASHBOARD_DOMAIN          | `dashboard-uso.example.com` | URL pour accéder à l’application **UpsignOn Dashboard**                                                     |
-| DASHBOARD_URL_PATH_PREFIX | `/`                         | Préfixe d’URL sous lequel l’application **UpsignOn Dashboard** est accessible (exemple : `/`, `/dashboard`) |
-| SERVER_PORT               | `3000`                      | Port utilisé par l’application **UpsignOn Server**                                                          |
-| DASHBOARD_PORT            | `3001`                      | Port utilisé par l’application **UpsignOn Dashboard**                                                       |
-| ACCESS_ALLOWED_IPS        | `0.0.0.0/0,::/0`            | Liste des adresses IP autorisées à accéder aux services (toutes autorisées par défaut)                      |
-| HTTP_PROXY                | ✗                           | Variable optionnelle pour définir le proxy HTTP. **Format :** `http://user:pass@host:port`                  |
+| SESSION_SECRET            | ✗                           | **Clé secrète** utilisée pour sécuriser les sessions utilisateur. Elle est générée automatiquement lors de l’exécution du script [init.sh](init.sh) et ne doit pas être modifiée manuellement. |
+| SERVER_DOMAIN             | `server-uso.example.com`    | **Domaine ou sous-domaine** permettant d’accéder à l’application **UpsignOn Server**. Ce domaine doit être correctement configuré dans votre DNS. Dans le cas de l’utilisation de **certificats personnalisés**, il doit également être associé à un certificat SSL valide. |
+| DASHBOARD_DOMAIN          | `dashboard-uso.example.com` | **Domaine ou sous-domaine** permettant d’accéder à l’application **UpsignOn Dashboard**. Comme pour le serveur, ce domaine doit être correctement configuré dans votre DNS. |
+| DASHBOARD_URL_PATH_PREFIX | `/`                         | Définit **le chemin** sous lequel l'application **UpsignOn Dashboard** est accessible. Par exemple : `/` → accessible à la racine du domaine, `/dashboard` → accessible via `https://<domain>/dashboard`. |
+| SERVER_PORT               | `3000`                      | **Port** utilisé par l’application **UpsignOn Server**. |
+| DASHBOARD_PORT            | `3001`                      | **Port** utilisé par l’application **UpsignOn Dashboard**. |
+| ACCESS_ALLOWED_IPS        | `0.0.0.0/0,::/0`            | **Liste des adresses IP ou plages CIDR autorisées** à accéder aux services, séparées par des virgules. Par défaut, toutes les adresses sont autorisées. Il est recommandé de restreindre cette liste en production pour renforcer la sécurité. |
+| HTTP_PROXY                | ✗                           | Définit un **proxy HTTP sortant**. Format : `http://user:pass@host:port`. À utiliser définir si votre environnement réseau l’exige. |
 
 ### Envoi d'emails
 
 | Variable               | Valeur par défaut | Description                                                                              |
 |------------------------|-------------------|------------------------------------------------------------------------------------------|
-| SMTP_HOST              | ✗                 | Adresse du serveur SMTP utilisé pour l’envoi des emails                                  |
-| SMTP_PORT              | ✗                 | Port du serveur SMTP (souvent 25, 465 ou 587 selon le protocole)                         |
-| SMTP_USER              | ✗                 | Nom d’utilisateur ou identifiant pour l’authentification auprès du SMTP                  |
-| SMTP_PASSWORD          | ✗                 | Mot de passe associé au compte SMTP pour l’envoi sécurisé des emails                     |
-| SMTP_SENDING_USER      | ✗                 | Adresse email qui apparaîtra comme l’expéditeur des messages envoyés                     |
-| SMTP_ALLOW_INVALID_CRT | `false`           | Autorise ou non l’utilisation de certificats SSL/TLS invalides pour le SMTP              |
-| LETSENCRYPT_EMAIL      | ✗                 | Adresse email utilisée pour l’enregistrement et la gestion des certificats Let’s Encrypt |
+| SMTP_HOST              | ✗                 | **Adresse du serveur SMTP** utilisé pour l’envoi des emails de l’application. Ce serveur doit être accessible depuis l’environnement où l’application est déployée. |
+| SMTP_PORT              | ✗                 | **Port du serveur SMTP**. Les ports les plus courants sont : **25** → SMTP non chiffré, **465** → SMTP avec SSL/TLS implicite, **587** → SMTP avec STARTTLS (recommandé)                         |
+| SMTP_USER              | ✗                 | **Identifiant** utilisé pour **l’authentification** auprès du serveur SMTP. Il s’agit généralement de l’adresse email complète ou d’un nom d’utilisateur fourni par votre service de messagerie. |
+| SMTP_PASSWORD          | ✗                 | **Mot de passe** associé au compte SMTP. |
+| SMTP_SENDING_USER      | ✗                 | **Adresse email affichée comme expéditeur** des messages envoyés par l’application. |
+| SMTP_ALLOW_INVALID_CRT | `false`           | Autorise **l’utilisation de certificats SSL/TLS invalides** lors de la connexion au serveur SMTP. Par défaut, seuls les certificats valides sont acceptés. |
+
+### Certificats Let's Encrypt
+
+| Variable          | Valeur par défaut | Description                                                                              |
+|-------------------|-------------------|------------------------------------------------------------------------------------------|
+| LETSENCRYPT_EMAIL | ✗                 | **Adresse email** utilisée par Let’s Encrypt pour **l’enregistrement du compte et la gestion des certificats SSL**. Aucune autre configuration n’est nécessaire si vous utilisez Let’s Encrypt : **la génération et le renouvellement des certificats** sont entièrement pris en charge automatiquement par Traefik. Cette variable est uniquement requise si vous choisissez d’utiliser **Let’s Encrypt**. Si vous utilisez des **certificats personnalisés**, elle peut être ignorée. |
 
 ## Mise en route de l'application UpsignOn
 
 * Vérifier que le(s) **enregistrement(s) DNS** ont bien été [déclarés](README.md#configuration-dns).
 * Configurer les **variables d'environnement** dans le fichier [.env](.env).
 * Si vous avez des certificats personnalisés, déposez vos certificats dans le dossier [certs](certs).
-* Le script `init.sh` permet d’initialiser et de démarrer automatiquement l’application **UpsignOn Pro** à l’aide de Docker. Il doit impérativement être exécuté avec les droits **root** et nécessite que **Docker soit installé et en cours d’exécution** sur la machine. Lors de l’exécution, le client doit choisir le mode de gestion des certificats TLS en passant l’un des paramètres obligatoires suivants : `-le` pour utiliser **Let’s Encrypt** ou `-certs` pour utiliser des **certificats TLS personnalisés** :
+* Le script [init.sh](init.sh) permet d’initialiser et de démarrer automatiquement l’application **UpsignOn Pro** via Docker. Il doit impérativement être exécuté avec les droits **root** et nécessite que **Docker soit installé et en cours d’exécution** sur la machine. Lors de l’exécution, le client doit choisir le mode de gestion des certificats TLS en passant l’un des paramètres obligatoires suivants : `-le` pour utiliser **Let’s Encrypt** ou `-certs` pour utiliser des **certificats TLS personnalisés** :
 ```bash
 ./init.sh -le # Let's Encrypt
 ./init.sh -certs # Certificats personnalisés
