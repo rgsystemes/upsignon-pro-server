@@ -168,6 +168,7 @@ Vous pouvez lancer un **backup de la base de données** à tout moment en exécu
 ```bash
 ./scripts/pg_backup.sh
 ```
+> ℹ️ Lors de l’exécution du script, il vous sera demandé de saisir le mot de passe de la base de données afin d’autoriser la sauvegarde.
 
 ### Restauration de la base de données
 
@@ -176,14 +177,17 @@ Le script `pg_restore.sh` permet de **restaurer une sauvegarde de la base de don
 ./scripts/pg_restore.sh
 ```
 
-Suivez ensuite les instructions à l’écran :
+ℹ️ Lors de l'exécution du script, suivez les instructions à l’écran :
 * Choisissez si vous souhaitez restaurer dans la base existante ou créer une nouvelle base.
 * Sélectionnez le fichier de sauvegarde à restaurer.
 * Si nécessaire, indiquez le nom de la nouvelle base.
 
 ### Modification des certificats personnalisés
 
-Vous pouvez à tout moment modifier les certificats personnalisés de votre application. Veuillez ajouter les nouveaux certificats avec les mêmes exigeances que décrites [ici](README.md#certificats-ssl), puis mettez à jour l’application en exécutant la commande suivante :
+Vous pouvez modifier à tout moment les certificats TLS personnalisés de votre application.  
+Ajoutez les nouveaux certificats en respectant les mêmes exigences que celles décrites [ici](README.md#certificats-ssl), puis exécutez le script [certificats.sh](scripts/certificats.sh).  
+Ce script appliquera la nouvelle configuration TLS et redémarrera Traefik afin de prendre en compte les changements :
 ```bash
-docker compose -f docker-compose-certs.yml up -d
+./scripts/certificates.sh
 ```
+> ⚠️  Le redémarrage de Traefik entraîne une courte interruption de l’accès aux services.

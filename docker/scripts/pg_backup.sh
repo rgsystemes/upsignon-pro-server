@@ -25,8 +25,8 @@ DUMP_FILE="$(date +%Y-%m-%d-%H-%M-%S).dump"
 docker exec -i $DB_BACKUPS_CONTAINER sh -c "pg_dump -h postgres -U $DB_USER -Fc pro > /backup/$DUMP_FILE"
 
 # Check if the backup was successful
-if [ -f "$FULL_DB_BACKUPS_PATH/$DUMP_FILE" ]; then
+if [ -s "$FULL_DB_BACKUPS_PATH/$DUMP_FILE" ]; then
   echo "Backup done at $(date +%Y-%m-%d_%H:%M:%S) in $FULL_DB_BACKUPS_PATH/$DUMP_FILE"
 else
-  echo "⚠️  Backup failed"
+  echo "❌ Backup failed"
 fi

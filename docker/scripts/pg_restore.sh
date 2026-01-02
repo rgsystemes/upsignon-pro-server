@@ -62,6 +62,6 @@ if [[ $DUMPS ]]; then
     esac
   done
 else
-  echo "⚠️  No backup files found in the $DB_BACKUPS_PATH directory. Please create a backup before proceeding. Script stopped."
+  echo "❌ No backup files found in the $DB_BACKUPS_PATH directory. Please create a backup before proceeding. Script stopped."
   exit 1
 fi
