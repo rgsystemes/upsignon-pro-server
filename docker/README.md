@@ -153,6 +153,8 @@ Le mot de passe que vous avez utilisé précédemment pour vous connecter était
 Grâce à UpsignOn, vous pouvez maintenant vous connecter en un clic à votre **compte super-admin** et **renouveler votre mot de passe** directement depuis l'application.  
 Il ne vous reste plus qu'à configurer UpsignOn via votre dashboard selon vos besoins, à inviter d'autres administrateurs et à diffuser le lien de configuration à tous vos collègues.
 
+## Gestion de l'application UpsignOn
+
 ### Backup de la base de données
 
 Le container Docker `uso.pg_backup` est utilisé pour réaliser des backups de votre base de données. [La configuration des backups](README.md#base-de-données) est automatiquement initialisée à partir des variables définies dans le fichier [.env](.env).  
