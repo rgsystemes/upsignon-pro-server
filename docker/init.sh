@@ -31,6 +31,9 @@ elif [[ $1 != "-le" ]] && [[ $1 != "-certs" ]]; then
   exit 1
 fi
 
+# Absolute path of this script's directory
+SCRIPT_DIR="$(dirname "$(realpath ${BASH_SOURCE[0]})")" && cd $SCRIPT_DIR
+
 # Prepare environment
 SESSION_SECRET=$(openssl rand -hex 30)
 sed -i "s/SESSION_SECRET.*/SESSION_SECRET=$SESSION_SECRET/" .env

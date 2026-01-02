@@ -104,27 +104,23 @@ L’application s’appuie sur un fichier [.env](.env) pour charger ses variable
 ## Mise en route de l'application UpsignOn
 
 * Vérifier que le(s) **enregistrement(s) DNS** ont bien été [déclarés](README.md#configuration-dns).
+* S’assurer que **Docker est installé et en cours d’exécution** sur la machine.
 * Configurer les **variables d'environnement** dans le fichier [.env](.env).
-* Si vous avez des certificats personnalisés, déposez vos certificats dans le dossier [certs](certs).
-* Le script [init.sh](init.sh) permet d’initialiser et de démarrer automatiquement l’application **UpsignOn Pro** via Docker. Il doit impérativement être exécuté avec les droits **root** et nécessite que **Docker soit installé et en cours d’exécution** sur la machine. Lors de l’exécution, le client doit choisir le mode de gestion des certificats TLS en passant l’un des paramètres obligatoires suivants : `-le` pour utiliser **Let’s Encrypt** ou `-certs` pour utiliser des **certificats TLS personnalisés** :
+* Uniquement si vous utilisez des **certificats personnalisés**, déposer vos certificats dans le dossier [certs](certs).
+* Le script init.sh permet d’initialiser et de démarrer automatiquement l’application **UpsignOn Pro** via Docker. Il doit impérativement être exécuté dans son **dossier courant** avec les droits **root**. Lors de son exécution, vous devez choisir **le mode de gestion des certificats** en passant l’un des paramètres obligatoires suivants :
+  * `-le` → utilisation de **Let’s Encrypt** (aucune action manuelle requise, gestion assurée automatiquement par Traefik)
+  * `-certs` → utilisation de **certificats personnalisés**
 ```bash
-./init.sh -le # Let's Encrypt
-./init.sh -certs # Certificats personnalisés
+./init.sh -le     # Let's Encrypt (gestion automatique par Traefik)
+./init.sh -certs  # Certificats personnalisés
 ```
+> ⚠️ Important! Le script [init.sh](init.sh) doit être exécuté uniquement lors de la première installation de l’application ou en cas de réinstallation complète. Une fois l’application initialisée et démarrée, le script ne doit pas être relancé.
 
 ### Première connexion à la console d'administration
 
-À la fin de l’exécution du script, un **lien en vers la console d’administration** sera généré avec les droits de superadministrateur. Ce lien sera valide durant *5 minutes*. Une fois ce délai dépassé, vous pourrez regénérer un lien de connexion temporaire à la console d'administration en exécutant le script [super_admin.sh](scripts/super_admin.sh) :
+À la fin de l’exécution du script, un **lien en vers la console d’administration** sera généré avec les droits de superadministrateur. Ce lien sera valide durant **5 minutes**. Une fois ce délai dépassé, vous pourrez regénérer un lien de connexion temporaire à la console d'administration en exécutant le script [super_admin.sh](scripts/super_admin.sh) :
 ```bash
 ./scripts/super_admin.sh
-```
-
-### Backup de la base de données
-
-Un container docker `uso.pg_backup` est utilisé pour réaliser des backups de votre base de données. [La configuration des backups](README.md#base-de-données) est automatiquement initialisée à partir des variables définies dans le fichier [.env](.env).  
-Vous pouvez **modifier ces paramètres** à tout moment en modifiant les variables dans le fichier [.env](.env) et redéployer l'application en exécutant :
-```bash
-docker compose -f docker-compose-<le/certs>.yml up -d
 ```
 
 ### Configuration de l'envoi de mails
@@ -154,5 +150,38 @@ Le mot de passe que vous avez utilisé précédemment pour vous connecter était
 * Vous devriez alors recevoir **un email** (vérifiez éventuellement vos spams) qui vous permettra d'importer votre compte super-admin dans UpsignOn.
 * Ouvrez le lien que vous aurez reçu par mail puis **suivez les instructions** dans l'application.
 
-Grâce à UpsignOn, vous pouvez maintenant vous connecter en un clic à votre compte super-admin et renouveler votre mot de passe directement depuis l'application.  
+Grâce à UpsignOn, vous pouvez maintenant vous connecter en un clic à votre **compte super-admin** et **renouveler votre mot de passe** directement depuis l'application.  
 Il ne vous reste plus qu'à configurer UpsignOn via votre dashboard selon vos besoins, à inviter d'autres administrateurs et à diffuser le lien de configuration à tous vos collègues.
+
+### Backup de la base de données
+
+Le container Docker `uso.pg_backup` est utilisé pour réaliser des backups de votre base de données. [La configuration des backups](README.md#base-de-données) est automatiquement initialisée à partir des variables définies dans le fichier [.env](.env).  
+Vous pouvez **modifier ces paramètres** à tout moment, à l’exception de `DB_PASSWORD`, en mettant à jour les variables dans le fichier [.env](.env). Ensuite, redéployez l’application en fonction du mode de gestion des certificats utilisé avec la commande appropriée :
+```bash
+docker compose -f docker-compose-le.yml up -d # Let's Encrypt (gestion automatique par Traefik)
+docker compose -f docker-compose-certs.yml up -d # Certificats personnalisés
+```
+
+Vous pouvez lancer un **backup de la base de données** à tout moment en exécutant le script [pg_backup.sh](scripts/pg_backup.sh) avec les droits root :
+```bash
+./scripts/pg_backup.sh
+```
+
+### Restauration de la base de données
+
+Le script `pg_restore.sh` permet de **restaurer une sauvegarde de la base de données** pour l’application **UpsignOn Pro.** Le script doit être exécuté avec les droits root.
+```bash
+./scripts/pg_restore.sh
+```
+
+Suivez ensuite les instructions à l’écran :
+* Choisissez si vous souhaitez restaurer dans la base existante ou créer une nouvelle base.
+* Sélectionnez le fichier de sauvegarde à restaurer.
+* Si nécessaire, indiquez le nom de la nouvelle base.
+
+### Modification des certificats personnalisés
+
+Vous pouvez à tout moment modifier les certificats personnalisés de votre application. Veuillez ajouter les nouveaux certificats avec les mêmes exigeances que décrites [ici](README.md#certificats-ssl), puis mettez à jour l’application en exécutant la commande suivante :
+```bash
+docker compose -f docker-compose-certs.yml up -d
+```

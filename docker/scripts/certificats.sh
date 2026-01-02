@@ -1,7 +1,10 @@
 #! /bin/bash
 
+# Absolute path of this script's directory
+SCRIPT_DIR="$(dirname "$(realpath ${BASH_SOURCE[0]})" | sed 's|\(/docker\).*|\1|')" && cd $SCRIPT_DIR
+
 # Check for .crt files in the certs directory
-shopt -s nullglob && CERTS=($SSL/*.crt)
+shopt -s nullglob && SSL=certs && CERTS=($SSL/*.crt)
 if [[ $CERTS ]]; then
   CERT_FILE=$SSL/tls.yml
   echo -e "tls:\n  certificates:" > $CERT_FILE
@@ -16,4 +19,9 @@ if [[ $CERTS ]]; then
       exit 1
     fi
   done
-  echo "✅ Traefik TLS configuration generated at $CERT_FILE"
+else
+  echo "⚠️  No .crt files found in the $SSL directory. Please add your TLS certificates before proceeding. Script stopped."
+  exit 1
+fi
+
+echo "✅ Traefik TLS configuration generated at $CERT_FILE"
