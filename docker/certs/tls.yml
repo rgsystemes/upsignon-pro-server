@@ -1,0 +1,4 @@
+tls:
+  certificates:
+    - certFile: /certs/app1.crt
+      keyFile: /certs/app1.key
