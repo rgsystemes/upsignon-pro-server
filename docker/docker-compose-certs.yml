@@ -23,10 +23,10 @@ services:
     volumes:
       - ${DB_BACKUPS_PATH}:/backup
     command: >
-      bash -c "sleep 10m
+      bash -u -c "sleep 10m
         while true; do
           PGPASSWORD=${DB_PASSWORD} pg_dump -h postgres -U ${DB_USER} -Fc pro > /backup/$(date +%Y-%m-%d-%H-%M-%S).dump
-          echo ""Backup done at $(date +%Y-%m-%d_%H:%M:%S)""
+          echo \"Backup done at $(date +%Y-%m-%d_%H:%M:%S)\"
           ls -1 /backup/*.dump | head -n -${MAX_DB_BACKUPS} | xargs rm -f
           sleep ${DB_BACKUP_FREQUENCY}
         done"

@@ -18,16 +18,15 @@ SCRIPT_DIR="$(dirname "$(realpath ${BASH_SOURCE[0]})" | sed 's|\(/docker\).*|\1|
 
 # Load environment variables
 source $SCRIPT_DIR/.env
+DB_BACKUPS_PATH="${DB_BACKUPS_PATH#./}" && FULL_DB_BACKUPS_PATH="$SCRIPT_DIR/$DB_BACKUPS_PATH"
 
 # Perform DB backup
 DUMP_FILE="$(date +%Y-%m-%d-%H-%M-%S).dump"
-echo "Veuillez entrer le mot de passe de la base pro :"
 docker exec -i $DB_BACKUPS_CONTAINER sh -c "pg_dump -h postgres -U $DB_USER -Fc pro > /backup/$DUMP_FILE"
 
 # Check if the backup was successful
-if [ -f "$SCRIPT_DIR/$DUMP_FILE" ]; then
-  echo "Backup done at $(date +%Y-%m-%d_%H:%M:%S) in $SCRIPT_DIR/$DB_BACKUPS_PATH/$DUMP_FILE"
+if [ -f "$FULL_DB_BACKUPS_PATH/$DUMP_FILE" ]; then
+  echo "Backup done at $(date +%Y-%m-%d_%H:%M:%S) in $FULL_DB_BACKUPS_PATH/$DUMP_FILE"
 else
   echo "⚠️  Backup failed"
 fi
-<
