@@ -53,13 +53,13 @@ if [[ $SSL == "certs" ]]; then
         echo "    - certFile: /$cert" >> $CERT_FILE
         echo "      keyFile: /$key" >> $CERT_FILE
       else
-        echo "⚠️  No $key file found in the $SSL directory. Please add your private key before proceeding. Script stopped."
+        echo "❌ No $key file found in the $SSL directory. Please add your private key before proceeding. Script stopped."
         exit 1
       fi
     done
     echo "✅ Traefik TLS configuration generated at $CERT_FILE"
   else
-    echo "⚠️  No .crt files found in the $SSL directory. Please add your TLS certificates before proceeding. Script stopped."
+    echo "❌ No .crt files found in the $SSL directory. Please add your TLS certificates before proceeding. Script stopped."
     exit 1
   fi
 fi
