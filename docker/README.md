@@ -177,10 +177,11 @@ Le script `pg_restore.sh` permet de **restaurer une sauvegarde de la base de don
 ./scripts/pg_restore.sh
 ```
 
-ℹ️ Lors de l'exécution du script, suivez les instructions à l’écran :
-* Choisissez si vous souhaitez restaurer dans la base existante ou créer une nouvelle base.
-* Sélectionnez le fichier de sauvegarde à restaurer.
-* Si nécessaire, indiquez le nom de la nouvelle base.
+> ℹ️ Lors de l'exécution du script, suivez les instructions à l’écran :
+> * Choisissez si vous souhaitez restaurer dans la **base existante** ou créer une **nouvelle base**.
+> * Sélectionnez le **fichier de sauvegarde** à restaurer.
+> * Si nécessaire, indiquez le **nom de la nouvelle base de données**.
+> *  il vous sera demandé de saisir le **mot de passe de la base de données** afin d’autoriser la restauration. 
 
 ### Modification des certificats personnalisés
 
@@ -191,3 +192,7 @@ Ce script appliquera la nouvelle configuration TLS et redémarrera Traefik afin 
 ./scripts/certificates.sh
 ```
 > ⚠️  Le redémarrage de Traefik entraîne une courte interruption de l’accès aux services.
+
+## Mise à jour d'UpsignOn
+
+### 

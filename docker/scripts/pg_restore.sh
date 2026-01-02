@@ -28,11 +28,11 @@ done
 
 # Restore database from selected backup
 if [[ $DUMPS ]]; then
-  echo "ℹ️ Do you want to restore to the existing database or create a new database ?"
+  echo "ℹ️  Do you want to restore to the existing database or create a new database ?"
   select CHOICE in "Restore to existing database" "Create a new database"; do
     case $CHOICE in
       "Restore to existing database")
-        echo "ℹ️ Which file do you want to restore?"
+        echo "ℹ️  Which file do you want to restore?"
         select dump in "${DUMP_NAMES[@]}"; do
           if [ $dump ]; then
             echo "Starting database restoration from file $dump ..."
@@ -45,9 +45,9 @@ if [[ $DUMPS ]]; then
         break
         ;;
       "Create a new database")
-        echo "ℹ️ What name would you like to give the new database ?"
+        echo "ℹ️  What name would you like to give the new database ?"
         read newdb
-        echo "ℹ️ Which file do you want to restore ?"
+        echo "ℹ️  Which file do you want to restore ?"
         select dump in "${DUMP_NAMES[@]}"; do
           if [ $dump ]; then
             echo "⏳ Creating database $newdb ..."
