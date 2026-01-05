@@ -76,11 +76,11 @@ export const requestDeviceAccess2 = async (req: any, res: any) => {
         return res.status(403).json({ error: 'email_address_not_allowed' });
       }
 
-      // // make sure there is still at least 1 unused licence
-      // if (!(await hasAvailableLicence(bankIds.internalId))) {
-      //   res.status(403).json({ error: 'no_more_licence' });
-      //   return;
-      // }
+      // make sure there is still at least 1 unused licence
+      if (!(await hasAvailableLicence(bankIds.internalId))) {
+        res.status(403).json({ error: 'no_more_licence' });
+        return;
+      }
 
       userRes = await db.query(
         'INSERT INTO users (email, ms_entra_id, bank_id) VALUES ($1,$2,$3) RETURNING id',
