@@ -9,6 +9,7 @@ export const hasAvailableLicence = async (bankId: number): Promise<boolean> => {
     `SELECT
       b.id,
       b.reseller_id,
+      b.settings,
       COALESCE((SELECT COUNT(1) FROM users WHERE users.bank_id=b.id)::int, 0) as used_vaults,
       COALESCE((SELECT
         SUM(il.nb_licences)
@@ -23,6 +24,12 @@ export const hasAvailableLicence = async (bankId: number): Promise<boolean> => {
         AND ${licenceValidityCondition})::int, 0) as external_licences
     FROM banks as b`,
   );
+
+  const targetBank = banks.rows.find((b) => b.id === bankId);
+  if (targetBank && targetBank.settings?.IS_TESTING) {
+    // let trial banks have as many vaults as desired
+    return true;
+  }
 
   const remainingLicencesByBank: {
     [bankId: number]: {
