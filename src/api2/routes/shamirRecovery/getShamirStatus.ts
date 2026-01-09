@@ -30,10 +30,13 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
       res.status(200).json({ status: 'not_setup' });
       return;
     }
+    const supportEmail = setupResult.rows[0].support_email;
 
-    const configRes = await db.query(
+    const requestRes = await db.query(
       `SELECT
-        sc.min_shares
+        sc.min_shares,
+        srr.created_at,
+        srr.expiry_date
       FROM shamir_configs AS sc
       INNER JOIN shamir_recovery_requests AS srr
         ON srr.shamir_config_id=sc.id
@@ -43,26 +46,22 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
         AND srr.device_id=$1`,
       [deviceId],
     );
-    const minShares = configRes.rows[0]?.min_shares;
-    if (!minShares) {
+    const recoveryRequest = requestRes.rows[0];
+    if (!recoveryRequest) {
       res.status(200).json({ status: 'no_pending_recovery_request' });
       return;
     }
-    const recoveryRequestRes = await db.query(
+
+    const minShares = recoveryRequest.min_shares;
+
+    const recoveryRequestHolderStatusRes = await db.query(
       `SELECT
-        u.email,
-        sh.nb_shares,
-        ss.closed_shares,
         ss.open_shares
       FROM shamir_recovery_requests AS srr
       INNER JOIN user_devices AS ud
         ON srr.device_id=ud.id
       INNER JOIN shamir_shares AS ss
         ON ud.user_id=ss.vault_id
-      INNER JOIN shamir_holders AS sh
-        ON sh.vault_id=ss.holder_vault_id AND sh.shamir_config_id=ss.shamir_config_id
-      INNER JOIN users AS u
-        ON u.id = sh.vault_id
       WHERE
         srr.status='PENDING'
         AND srr.expiry_date > current_timestamp(0)
@@ -70,12 +69,12 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
         AND ss.holder_vault_id != $2`,
       [deviceId, vaultId],
     );
-    if (recoveryRequestRes.rows.length == 0) {
+    if (recoveryRequestHolderStatusRes.rows.length == 0) {
       res.status(200).json({ status: 'no_pending_recovery_request' });
       return;
     }
 
-    const totalOpenShares = recoveryRequestRes.rows.reduce(
+    const totalOpenShares = recoveryRequestHolderStatusRes.rows.reduce(
       (acc, val) => acc + (val.open_shares?.length || 0),
       0,
     );
@@ -83,22 +82,21 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
     if (totalOpenShares < minShares) {
       res.status(200).json({
         status: 'pending',
-        missingShares: minShares - totalOpenShares,
-        nbOpenShares: totalOpenShares,
-        holderStatuses: recoveryRequestRes.rows.map((h) => ({
-          email: h.email,
-          nbShares: h.nb_shares,
-          open: h.open_shares?.length === h.nb_shares,
-        })),
+        supportEmail,
+        createdAt: recoveryRequest.created_at,
+        expiryDate: recoveryRequest.expiry_date,
       });
       return;
     }
     res.status(200).json({
       status: 'ready',
-      openShares: recoveryRequestRes.rows.reduce(
+      openShares: recoveryRequestHolderStatusRes.rows.reduce(
         (acc, val) => [...acc, ...(val.open_shares || [])],
         [],
       ),
+      supportEmail,
+      createdAt: recoveryRequest.created_at,
+      expiryDate: recoveryRequest.expiry_date,
     });
     return;
   } catch (e) {
