@@ -34,17 +34,26 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
 
     const requestRes = await db.query(
       `SELECT
+        srr.id,
         sc.min_shares,
         srr.created_at,
-        srr.expiry_date
+        srr.expiry_date,
+        srr.expiry_date <= current_timestamp(0) as is_expired,
+        COALESCE(ARRAY_AGG(ss.open_shares) FILTER (WHERE ss.open_shares IS NOT NULL), '{}') as open_shares
       FROM shamir_configs AS sc
       INNER JOIN shamir_recovery_requests AS srr
         ON srr.shamir_config_id=sc.id
+      INNER JOIN user_devices AS ud
+        ON srr.device_id=ud.id
+      INNER JOIN shamir_shares AS ss
+        ON ud.user_id=ss.vault_id
+        AND ss.holder_vault_id != $2
       WHERE
         srr.status='PENDING'
-        AND srr.expiry_date > current_timestamp(0)
-        AND srr.device_id=$1`,
-      [deviceId],
+        AND srr.device_id=$1
+      GROUP BY srr.id, sc.id
+      ORDER BY srr.created_at DESC LIMIT 1`,
+      [deviceId, vaultId],
     );
     const recoveryRequest = requestRes.rows[0];
     if (!recoveryRequest) {
@@ -54,28 +63,8 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
 
     const minShares = recoveryRequest.min_shares;
 
-    const recoveryRequestHolderStatusRes = await db.query(
-      `SELECT
-        ss.open_shares
-      FROM shamir_recovery_requests AS srr
-      INNER JOIN user_devices AS ud
-        ON srr.device_id=ud.id
-      INNER JOIN shamir_shares AS ss
-        ON ud.user_id=ss.vault_id
-      WHERE
-        srr.status='PENDING'
-        AND srr.expiry_date > current_timestamp(0)
-        AND srr.device_id=$1
-        AND ss.holder_vault_id != $2`,
-      [deviceId, vaultId],
-    );
-    if (recoveryRequestHolderStatusRes.rows.length == 0) {
-      res.status(200).json({ status: 'no_pending_recovery_request' });
-      return;
-    }
-
-    const totalOpenShares = recoveryRequestHolderStatusRes.rows.reduce(
-      (acc, val) => acc + (val.open_shares?.length || 0),
+    const totalOpenShares = recoveryRequest.open_shares.reduce(
+      (acc: number, val: string[]) => acc + (val.length || 0),
       0,
     );
 
@@ -90,8 +79,8 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
     }
     res.status(200).json({
       status: 'ready',
-      openShares: recoveryRequestHolderStatusRes.rows.reduce(
-        (acc, val) => [...acc, ...(val.open_shares || [])],
+      openShares: recoveryRequest.open_shares.reduce(
+        (acc: string[], val: string[]) => [...acc, ...(val || [])],
         [],
       ),
       supportEmail,
