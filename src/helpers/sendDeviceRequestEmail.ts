@@ -2,6 +2,7 @@ import { getAdminEmailsForBank } from './getAdminsEmailsForBank';
 import { getEmailConfig, getMailTransporter } from './getMailTransporter';
 import { logError } from './logger';
 import { inputSanitizer } from './sanitizer';
+import { buildEmail } from 'upsignon-mail';
 
 export const sendDeviceRequestEmail = async (
   emailAddress: string,
@@ -24,12 +25,24 @@ export const sendDeviceRequestEmail = async (
     const safeOSNameAndVersion = inputSanitizer.cleanForHTMLInjections(osNameAndVersion || '');
     const safeRequestToken = inputSanitizer.cleanForHTMLInjections(requestToken);
 
+    const { html, text, subject } = await buildEmail({
+      templateName: 'newDevice',
+      locales: 'fr',
+      args: {
+        deviceName: safeDeviceName,
+        availableCodeDate: `${expDate} ${expTime}`,
+        code: safeRequestToken,
+        deviceType: safeDeviceType,
+        deviceOSAndVersion: safeOSNameAndVersion,
+      },
+    });
+
     await transporter.sendMail({
       from: emailConfig.EMAIL_SENDING_ADDRESS,
       to: safeEmailAddress,
-      subject: "Nouvelle demande d'accès à votre espace UpSignOn PRO",
-      text: `Bonjour,\nPour autoriser votre appareil "${safeDeviceName}" (${safeDeviceType} ${safeOSNameAndVersion}) à accéder à votre espace confidentiel UpSignOn PRO, saisissez le code suivant :\n\n${safeRequestToken}\n\nCe code est valable jusqu'au ${expDate} à ${expTime}.\n\nBonne journée,\nUpSignOn`,
-      html: `<body><p>Bonjour,</p><p>Pour autoriser votre appareil "${safeDeviceName}" (${safeDeviceType} ${safeOSNameAndVersion}) à accéder à votre espace confidentiel UpSignOn PRO, saisissez le code suivant :</p><p style="font-family:monospace;font-size: 20px; font-weight: bold; margin: 20px 0;">${safeRequestToken}</p><p>Ce code est valable jusqu'au ${expDate} à ${expTime}.</p><p>Bonne journée,<br/>UpSignOn</p></body>`,
+      subject: subject,
+      text: text,
+      html: html,
     });
   } catch (e) {
     logError('ERROR sending email:', e);
@@ -50,12 +63,20 @@ export const sendDeviceRequestAdminEmail = async (
     // prevent HTML injections
     const safeUserEmailAddress = inputSanitizer.cleanForHTMLInjections(userEmailAddress);
 
+    const { html, text, subject } = await buildEmail({
+      templateName: 'newDeviceAdminApproval',
+      locales: 'fr',
+      args: {
+        emailUser: safeUserEmailAddress,
+      },
+    });
+
     await transporter.sendMail({
       from: emailConfig.EMAIL_SENDING_ADDRESS,
       to: adminEmails,
-      subject: 'UpSignOn Admin: deuxième appareil',
-      text: `Bonjour,\nL'utilisateur ${safeUserEmailAddress} a effectué une demande pour autoriser un nouvel appareil. Cet utilisateur a déjà un appareil autorisé ou en cours d'autorisation et a donc besoin de votre accord pour cette opération, conformément au paramètre que vous avez défini pour cette banque.\n\nBonne journée,\nUpSignOn`,
-      html: `<body><p>Bonjour,</p><p>L'utilisateur ${safeUserEmailAddress} a effectué une demande pour autoriser un nouvel appareil. Cet utilisateur a déjà un appareil autorisé ou en cours d'autorisation et a donc besoin de votre accord pour cette opération, conformément au paramètre que vous avez défini pour cette banque.</p><p>Bonne journée,<br/>UpSignOn</p></body>`,
+      subject: subject,
+      text: text,
+      html: html,
     });
   } catch (e) {
     logError('ERROR sending email:', e);
