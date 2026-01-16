@@ -1,13 +1,14 @@
 import { getEmailConfig, getMailTransporter } from './getMailTransporter';
 import { logError } from './logger';
 import { inputSanitizer } from './sanitizer';
-import { buildEmail } from 'upsignon-mail';
+import { buildEmail, getBestLanguage } from 'upsignon-mail';
 
 export const sendPasswordResetRequestEmail = async (
   emailAddress: string,
   deviceName: string,
   requestToken: string,
   expirationDate: string,
+  acceptLanguage: string,
 ): Promise<void> => {
   try {
     const emailConfig = await getEmailConfig();
@@ -20,7 +21,7 @@ export const sendPasswordResetRequestEmail = async (
 
     const { html, text, subject } = await buildEmail({
       templateName: 'resetPassword',
-      locales: 'fr',
+      locales: getBestLanguage(acceptLanguage),
       args: {
         deviceName: safeDeviceName,
         code: safeRequestToken,

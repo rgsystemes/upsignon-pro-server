@@ -2,7 +2,7 @@ import { getAdminEmailsForBank } from './getAdminsEmailsForBank';
 import { getEmailConfig, getMailTransporter } from './getMailTransporter';
 import { logError } from './logger';
 import { inputSanitizer } from './sanitizer';
-import { buildEmail } from 'upsignon-mail';
+import { buildEmail, getBestLanguage } from 'upsignon-mail';
 
 export const sendDeviceRequestEmail = async (
   emailAddress: string,
@@ -11,6 +11,7 @@ export const sendDeviceRequestEmail = async (
   osNameAndVersion: null | string,
   requestToken: string,
   expirationDate: Date,
+  acceptLanguage: string,
 ): Promise<void> => {
   try {
     const emailConfig = await getEmailConfig();
@@ -27,7 +28,7 @@ export const sendDeviceRequestEmail = async (
 
     const { html, text, subject } = await buildEmail({
       templateName: 'newDevice',
-      locales: 'fr',
+      locales: getBestLanguage(acceptLanguage),
       args: {
         deviceName: safeDeviceName,
         availableCodeDate: `${expDate} ${expTime}`,

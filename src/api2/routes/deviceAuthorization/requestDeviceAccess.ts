@@ -32,6 +32,7 @@ import { hasAvailableLicence } from '../../../helpers/licenceCheck';
 export const requestDeviceAccess2 = async (req: any, res: any) => {
   try {
     const bankIds = await getBankIds(req);
+    const acceptLanguage = req.headers['accept-language'];
 
     const joiRes = Joi.object({
       userEmail: Joi.string().email().lowercase().required(),
@@ -183,6 +184,7 @@ export const requestDeviceAccess2 = async (req: any, res: any) => {
           safeBody.osNameAndVersion,
           deviceInDb.authorization_code,
           deviceInDb.auth_code_expiration_date,
+          acceptLanguage,
         );
         logInfo(safeBody.userEmail, 'requestDeviceAccess2 OK (email resent)');
         return res.status(200).json({ authorizationStatus: 'PENDING' });
@@ -235,6 +237,7 @@ export const requestDeviceAccess2 = async (req: any, res: any) => {
         safeBody.osNameAndVersion,
         randomAuthorizationCode,
         new Date(expirationDate),
+        acceptLanguage,
       );
 
       logInfo(safeBody.userEmail, 'requestDeviceAccess2 OK (email sent with new code)');

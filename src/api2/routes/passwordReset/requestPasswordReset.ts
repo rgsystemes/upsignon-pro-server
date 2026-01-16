@@ -15,6 +15,7 @@ import Joi from 'joi';
 export const requestPasswordReset2 = async (req: any, res: any) => {
   try {
     const bankIds = await getBankIds(req);
+    const acceptLanguage = req.headers['accept-language'];
 
     const joiRes = Joi.object({
       userEmail: Joi.string().email().lowercase().required(),
@@ -110,6 +111,7 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
           authDbRes.rows[0].device_name,
           randomAuthorizationCode,
           expirationDate,
+          acceptLanguage,
         );
         logInfo(
           req.body?.userEmail,
@@ -139,6 +141,7 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
           authDbRes.rows[0].device_name,
           randomAuthorizationCode,
           expirationDate,
+          acceptLanguage,
         );
         logInfo(
           req.body?.userEmail,
@@ -150,6 +153,7 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
           authDbRes.rows[0].device_name,
           resetRequest.reset_token,
           resetRequest.reset_token_expiration_date,
+          acceptLanguage,
         );
         logInfo(
           req.body?.userEmail,
@@ -172,7 +176,11 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
           req.body?.userEmail,
           'requestPasswordReset2 OK (reset request created - needs admin grant)',
         );
-        await sendPasswordResetRequestNotificationToAdmins(safeBody.userEmail, bankIds.internalId);
+        await sendPasswordResetRequestNotificationToAdmins(
+          safeBody.userEmail,
+          bankIds.internalId,
+          acceptLanguage,
+        );
         return res.status(200).json({ resetStatus: 'pending_admin_check' });
       } else if (
         !resetRequest.reset_token_expiration_date ||
@@ -187,7 +195,11 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
           req.body?.userEmail,
           'requestPasswordReset2 OK (reset request updated - needs new admin grant)',
         );
-        await sendPasswordResetRequestNotificationToAdmins(safeBody.userEmail, bankIds.internalId);
+        await sendPasswordResetRequestNotificationToAdmins(
+          safeBody.userEmail,
+          bankIds.internalId,
+          acceptLanguage,
+        );
         return res.status(200).json({ resetStatus: 'pending_admin_check' });
       } else if (resetRequest.reset_status === 'PENDING_ADMIN_CHECK') {
         logInfo(
@@ -201,6 +213,7 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
           authDbRes.rows[0].device_name,
           resetRequest.reset_token,
           resetRequest.reset_token_expiration_date,
+          acceptLanguage,
         );
         logInfo(req.body?.userEmail, 'requestPasswordReset2 OK (mail resent)');
         return res.status(200).json({ resetStatus: 'mail_sent' });

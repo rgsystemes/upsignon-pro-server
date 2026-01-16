@@ -2,11 +2,12 @@ import { getAdminEmailsForBank } from './getAdminsEmailsForBank';
 import { getEmailConfig, getMailTransporter } from './getMailTransporter';
 import { logError } from './logger';
 import { inputSanitizer } from './sanitizer';
-import { buildEmail } from 'upsignon-mail';
+import { buildEmail, getBestLanguage } from 'upsignon-mail';
 
 export const sendPasswordResetRequestNotificationToAdmins = async (
   emailAddress: string,
   bankId: number,
+  acceptLanguage: string,
 ): Promise<void> => {
   try {
     const emailConfig = await getEmailConfig();
@@ -20,7 +21,7 @@ export const sendPasswordResetRequestNotificationToAdmins = async (
 
     const { html, text, subject } = await buildEmail({
       templateName: 'masterPasswordResetAdminApproval',
-      locales: 'fr',
+      locales: getBestLanguage(acceptLanguage),
       args: {
         emailUser: safeEmailAddress,
       },
