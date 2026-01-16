@@ -23,13 +23,11 @@ export const retrieveShamirRecoveriesToApprove = async (
         ud.os_family,
         ud.device_type,
         b.name AS bank_name,
-        sc.name AS config_name,
-        sc.min_shares AS config_min_shares,
-        sh.nb_shares,
         ss.shamir_config_id,
         ss.closed_shares,
         srr.public_key,
-        srr.created_at AS requested_at
+        srr.created_at AS requested_at,
+        srr.expiry_date AS expiry_date
       FROM shamir_recovery_requests AS srr
       INNER JOIN user_devices AS ud ON ud.id = srr.device_id
       INNER JOIN users AS u ON u.id = ud.user_id
@@ -47,7 +45,21 @@ export const retrieveShamirRecoveriesToApprove = async (
       [basicAuth.userId],
     );
 
+    const amIShamirTrustedPersonRes = await db.query(
+      `SELECT
+      (EXISTS(SELECT 1
+        FROM shamir_configs as sc
+        INNER JOIN shamir_holders as sh ON sh.shamir_config_id = sc.id
+        WHERE sc.is_active AND sh.vault_id=$1)) OR
+      (EXISTS(SELECT 1
+        FROM shamir_shares as ss
+        WHERE ss.holder_vault_id=$1)) as is_trusted_person
+      `,
+      [basicAuth.userId],
+    );
+
     res.status(200).json({
+      isShamirTrustedPerson: amIShamirTrustedPersonRes.rows[0].is_trusted_person,
       pendingRecoveryRequests: pendingRecoveryRequestsRes.rows.map((prr) => ({
         userVaultId: prr.user_vault_id,
         email: prr.email,
@@ -56,12 +68,10 @@ export const retrieveShamirRecoveriesToApprove = async (
         deviceType: prr.device_type,
         devicePublicKey: prr.public_key,
         bankName: prr.bank_name,
-        configName: prr.config_name,
-        configMinShares: prr.config_min_shares,
-        nbShares: prr.nb_shares,
         shamirConfigId: prr.shamir_config_id,
         closedShares: prr.closed_shares,
         requestedAt: prr.requested_at,
+        expiryDate: prr.expiry_date,
       })),
     });
     return;
