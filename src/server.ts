@@ -64,6 +64,7 @@ import { abortShamirRecovery } from './api2/routes/shamirRecovery/abortShamirRec
 import { finishShamirRecovery } from './api2/routes/shamirRecovery/finishShamirRecovery';
 import { getDevicesWithPaswordBackup } from './api2/routes/shamirRecovery/getDevicesWithPasswordBackup';
 import { authenticateDeviceOnly } from './api2/routes/authentication/authenticateDeviceOnly';
+import { denyShamirRequestApproval } from './api2/routes/shamirRecovery/denyShamirRequestApproval';
 
 const app = express();
 
@@ -276,6 +277,7 @@ app.post(
   retrieveShamirRecoveriesToApprove,
 );
 app.post(['/:bankUUID/api2/open-shamir-shares'], openShamirShares);
+app.post(['/:bankUUID/api2/deny-shamir-request-approval'], denyShamirRequestApproval);
 app.post(['/:bankUUID/api2/get-shamir-recovery-status'], getShamirStatus);
 app.post(['/:bankUUID/api2/abort-shamir-recovery'], abortShamirRecovery);
 app.post(['/:bankUUID/api2/finish-shamir-recovery'], finishShamirRecovery);

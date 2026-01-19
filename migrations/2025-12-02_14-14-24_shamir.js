@@ -47,7 +47,8 @@ exports.up = async function (db) {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP(0),
         completed_at TIMESTAMP WITH TIME ZONE,
         status shamir_status,
-        expiry_date TIMESTAMP WITH TIME ZONE
+        expiry_date TIMESTAMP WITH TIME ZONE,
+        denied_by INTEGER[] DEFAULT '{}'
     )`,
   );
   await db.query('COMMIT');

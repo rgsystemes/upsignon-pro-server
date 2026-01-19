@@ -41,6 +41,7 @@ export const retrieveShamirRecoveriesToApprove = async (
         AND (ss.open_shares IS NULL OR ARRAY_LENGTH(ss.open_shares, 1) < ARRAY_LENGTH(ss.closed_shares, 1))
         AND ud.authorization_status = 'AUTHORIZED'
         AND ss.holder_vault_id = $1
+        AND NOT($1 = ANY(srr.denied_by))
       `,
       [basicAuth.userId],
     );
