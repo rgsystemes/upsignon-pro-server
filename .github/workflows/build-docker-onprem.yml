@@ -1,0 +1,32 @@
+---
+name: Build USO for On-Premise
+on:
+  push:
+    branches:
+      - production
+    paths-ignore:
+      - '**.md'
+      - '**/**.md'
+      - '.github/**'
+      - '.vscode/**'
+      - 'doc/**'
+
+jobs:
+  build:
+    runs-on: [self-hosted, dev]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+      - name: Build USO On-Premise
+        shell: bash
+        run: |
+          ENV_TS_CHANGED=$(git diff --name-only HEAD^ HEAD | grep src/helpers/env.ts)
+          if [ -z $ENV_TS_CHANGED ]; then
+            curl -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.RGSUPVDEV_TOKEN }}" \
+              https://api.github.com/repos/rgsystemes/eel-ops/actions/workflows/ansible-roles.build-uso-onprem.yml/dispatches \
+              -d '{"ref":"master"}'
+          fi
