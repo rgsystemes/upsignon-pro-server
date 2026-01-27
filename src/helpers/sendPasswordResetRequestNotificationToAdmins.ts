@@ -2,10 +2,12 @@ import { getAdminEmailsForBank } from './getAdminsEmailsForBank';
 import { getEmailConfig, getMailTransporter } from './getMailTransporter';
 import { logError } from './logger';
 import { inputSanitizer } from './sanitizer';
+import { buildEmail, getBestLanguage } from 'upsignon-mail';
 
 export const sendPasswordResetRequestNotificationToAdmins = async (
   emailAddress: string,
   bankId: number,
+  acceptLanguage: string,
 ): Promise<void> => {
   try {
     const emailConfig = await getEmailConfig();
@@ -17,12 +19,20 @@ export const sendPasswordResetRequestNotificationToAdmins = async (
     const adminEmails = await getAdminEmailsForBank(bankId);
     if (adminEmails.length === 0) return;
 
+    const { html, text, subject } = await buildEmail({
+      templateName: 'masterPasswordResetAdminApproval',
+      locales: getBestLanguage(acceptLanguage),
+      args: {
+        emailUser: safeEmailAddress,
+      },
+    });
+
     transporter.sendMail({
       from: emailConfig.EMAIL_SENDING_ADDRESS,
       to: adminEmails,
-      subject: 'UpSignOn Admin: mot de passe oublié',
-      text: `Bonjour,\nNous vous informons que l'utilisateur ${safeEmailAddress} a oublié son mot de passe maître de coffre-fort UpSignOn PRO et a besoin de votre aide pour le réinitialiser.\n\nBonne journée,\nUpSignOn`,
-      html: `<body><p>Bonjour,</p><p>Nous vous informons que l'utilisateur <strong>"${safeEmailAddress}"</strong> a oublié son mot de passe maître de coffre-fort UpSignOn PRO et a besoin de votre aide pour le réinitialiser.</p><p>Bonne journée,<br/>UpSignOn</p></body>`,
+      subject: subject,
+      text: text,
+      html: html,
     });
   } catch (e) {
     logError('ERROR sending password reset admin notification email:', e);
