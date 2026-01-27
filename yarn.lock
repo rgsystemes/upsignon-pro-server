@@ -5356,7 +5356,7 @@ update-browserslist-db@^1.1.4:
 
 "upsignon-mail@git+https://github.com/rgsystemes/upsignon-mail.git#v1.0.0":
   version "1.0.0"
-  resolved "git+https://github.com/rgsystemes/upsignon-mail.git#dab6cdfe89be72b81a44eef055b4a46416902663"
+  resolved "git+https://github.com/rgsystemes/upsignon-mail.git#dba38b4cfb7d5081e2cc9d02ec34ab0ca6db834e"
   dependencies:
     "@react-email/components" "1.0.2"
     "@react-email/render" "2.0.0"
