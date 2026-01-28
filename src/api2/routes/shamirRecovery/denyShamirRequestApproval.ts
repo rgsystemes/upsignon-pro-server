@@ -44,11 +44,12 @@ export const denyShamirRequestApproval = async (req: Request, res: Response): Pr
         ON shamir_shares.vault_id=user_devices.user_id
       WHERE
         shamir_recovery_requests.device_id=user_devices.id
-        AND user_devices.user_id=$2
         AND shamir_recovery_requests.status='PENDING'
         AND shamir_recovery_requests.expiry_date > current_timestamp(0)
-        AND shamir_shares.shamir_config_id=$3
         AND NOT($1 = ANY(shamir_recovery_requests.denied_by))
+        AND shamir_shares.holder_vault_id=$1
+        AND shamir_shares.vault_id=$2
+        AND shamir_shares.shamir_config_id=$3
       `,
       [basicAuth.userId, validatedBody.targetVaultId, validatedBody.shamirConfigId],
     );
