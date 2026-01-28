@@ -1,4 +1,4 @@
-//2025-10-07_10-43-20_shamir
+//2025-12-02_14-14-24_shamir
 
 exports.up = async function (db) {
   await db.query('BEGIN');
@@ -7,9 +7,13 @@ exports.up = async function (db) {
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         min_shares SMALLINT NOT NULL DEFAULT 1,
-        is_active BOOLEAN NOT NULL DEFAULT true,
+        is_active BOOLEAN NOT NULL DEFAULT false,
+        support_email VARCHAR(100),
+        creator_email VARCHAR(100),
         bank_id INTEGER REFERENCES banks(id) ON DELETE CASCADE,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp(0)
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp(0),
+        change TEXT,
+        change_signatures JSONB
     )`,
   );
   await db.query(
@@ -33,7 +37,7 @@ exports.up = async function (db) {
         PRIMARY KEY(vault_id, holder_vault_id, shamir_config_id)
     )`,
   );
-  await db.query(`CREATE TYPE shamir_status AS ENUM ('PENDING', 'COMPLETED', 'ABORTED')`);
+  await db.query(`CREATE TYPE shamir_status AS ENUM ('PENDING', 'ABORTED', 'COMPLETED')`);
   await db.query(
     `CREATE TABLE IF NOT EXISTS shamir_recovery_requests (
         id SERIAL PRIMARY KEY,
@@ -42,7 +46,9 @@ exports.up = async function (db) {
         shamir_config_id INTEGER REFERENCES shamir_configs(id) ON DELETE CASCADE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP(0),
         completed_at TIMESTAMP WITH TIME ZONE,
-        status shamir_status
+        status shamir_status,
+        expiry_date TIMESTAMP WITH TIME ZONE,
+        denied_by INTEGER[] DEFAULT '{}'
     )`,
   );
   await db.query('COMMIT');
@@ -51,9 +57,9 @@ exports.up = async function (db) {
 exports.down = async function (db) {
   await db.query('BEGIN');
   await db.query('DROP TABLE IF EXISTS shamir_recovery_requests');
-  await db.query('DROP TYPE shamir_status');
   await db.query('DROP TABLE IF EXISTS shamir_shares');
   await db.query('DROP TABLE IF EXISTS shamir_holders');
   await db.query('DROP TABLE IF EXISTS shamir_configs');
+  await db.query('DROP TYPE IF EXISTS shamir_status');
   await db.query('COMMIT');
 };
