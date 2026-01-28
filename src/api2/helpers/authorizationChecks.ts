@@ -145,10 +145,10 @@ export const checkDeviceAuth = async (
   | { granted: false }
   | {
       granted: true;
-      vaultEmail: String;
-      vaultId: Number;
-      deviceUuid: String;
-      deviceId: Number;
+      vaultEmail: string;
+      vaultId: number;
+      deviceUuid: string;
+      deviceId: number;
       bankIds: BankIds;
     }
 > => {

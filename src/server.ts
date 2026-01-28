@@ -62,7 +62,7 @@ import { openShamirShares } from './api2/routes/shamirRecovery/openShamirShares'
 import { getShamirStatus } from './api2/routes/shamirRecovery/getShamirStatus';
 import { abortShamirRecovery } from './api2/routes/shamirRecovery/abortShamirRecovery';
 import { finishShamirRecovery } from './api2/routes/shamirRecovery/finishShamirRecovery';
-import { getDevicesWithPaswordBackup } from './api2/routes/shamirRecovery/getDevicesWithPasswordBackup';
+import { getDevicesWithPasswordBackup } from './api2/routes/shamirRecovery/getDevicesWithPasswordBackup';
 import { authenticateDeviceOnly } from './api2/routes/authentication/authenticateDeviceOnly';
 import { denyShamirRequestApproval } from './api2/routes/shamirRecovery/denyShamirRequestApproval';
 
@@ -268,7 +268,7 @@ app.post('/:bankUUID/api2/get-browser-setup-preference', getBrowserSetupPreferen
 app.post('/:bankUUID/api2/set-browser-setup-preference', setBrowserSetupUserPreference);
 
 // SHAMIR RECOVERY
-app.post(['/:bankUUID/api2/get-devices-with-backup'], getDevicesWithPaswordBackup);
+app.post(['/:bankUUID/api2/get-devices-with-backup'], getDevicesWithPasswordBackup);
 app.post(['/:bankUUID/api2/get-shamir-configs'], getShamirConfigs);
 app.post(['/:bankUUID/api2/update-shamir-backup'], upsertShamirBackup);
 app.post(['/:bankUUID/api2/request-shamir-recovery'], requestShamirRecovery);

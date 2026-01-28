@@ -3,11 +3,11 @@ import { logError, logInfo } from '../../../helpers/logger';
 import { Request, Response } from 'express';
 import { checkDeviceAuth } from '../../helpers/authorizationChecks';
 
-export const getDevicesWithPaswordBackup = async (req: Request, res: Response) => {
+export const getDevicesWithPasswordBackup = async (req: Request, res: Response) => {
   try {
     const deviceAuth = await checkDeviceAuth(req);
     if (!deviceAuth.granted) {
-      logInfo(req.body?.userEmail, 'getDevicesWithPaswordBackup fail: device auth not granted');
+      logInfo(req.body?.userEmail, 'getDevicesWithPasswordBackup fail: device auth not granted');
       res.status(401).end();
       return;
     }
@@ -28,7 +28,7 @@ export const getDevicesWithPaswordBackup = async (req: Request, res: Response) =
         AND bank_id=$2`,
       [vaultId, bankIds.internalId],
     );
-    logInfo(req.body?.userEmail, 'getDevicesWithPaswordBackup OK');
+    logInfo(req.body?.userEmail, 'getDevicesWithPasswordBackup OK');
     res.status(200).json({
       devices: devicesWithBackupRes.rows.map((d) => ({
         name: d.device_name,
@@ -38,7 +38,7 @@ export const getDevicesWithPaswordBackup = async (req: Request, res: Response) =
       })),
     });
   } catch (e) {
-    logError(req.body?.userEmail, 'getDevicesWithPaswordBackup', e);
+    logError(req.body?.userEmail, 'getDevicesWithPasswordBackup', e);
     return res.status(400).end();
   }
 };
