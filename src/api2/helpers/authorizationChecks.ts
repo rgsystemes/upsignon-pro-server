@@ -189,11 +189,16 @@ export const checkDeviceAuth = async (
           INNER JOIN users ON user_devices.user_id = users.id
         WHERE
           users.email=$1
+          AND (users.deactivated IS NULL OR users.deactivated = false)
           AND user_devices.device_unique_id = $2
           AND user_devices.bank_id=$3
         LIMIT 1`,
     [userEmail, deviceUuid, bankIds.internalId],
   );
+  if (idsRes.rows.length === 0) {
+    logInfo(req.body?.userEmail, 'checkDeviceAuth fail: device or user not found');
+    return { granted: false };
+  }
   return {
     granted: true,
     vaultEmail: userEmail,
