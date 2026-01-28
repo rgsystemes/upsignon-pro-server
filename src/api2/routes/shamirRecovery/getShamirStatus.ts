@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { db } from '../../../helpers/db';
 import { logError, logInfo } from '../../../helpers/logger';
 import { checkDeviceAuth } from '../../helpers/authorizationChecks';
+import { isShamirRecoveryRequestRefused } from './_isShamirRecoveryRequestRefused';
 
 export const getShamirStatus = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -69,12 +70,22 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
     );
 
     if (totalOpenShares < minShares) {
-      res.status(200).json({
-        status: 'pending',
-        supportEmail,
-        createdAt: recoveryRequest.created_at,
-        expiryDate: recoveryRequest.expiry_date,
-      });
+      const isRequestRefused = await isShamirRecoveryRequestRefused(recoveryRequest.id);
+      if (isRequestRefused) {
+        res.status(200).json({
+          status: 'refused',
+          supportEmail,
+          createdAt: recoveryRequest.created_at,
+          expiryDate: recoveryRequest.expiry_date,
+        });
+      } else {
+        res.status(200).json({
+          status: 'pending',
+          supportEmail,
+          createdAt: recoveryRequest.created_at,
+          expiryDate: recoveryRequest.expiry_date,
+        });
+      }
       return;
     }
     res.status(200).json({
