@@ -101,7 +101,7 @@ async function checkSession(
       // for backwards compatibility
       expectedSessionData.groupId === untrustedSessionData.bankId) &&
     (options.deviceOnlyAuthAllowed ||
-      // use != true for backwards compatibiliy will undefined values
+      // use != true for backwards compatibiliy with undefined values
       expectedSessionData.deviceOnly != true)
   );
 }
