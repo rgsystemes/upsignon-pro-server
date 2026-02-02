@@ -71,21 +71,12 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
 
     if (totalOpenShares < minShares) {
       const isRequestRefused = await isShamirRecoveryRequestRefused(recoveryRequest.id);
-      if (isRequestRefused) {
-        res.status(200).json({
-          status: 'refused',
-          supportEmail,
-          createdAt: recoveryRequest.created_at,
-          expiryDate: recoveryRequest.expiry_date,
-        });
-      } else {
-        res.status(200).json({
-          status: 'pending',
-          supportEmail,
-          createdAt: recoveryRequest.created_at,
-          expiryDate: recoveryRequest.expiry_date,
-        });
-      }
+      res.status(200).json({
+        status: isRequestRefused ? 'refused' : 'pending',
+        supportEmail,
+        createdAt: recoveryRequest.created_at,
+        expiryDate: recoveryRequest.expiry_date,
+      });
       return;
     }
     res.status(200).json({
