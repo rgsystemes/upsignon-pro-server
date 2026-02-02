@@ -364,14 +364,24 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
   //     ],
   //   );
   // }
-  
+
   // SHAMIR CONFIGS
   if (data.shamir_configs) {
     for (var i = 0; i < data.shamir_configs.length; i++) {
       const sc = data.shamir_configs[i];
       const insertedConfig = await dbConnection.query(
-        'INSERT INTO shamir_configs (name, min_shares, is_active, bank_id, created_at) VALUES ($1,$2,$3,$4,$5) RETURNING id',
-        [sc.name, sc.min_shares, sc.is_active, bankId, sc.created_at],
+        'INSERT INTO shamir_configs (name, min_shares, is_active, support_email, creator_email, bank_id, created_at, change, change_signatures) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id',
+        [
+          sc.name,
+          sc.min_shares,
+          sc.is_active,
+          sc.support_email,
+          sc.creator_email,
+          bankId,
+          sc.created_at,
+          sc.change,
+          sc.change_signatures,
+        ],
       );
       const newConfigId = insertedConfig.rows[0].id;
 
@@ -452,8 +462,17 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
     for (var i = 0; i < data.shamir_recovery_requests.length; i++) {
       const srr = data.shamir_recovery_requests[i];
       await dbConnection.query(
-        'INSERT INTO shamir_recovery_requests (device_id, shamir_config_id, created_at, completed_at, status) VALUES ($1,$2,$3,$4,$5)',
-        [srr.newDeviceId, srr.newShamirConfigId, srr.created_at, srr.completed_at, srr.status],
+        'INSERT INTO shamir_recovery_requests (device_id, public_key, shamir_config_id, created_at, completed_at, status, expiry_date, denied_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$7,$8)',
+        [
+          srr.newDeviceId,
+          srr.public_key,
+          srr.newShamirConfigId,
+          srr.created_at,
+          srr.completed_at,
+          srr.status,
+          srr.expiry_date,
+          srr.denied_by,
+        ],
       );
     }
   }

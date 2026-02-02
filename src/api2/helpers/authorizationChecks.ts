@@ -1,11 +1,10 @@
 import { Request, Response } from 'express';
 import { db } from '../../helpers/db';
-import { logInfo } from '../../helpers/logger';
+import { logError, logInfo } from '../../helpers/logger';
 import { inputSanitizer } from '../../helpers/sanitizer';
 import { SessionStore } from '../../helpers/sessionStore';
 import { getBankIds, BankIds } from './bankUUID';
 import Joi from 'joi';
-import { checkDeviceRequestAuthorizationV2, createDeviceChallengeV2 } from './deviceChallengev2';
 
 export const checkBasicAuth2 = async (
   req: Request,
@@ -50,11 +49,15 @@ export const checkBasicAuth2 = async (
   }
 
   if (deviceSession) {
-    const isSessionOK = await SessionStore.checkSession(deviceSession, {
-      userEmail,
-      deviceUniqueId: deviceUId,
-      bankId: bankIds.internalId,
-    });
+    const isSessionOK = await SessionStore.checkSession(
+      deviceSession,
+      {
+        userEmail,
+        deviceUniqueId: deviceUId,
+        bankId: bankIds.internalId,
+      },
+      { deviceOnlyAuthAllowed: false },
+    );
     if (!isSessionOK) {
       logInfo(req.body?.userEmail, 'checkBasicAuth2 fail: invalid session');
       return { granted: false };
@@ -136,72 +139,72 @@ WHERE
   };
 };
 
-export const authenticateDeviceWithChallenge = async (
+export const checkDeviceAuth = async (
   req: Request,
-  res: Response,
-  logPrefix: string,
-): Promise<{ vaultId: number; devicePrimaryId: number } | null> => {
+): Promise<
+  | { granted: false }
+  | {
+      granted: true;
+      vaultEmail: string;
+      vaultId: number;
+      deviceUuid: string;
+      deviceId: number;
+      bankIds: BankIds;
+    }
+> => {
   const joiRes = Joi.object({
     userEmail: Joi.string().email().lowercase().required(),
     deviceId: Joi.string().required(),
-    deviceChallengeResponse: Joi.string(),
+    deviceOnlySession: Joi.string().required(),
   })
     .unknown(true)
     .validate(req.body);
 
   if (joiRes.error) {
-    res.status(403).json({ error: joiRes.error.details });
-    return null;
+    logError(joiRes.error);
+    return { granted: false };
   }
   const bankIds = await getBankIds(req);
 
-  const safeBody = joiRes.value;
+  const { userEmail, deviceId: deviceUuid, deviceOnlySession } = joiRes.value;
 
-  // Request DB
-  const deviceRes = await db.query(
+  const isSessionOK = await SessionStore.checkSession(
+    deviceOnlySession,
+    {
+      userEmail: userEmail,
+      deviceUniqueId: deviceUuid,
+      bankId: bankIds.internalId,
+    },
+    { deviceOnlyAuthAllowed: true },
+  );
+  if (!isSessionOK) {
+    logInfo(req.body?.userEmail, 'checkDeviceAuth fail: invalid session');
+    return { granted: false };
+  }
+  const idsRes = await db.query(
     `SELECT
           user_devices.id AS id,
-          users.id AS userid,
-          user_devices.device_public_key_2 AS device_public_key_2,
-          user_devices.session_auth_challenge AS session_auth_challenge,
-          user_devices.session_auth_challenge_exp_time AS session_auth_challenge_exp_time
+          users.id AS vaultid
         FROM user_devices
           INNER JOIN users ON user_devices.user_id = users.id
         WHERE
           users.email=$1
+          AND (users.deactivated IS NULL OR users.deactivated = false)
           AND user_devices.device_unique_id = $2
-          AND user_devices.authorization_status='AUTHORIZED'
           AND user_devices.bank_id=$3
         LIMIT 1`,
-    [safeBody.userEmail, safeBody.deviceId, bankIds.internalId],
+    [userEmail, deviceUuid, bankIds.internalId],
   );
-
-  if (!deviceRes || deviceRes.rowCount === 0) {
-    logInfo(safeBody.userEmail, `${logPrefix} fail: no such authorized device`);
-    res.status(401).end();
-    return null;
-  }
-
-  if (!safeBody.deviceChallengeResponse) {
-    const deviceChallenge = await createDeviceChallengeV2(deviceRes.rows[0].id);
-    logInfo(safeBody.userEmail, `${logPrefix} fail: sending device challenge`);
-    res.status(403).json({ deviceChallenge });
-    return null;
-  }
-  const isDeviceAuthorized = await checkDeviceRequestAuthorizationV2(
-    safeBody.deviceChallengeResponse,
-    deviceRes.rows[0].id,
-    deviceRes.rows[0].session_auth_challenge_exp_time,
-    deviceRes.rows[0].session_auth_challenge,
-    deviceRes.rows[0].device_public_key_2,
-  );
-  if (!isDeviceAuthorized) {
-    logInfo(safeBody.userEmail, `${logPrefix} fail: device auth failed`);
-    res.status(401).end();
-    return null;
+  if (idsRes.rows.length === 0) {
+    logInfo(req.body?.userEmail, 'checkDeviceAuth fail: device or user not found');
+    return { granted: false };
   }
   return {
-    vaultId: deviceRes.rows[0].userid,
-    devicePrimaryId: deviceRes.rows[0].id,
+    granted: true,
+    vaultEmail: userEmail,
+    vaultId: idsRes.rows[0].vaultid,
+    deviceUuid,
+    deviceId: idsRes.rows[0].id,
+    bankIds,
   };
 };

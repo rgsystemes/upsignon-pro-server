@@ -59,9 +59,12 @@ import { upsertShamirBackup } from './api2/routes/shamirRecovery/upsertShamirBac
 import { requestShamirRecovery } from './api2/routes/shamirRecovery/requestShamirRecovery';
 import { retrieveShamirRecoveriesToApprove } from './api2/routes/shamirRecovery/retrieveShamirRecoveriesToApprove';
 import { openShamirShares } from './api2/routes/shamirRecovery/openShamirShares';
-import { retrieveOpenShamirShares } from './api2/routes/shamirRecovery/retrieveOpenShamirShares';
+import { getShamirStatus } from './api2/routes/shamirRecovery/getShamirStatus';
 import { abortShamirRecovery } from './api2/routes/shamirRecovery/abortShamirRecovery';
 import { finishShamirRecovery } from './api2/routes/shamirRecovery/finishShamirRecovery';
+import { getDevicesWithPasswordBackup } from './api2/routes/shamirRecovery/getDevicesWithPasswordBackup';
+import { authenticateDeviceOnly } from './api2/routes/authentication/authenticateDeviceOnly';
+import { denyShamirRequestApproval } from './api2/routes/shamirRecovery/denyShamirRequestApproval';
 
 const app = express();
 
@@ -161,6 +164,7 @@ app.post(
 );
 app.post(['/:bankUUID/api2/authenticate', '/api2/authenticate'], authenticate2);
 app.post(['/:bankUUID/api2/disconnect', '/api2/disconnect'], disconnect2);
+app.post(['/:bankUUID/api2/authenticate-device-only'], authenticateDeviceOnly);
 
 // OPENID
 app.post(['/:bankUUID/api2/authenticate-with-openid-auth-code'], authenticateWithOpenidAuthCode);
@@ -264,6 +268,7 @@ app.post('/:bankUUID/api2/get-browser-setup-preference', getBrowserSetupPreferen
 app.post('/:bankUUID/api2/set-browser-setup-preference', setBrowserSetupUserPreference);
 
 // SHAMIR RECOVERY
+app.post(['/:bankUUID/api2/get-devices-with-backup'], getDevicesWithPasswordBackup);
 app.post(['/:bankUUID/api2/get-shamir-configs'], getShamirConfigs);
 app.post(['/:bankUUID/api2/update-shamir-backup'], upsertShamirBackup);
 app.post(['/:bankUUID/api2/request-shamir-recovery'], requestShamirRecovery);
@@ -272,7 +277,8 @@ app.post(
   retrieveShamirRecoveriesToApprove,
 );
 app.post(['/:bankUUID/api2/open-shamir-shares'], openShamirShares);
-app.post(['/:bankUUID/api2/retrieve-open-shamir-shares'], retrieveOpenShamirShares);
+app.post(['/:bankUUID/api2/deny-shamir-request-approval'], denyShamirRequestApproval);
+app.post(['/:bankUUID/api2/get-shamir-recovery-status'], getShamirStatus);
 app.post(['/:bankUUID/api2/abort-shamir-recovery'], abortShamirRecovery);
 app.post(['/:bankUUID/api2/finish-shamir-recovery'], finishShamirRecovery);
 
