@@ -64,7 +64,9 @@ import { finishShamirRecovery } from './api2/routes/shamirRecovery/finishShamirR
 import { getDevicesWithPasswordBackup } from './api2/routes/shamirRecovery/getDevicesWithPasswordBackup';
 import { authenticateDeviceOnly } from './api2/routes/authentication/authenticateDeviceOnly';
 import { denyShamirRequestApproval } from './api2/routes/shamirRecovery/denyShamirRequestApproval';
+import { retrieveShamirConfigChangeToApprove } from './api2/routes/shamirRecovery/retrieveShamirConfigChangeToApprove';
 import { checkPublicKeys2 } from './api2/routes/data/checkUserPublicKey';
+import { signShamirConfigChange } from './api2/routes/shamirRecovery/signShamirConfigChange';
 
 const app = express();
 
@@ -281,6 +283,11 @@ app.post(['/:bankUUID/api2/deny-shamir-request-approval'], denyShamirRequestAppr
 app.post(['/:bankUUID/api2/get-shamir-recovery-status'], getShamirStatus);
 app.post(['/:bankUUID/api2/abort-shamir-recovery'], abortShamirRecovery);
 app.post(['/:bankUUID/api2/finish-shamir-recovery'], finishShamirRecovery);
+app.post(
+  ['/:bankUUID/api2/retrieve-shamir-config-changes-to-approve'],
+  retrieveShamirConfigChangeToApprove,
+);
+app.post(['/:bankUUID/api2/sign-shamir-config-change'], signShamirConfigChange);
 
 if (module === require.main) {
   runMigrations()

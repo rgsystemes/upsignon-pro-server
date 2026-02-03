@@ -34,9 +34,9 @@ export const checkPublicKeys2 = async (req: Request, res: Response) => {
       return;
     }
 
-    if (userPublicKeysRes.rows[0].sharing_public_key !== sharingPublicKey) {
+    if (userPublicKeysRes.rows[0].sharing_public_key_2 !== sharingPublicKey) {
       matchesSharingPublicKey = false;
-      const message = `---------------\nWARNING! POTENTIAL HACK DETECTED!\nThe sharing public key for user ${basicAuth.userEmail} that was found in the database did not match the public key registered in the user's private space. The database public key was\n\n${userPublicKeysRes.rows[0].sharing_public_key}\n\nwhile the user's expected public key was\n\n${sharingPublicKey}\n\nA database request to update the public key for this user with his expected public key will be made right after this message.\nIt is possible that the hacker has been able to read the passwords of all the accounts that are shared with ${basicAuth.userEmail}.\n---------------`;
+      const message = `---------------\nWARNING! POTENTIAL HACK DETECTED!\nThe sharing public key for user ${basicAuth.userEmail} that was found in the database did not match the public key registered in the user's private space. The database public key was\n\n${userPublicKeysRes.rows[0].sharing_public_key_2}\n\nwhile the user's expected public key was\n\n${sharingPublicKey}\n\nA database request to update the public key for this user with his expected public key will be made right after this message.\nIt is possible that the hacker has been able to read the passwords of all the accounts that are shared with ${basicAuth.userEmail}.\n---------------`;
       logInfo(message);
       logError(req.body?.userEmail, message);
       await db.query('UPDATE users SET sharing_public_key_2 = $1 WHERE email=$2 AND bank_id=$3', [
@@ -44,6 +44,7 @@ export const checkPublicKeys2 = async (req: Request, res: Response) => {
         basicAuth.userEmail,
         basicAuth.bankIds.internalId,
       ]);
+      // TODO send warning email to admin
     }
 
     let matchesSigningPublicKey = true;
@@ -51,9 +52,10 @@ export const checkPublicKeys2 = async (req: Request, res: Response) => {
       if (!!userPublicKeysRes.rows[0].signing_public__key) {
         // The signing key has been set before but has changed
         matchesSigningPublicKey = false;
-        const message = `---------------\nWARNING! POTENTIAL HACK DETECTED!\nThe signing public key for user ${basicAuth.userEmail} that was found in the database did not match the public key registered in the user's private space. The database public key was\n\n${userPublicKeysRes.rows[0].signing_public_key}\n\nwhile the user's expected public key was\n\n${signingPublicKey}\n\nA database request to update the public key for this user with his expected public key will be made right after this message.\nIt is possible that the hacker has been able to read the passwords of all the accounts that are shared with ${basicAuth.userEmail}.\n---------------`;
+        const message = `---------------\nWARNING! POTENTIAL HACK DETECTED!\nThe signing public key for user ${basicAuth.userEmail} that was found in the database did not match the public key registered in the user's private space. The database public signing key was\n\n${userPublicKeysRes.rows[0].signing_public_key}\n\nwhile the user's expected public key was\n\n${signingPublicKey}\n\nA database request to update the signing key for this user with his expected signing key will be made right after this message.\n---------------`;
         logInfo(message);
         logError(req.body?.userEmail, message);
+        // TODO send warning email to admin
       } // else the signing key has never been set before
       await db.query('UPDATE users SET signing_public_key = $1 WHERE email=$2 AND bank_id=$3', [
         signingPublicKey,
