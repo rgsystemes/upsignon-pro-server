@@ -2,6 +2,7 @@
 
 exports.up = async function (db) {
   await db.query('BEGIN');
+  await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS signing_public_key TEXT');
   await db.query(
     `CREATE TABLE IF NOT EXISTS shamir_configs (
         id SERIAL PRIMARY KEY,
@@ -61,5 +62,6 @@ exports.down = async function (db) {
   await db.query('DROP TABLE IF EXISTS shamir_holders');
   await db.query('DROP TABLE IF EXISTS shamir_configs');
   await db.query('DROP TYPE IF EXISTS shamir_status');
+  await db.query('ALTER TABLE users DROP COLUMN IF EXISTS signin_public_key');
   await db.query('COMMIT');
 };

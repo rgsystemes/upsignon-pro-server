@@ -44,7 +44,6 @@ import { disconnect2 } from './api2/routes/authentication/disconnect';
 import { backupPassword2 } from './api2/routes/passwordReset/backupPassword';
 import { getPasswordBackup2 } from './api2/routes/passwordReset/getPasswordBackup';
 import { renameDevice2 } from './api2/routes/devices/renameDevice';
-import { checkUserPublicKey2 } from './api2/routes/sharingRecipients/checkUserPublicKey';
 import { updateDeviceMetaData2 } from './api2/routes/devices/updateDeviceMetaData';
 import { logEvent } from './api2/routes/audit/logEvent';
 import libsodium from 'libsodium-wrappers';
@@ -65,6 +64,7 @@ import { finishShamirRecovery } from './api2/routes/shamirRecovery/finishShamirR
 import { getDevicesWithPasswordBackup } from './api2/routes/shamirRecovery/getDevicesWithPasswordBackup';
 import { authenticateDeviceOnly } from './api2/routes/authentication/authenticateDeviceOnly';
 import { denyShamirRequestApproval } from './api2/routes/shamirRecovery/denyShamirRequestApproval';
+import { checkPublicKeys2 } from './api2/routes/data/checkUserPublicKey';
 
 const app = express();
 
@@ -212,8 +212,8 @@ app.post(['/:bankUUID/api2/delete-shared-vault', '/api2/delete-shared-vault'], d
 
 // SHARING RECIPIENTS
 app.post(
-  ['/:bankUUID/api2/check-user-public-key', '/api2/check-user-public-key'],
-  checkUserPublicKey2,
+  ['/:bankUUID/api2/check-user-public-keys', '/api2/check-user-public-keys'],
+  checkPublicKeys2,
 );
 app.post(
   [
