@@ -1,4 +1,5 @@
 import { db } from './db';
+import env from './env';
 
 export const getAdminEmailsForBank = async (bankId: number): Promise<string[]> => {
   const bankAdmins = await db.query(
@@ -9,6 +10,9 @@ export const getAdminEmailsForBank = async (bankId: number): Promise<string[]> =
     const adminEmails = bankAdmins.rows.map((admin) => admin.email);
     return adminEmails;
   } else {
+    if (env.IS_SAAS) {
+      return [];
+    }
     const superAdmins = await db.query(
       "SELECT email FROM admins WHERE admin_role = 'superadmin'",
       [],
