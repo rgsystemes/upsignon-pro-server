@@ -65,8 +65,9 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
         allowed_offline_desktop,
         settings_override,
         ms_entra_id,
-        deactivated
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22) RETURNING id`,
+        deactivated,
+        signing_public_key
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23) RETURNING id`,
       [
         u.email,
         u.created_at,
@@ -90,6 +91,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
         u.settings_override,
         u.ms_entra_id,
         u.deactivated,
+        u.signing_public_key,
       ],
     );
     const newId = insertedUser.rows[0].id;
@@ -260,7 +262,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
   // USER DEVICES
   for (var i = 0; i < data.user_devices.length; i++) {
     const ud = data.user_devices[i];
-    const insertedRes = await db.query(
+    const insertedRes = await dbConnection.query(
       `INSERT INTO user_devices (
           user_id,
           device_name,
@@ -338,7 +340,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
   // let's drop this import since the curve will change from before due to potential missing refrences for deleted users and shared_vaults
   // for (var i = 0; i < data.data_stats.length; i++) {
   //   const row = data.data_stats[i];
-  //   await db.query(
+  //   await dbConnection.query(
   //     `INSERT INTO data_stats (
   //       user_id,
   //       date,
@@ -440,7 +442,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
   if (data.shamir_holders) {
     for (var i = 0; i < data.shamir_holders.length; i++) {
       const sh = data.shamir_holders[i];
-      const insertedHolder = await db.query(
+      const insertedHolder = await dbConnection.query(
         'INSERT INTO shamir_holders (vault_id, shamir_config_id, nb_shares, created_at) VALUES ($1,$2,$3,$4) RETURNING id',
         [sh.newVaultId, sh.newShamirConfigId, sh.nb_shares, sh.created_at],
       );
@@ -451,7 +453,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
   if (data.shamir_shares) {
     for (var i = 0; i < data.shamir_shares.length; i++) {
       const ss = data.shamir_shares[i];
-      await db.query(
+      await dbConnection.query(
         'INSERT INTO shamir_shares (vault_id, holder_vault_id, shamir_config_id, closed_shares, open_shares, created_at, open_at) VALUES ($1,$2,$3,$4,$5,$6,$7)',
         [
           ss.newVaultId,
