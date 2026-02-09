@@ -16,7 +16,7 @@ async function importBanks(filePath, dbConnection, resellerId) {
             skippedCount++;
             continue;
         }
-        const bankName = parseInt(raw, 10).toString();
+        const bankName = 'Etude ' + parseInt(raw, 10).toString();
         const result = await dbConnection.query(
             `INSERT INTO banks (name, reseller_id)
              SELECT $1, $2
