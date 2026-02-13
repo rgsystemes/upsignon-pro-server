@@ -38,6 +38,32 @@ export type ShamirConfig = {
   change_signatures: Record<string, any> | null;
 };
 
+export type EnhancedShamirConfig = {
+  id: number;
+  name: string;
+  minShares: number;
+  isActive: boolean;
+  supportEmail: string | null;
+  creatorEmail: string | null;
+  bankPublicId: string;
+  createdAt: Date | string;
+  change: string | null;
+  changeSignatures: Array<{
+    holderVaultId: number;
+    signedAt: string;
+    approved: boolean;
+    signature: string;
+  }>;
+  holders: Array<{
+    id: number;
+    email: string | null;
+    sharingPublicKey: string | null;
+    signingPublicKey: string | null;
+    nbShares: number;
+  }>;
+  needsUpdate: boolean;
+};
+
 const configFootprint1 = {
   configId: 1,
   configName: 'Shamir 1',
