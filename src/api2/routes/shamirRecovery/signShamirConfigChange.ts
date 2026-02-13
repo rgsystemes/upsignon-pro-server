@@ -58,10 +58,12 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
     }
 
     const changeObject: ShamirChange = JSON.parse(config.change);
-    const authorityConfig =
-      changeObject.previousShamirConfig == null
-        ? changeObject.thisShamirConfig
-        : changeObject.previousShamirConfig;
+    if (changeObject.previousShamirConfig == null) {
+      logInfo(req.body?.userEmail, 'First configs cannot be signed');
+      res.status(403).end();
+      return;
+    }
+    const authorityConfig = changeObject.previousShamirConfig;
 
     let isLegitimate = !!authorityConfig.shareholders.find(
       (sh) =>
@@ -136,15 +138,7 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
     }
 
     if (!updatedConfig.is_active) {
-      // Verify if the shamir config is now approved.
-      // No need to recheck all the signatures (if someone had access to the db, they could directly change the is_active flag)
-      const authorityShareHoldersRes = await db.query(
-        `SELECT vault_id, nb_shares
-        FROM shamir_holders
-        WHERE shamir_config_id=$1`,
-        [authorityConfig.configId],
-      );
-      const authorityShareHolders = authorityShareHoldersRes.rows;
+      const authorityShareHolders = authorityConfig.shareholders;
 
       const changeSignatures: ShamirChangeSignature[] = updatedConfig.change_signatures;
       // Count the number of approving shares.
@@ -153,10 +147,10 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
       const totalApprovingShares: number = authorityShareHolders.reduce(
         (sum: number, nextShareholder) => {
           const signature = changeSignatures.find(
-            (s) => s.holderVaultId === nextShareholder.vault_id,
+            (s) => s.holderVaultId === nextShareholder.vaultId,
           );
           if (signature && signature.approved) {
-            return sum + nextShareholder.nb_shares;
+            return sum + nextShareholder.nbShares;
           } else {
             return sum;
           }
