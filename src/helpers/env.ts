@@ -43,7 +43,7 @@ if (!!USE_POSTFIX_BOOL && !!DKIM_PRIVATE_KEY_PATH) {
 const statusServerUrl = (STATUS_SERVER_URL || 'https://app.upsignon.eu').replace(/\/$/, '');
 
 export default {
-  IS_PRODUCTION: NODE_ENV !== 'development',
+  IS_PRODUCTION: NODE_ENV !== 'development' && NODE_ENV !== 'test',
   DB_HOST,
   DB_PORT: DB_PORT ? Number.parseInt(DB_PORT) : 5432,
   DB_USER,

@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import path from 'path';
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+require('dotenv').config({ path: path.join(__dirname, '..', envFile) });
+
+// ...existing code...
 
 import express from 'express';
 import { SessionStore } from './helpers/sessionStore';
@@ -68,7 +71,7 @@ import { retrieveShamirConfigChangeToApprove } from './api2/routes/shamirRecover
 import { checkPublicKeys2 } from './api2/routes/data/checkUserPublicKey';
 import { signShamirConfigChange } from './api2/routes/shamirRecovery/signShamirConfigChange';
 
-const app = express();
+export const app = express();
 
 // Set express trust-proxy so that secure sessions cookies can work
 app.set('trust proxy', 1);

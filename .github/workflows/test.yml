@@ -1,0 +1,74 @@
+name: Tests
+
+on:
+  push:
+    branches: [master, production]
+  pull_request:
+    branches: [master, production]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Setup test environment
+        run: |
+          cp .env.test .env.test.local
+          echo "DB_HOST=localhost" >> .env.test.local
+          echo "DB_PORT=5432" >> .env.test.local
+          echo "DB_USER=postgres" >> .env.test.local
+          echo "DB_PASS=postgres" >> .env.test.local
+
+      - name: Build TypeScript
+        run: yarn run tsc
+
+      - name: Run tests
+        run: yarn test --coverage --maxWorkers=1
+        env:
+          NODE_ENV: test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASS: postgres
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        if: success()
+        with:
+          files: ./coverage/lcov.info
+          flags: integration-tests
+          name: codecov-umbrella
+
+      - name: Comment PR with coverage
+        if: github.event_name == 'pull_request'
+        uses: romeovs/lcov-reporter-action@v0.3.1
+        with:
+          lcov-file: ./coverage/lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
