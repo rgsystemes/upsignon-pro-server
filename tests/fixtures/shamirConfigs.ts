@@ -301,6 +301,11 @@ export const config2Approved: ShamirConfig = {
   change_signatures: approvingSignaturesConfig2,
 };
 
+export const rawConfig3Change = JSON.stringify({
+  previousShamirConfig: configFootprint2,
+  thisShamirConfig: configFootprint3,
+});
+
 export const config3Pending: ShamirConfig = {
   id: 3,
   name: 'Shamir 3',
@@ -310,10 +315,7 @@ export const config3Pending: ShamirConfig = {
   creator_email: 'admin@testbank1.com',
   bank_id: 1,
   created_at: new Date('2023-03-15T09:00:00Z'),
-  change: JSON.stringify({
-    previousShamirConfig: configFootprint2,
-    thisShamirConfig: configFootprint3,
-  }),
+  change: rawConfig3Change,
   change_signatures: [approvingSignaturesConfig3[1], approvingSignaturesConfig3[3]],
 };
 

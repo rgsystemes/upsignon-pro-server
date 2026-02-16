@@ -96,7 +96,7 @@ export const holdersConfig3: ShamirHolder[] = [
   },
 ];
 
-export const addShamirHolders = async (holders: ShamirHolder[]) => {
+export const addTestShamirHolders = async (holders: ShamirHolder[]) => {
   for (const holder of holders) {
     const query = holder.id
       ? `INSERT INTO shamir_holders (id, vault_id, shamir_config_id, nb_shares, created_at)
@@ -109,18 +109,5 @@ export const addShamirHolders = async (holders: ShamirHolder[]) => {
       : [holder.vault_id, holder.shamir_config_id, holder.nb_shares, holder.created_at];
 
     await db.query(query, params);
-  }
-};
-
-export const addShamirHoldersForConfig = async (
-  shamirConfigId: number,
-  holders: Array<{ vaultId: number; nbShares: number }>,
-) => {
-  for (const holder of holders) {
-    await db.query(
-      `INSERT INTO shamir_holders (shamir_config_id, vault_id, nb_shares)
-      VALUES ($1, $2, $3)`,
-      [shamirConfigId, holder.vaultId, holder.nbShares],
-    );
   }
 };

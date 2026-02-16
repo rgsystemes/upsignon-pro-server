@@ -57,7 +57,7 @@ export type UserDevice = {
   enrollment_method?: string;
 };
 
-const device1: UserDevice = {
+export const device1: UserDevice = {
   id: 1,
   user_id: 1,
   device_name: 'iPhone 15',
@@ -77,7 +77,7 @@ const device1: UserDevice = {
   enrollment_method: 'email',
 };
 
-const device2: UserDevice = {
+export const device2: UserDevice = {
   id: 2,
   user_id: 2,
   device_name: 'MacBook Pro',
@@ -97,7 +97,7 @@ const device2: UserDevice = {
   enrollment_method: 'email',
 };
 
-const device3: UserDevice = {
+export const device3: UserDevice = {
   id: 3,
   user_id: 3,
   device_name: 'Samsung Galaxy S24',
@@ -117,7 +117,7 @@ const device3: UserDevice = {
   enrollment_method: 'email',
 };
 
-const device4: UserDevice = {
+export const device4: UserDevice = {
   id: 4,
   user_id: 4,
   device_name: 'Windows Desktop',
@@ -140,7 +140,7 @@ const device4: UserDevice = {
   enrollment_method: 'qr_code',
 };
 
-const device5: UserDevice = {
+export const device5: UserDevice = {
   id: 5,
   user_id: 5,
   device_name: 'iPad Pro',
@@ -162,10 +162,9 @@ const device5: UserDevice = {
 
 export const testDevices: UserDevice[] = [device1, device2, device3, device4, device5];
 
-export const addTestDevices = async () => {
-  for (let d of testDevices) {
-    await db.query(
-      `INSERT INTO user_devices (
+export const addTestDevice = async (d: UserDevice) => {
+  await db.query(
+    `INSERT INTO user_devices (
         id, user_id, device_name, device_unique_id, authorization_status,
         authorization_code, auth_code_expiration_date, created_at, device_type,
         os_version, revocation_date, app_version, bank_id, session_auth_challenge,
@@ -175,33 +174,37 @@ export const addTestDevices = async () => {
         use_safe_browser_setup, enrollment_method
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)`,
-      [
-        d.id,
-        d.user_id,
-        d.device_name,
-        d.device_unique_id,
-        d.authorization_status,
-        d.authorization_code,
-        d.auth_code_expiration_date,
-        d.created_at,
-        d.device_type,
-        d.os_version,
-        d.revocation_date,
-        d.app_version,
-        d.bank_id,
-        d.session_auth_challenge,
-        d.session_auth_challenge_exp_time,
-        d.password_challenge_error_count,
-        d.last_password_challenge_submission_date,
-        d.encrypted_password_backup_2,
-        d.device_public_key_2,
-        d.last_sync_date,
-        d.install_type,
-        d.os_family,
-        d.use_safe_browser_setup,
-        d.enrollment_method,
-      ],
-    );
+    [
+      d.id,
+      d.user_id,
+      d.device_name,
+      d.device_unique_id,
+      d.authorization_status,
+      d.authorization_code,
+      d.auth_code_expiration_date,
+      d.created_at,
+      d.device_type,
+      d.os_version,
+      d.revocation_date,
+      d.app_version,
+      d.bank_id,
+      d.session_auth_challenge,
+      d.session_auth_challenge_exp_time,
+      d.password_challenge_error_count,
+      d.last_password_challenge_submission_date,
+      d.encrypted_password_backup_2,
+      d.device_public_key_2,
+      d.last_sync_date,
+      d.install_type,
+      d.os_family,
+      d.use_safe_browser_setup,
+      d.enrollment_method,
+    ],
+  );
+};
+export const addTestDevices = async () => {
+  for (let d of testDevices) {
+    await addTestDevice(d);
   }
 };
 
