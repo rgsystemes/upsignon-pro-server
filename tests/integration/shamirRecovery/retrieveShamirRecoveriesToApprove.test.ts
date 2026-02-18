@@ -330,7 +330,7 @@ describe('retrieveShamirRecoveriesToApprove', () => {
           created_at: new Date('2023-03-01T14:30:00Z'),
         },
       ]);
-      // fake remaining shares for a previous config wher user was holder
+      // fake remaining shares for a previous config where user was holder
       await addTestShamirShares([
         {
           vault_id: 1,

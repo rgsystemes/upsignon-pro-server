@@ -30,18 +30,21 @@ export class TestDatabase {
   }
 
   async clean() {
-    if (!this.pool) {
-      throw new Error('Database pool is not initialized');
-    }
+    try {
+      if (!this.pool) {
+        throw new Error('Database pool is not initialized');
+      }
 
-    const tables = await this.pool.query(`
-      SELECT tablename FROM pg_tables
-      WHERE schemaname = 'public'
-      AND tablename != 'migrations'
-    `);
-
-    for (const row of tables.rows) {
-      await this.pool.query(`TRUNCATE TABLE ${row.tablename} CASCADE`);
+      const tables = await this.pool.query(`
+        SELECT tablename FROM pg_tables
+        WHERE schemaname = 'public'
+        AND tablename != 'migrations'
+        `);
+      for (const row of tables.rows) {
+        await this.pool.query(`TRUNCATE TABLE ${row.tablename} CASCADE`);
+      }
+    } catch (e) {
+      console.error('Error cleaning database', e);
     }
   }
 

@@ -12,13 +12,14 @@ import {
   config3Pending,
   approvingSignaturesConfig2,
   EnhancedShamirConfig,
+  rawConfig3Change,
+  approvingSignaturesConfig3,
 } from '../../fixtures/shamirConfigs';
 import {
-  addShamirHoldersForConfig,
   holdersConfig1,
   holdersConfig2,
   holdersConfig3,
-  addShamirHolders,
+  addTestShamirHolders,
 } from '../../fixtures/shamirHolders';
 
 jest.mock('../../../src/api2/helpers/authorizationChecks', () => ({
@@ -31,6 +32,7 @@ jest.mock('../../../src/helpers/logger', () => ({
 
 import { checkBasicAuth2 } from '../../../src/api2/helpers/authorizationChecks';
 import { db } from '../../../src/helpers/db';
+import { addTestShamirShares, sharesConfig1, sharesConfig2 } from '../../fixtures/shamirShares';
 
 const mockRes = () => {
   return {
@@ -58,19 +60,6 @@ const mockCheckBasicAuth2Failure = () => {
   (checkBasicAuth2 as jest.Mock<any>).mockResolvedValue({
     granted: false,
   });
-};
-
-const addShamirShares = async (
-  shamirConfigId: number,
-  vaultId: number,
-  holderVaultId: number,
-  closedShares: string[] | null,
-) => {
-  await db.query(
-    `INSERT INTO shamir_shares (shamir_config_id, vault_id, holder_vault_id, closed_shares)
-    VALUES ($1, $2, $3, $4)`,
-    [shamirConfigId, vaultId, holderVaultId, closedShares],
-  );
 };
 
 describe('getShamirConfigs', () => {
@@ -117,7 +106,6 @@ describe('getShamirConfigs', () => {
   describe('retrieve configurations', () => {
     it('should return empty array when no configurations exist', async () => {
       mockCheckBasicAuth2Success(testUsers[0].id);
-
       const mockReq = {
         body: {
           userEmail: testUsers[0].email,
@@ -125,17 +113,13 @@ describe('getShamirConfigs', () => {
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirConfigs(mockReq, resMock);
-
       expect(resMock.status).toHaveBeenCalledWith(200);
       expect(resMock.json).toHaveBeenCalledWith([]);
     });
-
     it('should return single configuration', async () => {
       await addTestShamirConfigs([config1Approved]);
-      await addShamirHolders(holdersConfig1);
-
+      await addTestShamirHolders(holdersConfig1);
       mockCheckBasicAuth2Success(testUsers[0].id);
-
       const mockReq = {
         body: {
           userEmail: testUsers[0].email,
@@ -143,7 +127,6 @@ describe('getShamirConfigs', () => {
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirConfigs(mockReq, resMock);
-
       expect(resMock.status).toHaveBeenCalledWith(200);
       const jsonCall = (resMock.json as jest.Mock).mock.calls[0][0] as EnhancedShamirConfig[];
       expect(jsonCall).toHaveLength(1);
@@ -156,13 +139,10 @@ describe('getShamirConfigs', () => {
         creatorEmail: 'admin@testbank1.com',
       });
     });
-
     it('should return multiple configurations ordered by creation date', async () => {
       await addTestShamirConfigs([config1Approved, config2Approved, config3Pending]);
-      await addShamirHolders([...holdersConfig1, ...holdersConfig2, ...holdersConfig3]);
-
+      await addTestShamirHolders([...holdersConfig1, ...holdersConfig2, ...holdersConfig3]);
       mockCheckBasicAuth2Success(testUsers[0].id);
-
       const mockReq = {
         body: {
           userEmail: testUsers[0].email,
@@ -170,64 +150,58 @@ describe('getShamirConfigs', () => {
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirConfigs(mockReq, resMock);
-
       expect(resMock.status).toHaveBeenCalledWith(200);
       const jsonCall = (resMock.json as jest.Mock).mock.calls[0][0] as EnhancedShamirConfig[];
       expect(jsonCall).toHaveLength(3);
       expect(jsonCall[0].id).toBe(1);
       expect(jsonCall[1].id).toBe(2);
       expect(jsonCall[2].id).toBe(3);
-    });
-
-    it('should return correct holders information', async () => {
-      await addTestShamirConfigs([config2Approved]);
-      await addShamirHolders(holdersConfig2);
-
-      mockCheckBasicAuth2Success(testUsers[0].id);
-
-      const mockReq = {
-        body: {
-          userEmail: testUsers[0].email,
-        },
-      } as unknown as Request;
-      const resMock = mockRes();
-      await getShamirConfigs(mockReq, resMock);
-
-      expect(resMock.status).toHaveBeenCalledWith(200);
-      const jsonCall = (resMock.json as jest.Mock).mock.calls[0][0] as EnhancedShamirConfig[];
-      expect(jsonCall[0].holders).toHaveLength(4);
-      expect(jsonCall[0].holders[0]).toMatchObject({
-        id: testUsers[0].id,
-        email: testUsers[0].email,
-        nbShares: 1,
+      const returnedConfig3 = jsonCall[2];
+      expect(returnedConfig3).toMatchObject({
+        id: 3,
+        name: 'Shamir 3',
+        minShares: 1,
+        isActive: false,
+        supportEmail: 'test@testbank1.com',
+        creatorEmail: 'admin@testbank1.com',
+        bankPublicId: '6333b2b6-2598-4a31-a263-e1897b29d5f5',
+        createdAt: new Date('2023-03-15T09:00:00Z'),
+        change: rawConfig3Change,
+        changeSignatures: [approvingSignaturesConfig3[1], approvingSignaturesConfig3[3]],
+        holders: [
+          {
+            id: 1,
+            email: 'user1@testbank1.com',
+            sharingPublicKey: 'VO8BJSM+drNdlNm9AkAmQXg6/AHl+xDnskvrbdXilH4=',
+            signingPublicKey: 'Oo9Do/g8Wak201deG8C902+a7VIEDzgZu6YFyuxqMCs=',
+            nbShares: 1,
+          },
+          {
+            id: 2,
+            email: 'user2@testbank1.com',
+            sharingPublicKey: '2CAhQVMbuRulJMyz7nsuNhXDt3kQjzGLOaCnm4v9YhU=',
+            signingPublicKey: 'Arf/cbVfjXekFHgrJnpFf07xN8UFSjOjNDaZ/seWS1k=',
+            nbShares: 1,
+          },
+          {
+            id: 4,
+            email: 'user1@testbank2.com',
+            sharingPublicKey: 'y8cC9saI397Abt+kdPxx0zG8y4zpzA6JRA4XqAiW93A=',
+            signingPublicKey: 'iFB2t1w6HfzUawFQDvvT6QvfDZm/gdVMhu7zLEi4kLs=',
+            nbShares: 1,
+          },
+          {
+            id: 5,
+            email: 'user2@testbank2.com',
+            sharingPublicKey: 'fZssSU/bDt+obMKJtqApdO6jbmy0azOtKGtr1H2+QX8=',
+            signingPublicKey: 'Z1fm5BxZSXb6oW9zPVHbIgVQnHfWMKS6gf4I6kx4HAE=',
+            nbShares: 1,
+          },
+        ],
+        needsUpdate: false,
       });
-      expect(jsonCall[0].holders[0].sharingPublicKey).toBeTruthy();
-      expect(jsonCall[0].holders[0].signingPublicKey).toBeTruthy();
-    });
-
-    it('should return change and changeSignatures', async () => {
-      await addTestShamirConfigs([config1Approved, config2Approved]);
-      await addShamirHolders([...holdersConfig1, ...holdersConfig2]);
-
-      mockCheckBasicAuth2Success(testUsers[0].id);
-
-      const mockReq = {
-        body: {
-          userEmail: testUsers[0].email,
-        },
-      } as unknown as Request;
-      const resMock = mockRes();
-      await getShamirConfigs(mockReq, resMock);
-
-      expect(resMock.status).toHaveBeenCalledWith(200);
-      const jsonCall = (resMock.json as jest.Mock).mock.calls[0][0] as EnhancedShamirConfig[];
-      expect(jsonCall[0].change).toBeTruthy();
-      expect(jsonCall[0].changeSignatures).toEqual([]);
-      expect(jsonCall[1].change).toBeTruthy();
-      expect(jsonCall[1].changeSignatures).toEqual(approvingSignaturesConfig2);
     });
   });
-
   describe('needsUpdate flag', () => {
     it('should set needsUpdate to true when no shares exist for active config', async () => {
       await addTestShamirConfigs([
@@ -236,10 +210,8 @@ describe('getShamirConfigs', () => {
           is_active: true,
         },
       ]);
-      await addShamirHolders(holdersConfig1);
-
+      await addTestShamirHolders(holdersConfig1);
       mockCheckBasicAuth2Success(testUsers[0].id);
-
       const mockReq = {
         body: {
           userEmail: testUsers[0].email,
@@ -247,12 +219,10 @@ describe('getShamirConfigs', () => {
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirConfigs(mockReq, resMock);
-
       expect(resMock.status).toHaveBeenCalledWith(200);
       const jsonCall = (resMock.json as jest.Mock).mock.calls[0][0] as EnhancedShamirConfig[];
       expect(jsonCall[0].needsUpdate).toBe(true);
     });
-
     it('should set needsUpdate to false when all shares are up to date for active config', async () => {
       await addTestShamirConfigs([
         {
@@ -260,11 +230,9 @@ describe('getShamirConfigs', () => {
           is_active: true,
         },
       ]);
-      await addShamirHoldersForConfig(1, [{ vaultId: testUsers[0].id, nbShares: 2 }]);
-      await addShamirShares(1, testUsers[0].id, testUsers[0].id, ['share1', 'share2']);
-
+      await addTestShamirHolders(holdersConfig1);
+      await addTestShamirShares(sharesConfig1);
       mockCheckBasicAuth2Success(testUsers[0].id);
-
       const mockReq = {
         body: {
           userEmail: testUsers[0].email,
@@ -272,12 +240,10 @@ describe('getShamirConfigs', () => {
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirConfigs(mockReq, resMock);
-
       expect(resMock.status).toHaveBeenCalledWith(200);
       const jsonCall = (resMock.json as jest.Mock).mock.calls[0][0] as EnhancedShamirConfig[];
       expect(jsonCall[0].needsUpdate).toBe(false);
     });
-
     it('should set needsUpdate to true when number of shares is reduced', async () => {
       await addTestShamirConfigs([
         {
@@ -285,11 +251,9 @@ describe('getShamirConfigs', () => {
           is_active: true,
         },
       ]);
-      await addShamirHoldersForConfig(1, [{ vaultId: testUsers[0].id, nbShares: 3 }]);
-      await addShamirShares(1, testUsers[0].id, testUsers[0].id, ['share1', 'share2']);
-
+      await addTestShamirHolders([{ ...holdersConfig1[0], nb_shares: 2 }]);
+      await addTestShamirShares(sharesConfig1);
       mockCheckBasicAuth2Success(testUsers[0].id);
-
       const mockReq = {
         body: {
           userEmail: testUsers[0].email,
@@ -297,18 +261,14 @@ describe('getShamirConfigs', () => {
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirConfigs(mockReq, resMock);
-
       expect(resMock.status).toHaveBeenCalledWith(200);
       const jsonCall = (resMock.json as jest.Mock).mock.calls[0][0] as EnhancedShamirConfig[];
       expect(jsonCall[0].needsUpdate).toBe(true);
     });
-
     it('should set needsUpdate to false for inactive configs even when shares are missing', async () => {
       await addTestShamirConfigs([config1Approved]);
-      await addShamirHolders(holdersConfig1);
-
+      await addTestShamirHolders(holdersConfig1);
       mockCheckBasicAuth2Success(testUsers[0].id);
-
       const mockReq = {
         body: {
           userEmail: testUsers[0].email,
@@ -316,13 +276,11 @@ describe('getShamirConfigs', () => {
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirConfigs(mockReq, resMock);
-
       expect(resMock.status).toHaveBeenCalledWith(200);
       const jsonCall = (resMock.json as jest.Mock).mock.calls[0][0] as EnhancedShamirConfig[];
       expect(jsonCall[0].isActive).toBe(false);
       expect(jsonCall[0].needsUpdate).toBe(false);
     });
-
     it('should handle multiple users with different share status', async () => {
       await addTestShamirConfigs([
         {
@@ -330,15 +288,9 @@ describe('getShamirConfigs', () => {
           is_active: true,
         },
       ]);
-      await addShamirHoldersForConfig(2, [
-        { vaultId: testUsers[0].id, nbShares: 2 },
-        { vaultId: testUsers[1].id, nbShares: 2 },
-      ]);
-      await addShamirShares(2, testUsers[0].id, testUsers[0].id, ['share1', 'share2']);
-      await addShamirShares(2, testUsers[0].id, testUsers[1].id, ['share3', 'share4']);
-
+      await addTestShamirHolders(holdersConfig2);
+      await addTestShamirShares(sharesConfig2);
       mockCheckBasicAuth2Success(testUsers[0].id);
-
       const mockReq = {
         body: {
           userEmail: testUsers[0].email,
@@ -346,7 +298,6 @@ describe('getShamirConfigs', () => {
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirConfigs(mockReq, resMock);
-
       expect(resMock.status).toHaveBeenCalledWith(200);
       const jsonCall = (resMock.json as jest.Mock).mock.calls[0][0] as EnhancedShamirConfig[];
       expect(jsonCall[0].needsUpdate).toBe(false);
@@ -356,7 +307,7 @@ describe('getShamirConfigs', () => {
   describe('user from different banks', () => {
     it('should only return configs for the user bank', async () => {
       await addTestShamirConfigs([config1Approved, config2Approved]);
-      await addShamirHolders([...holdersConfig1, ...holdersConfig2]);
+      await addTestShamirHolders([...holdersConfig1, ...holdersConfig2]);
 
       mockCheckBasicAuth2Success(testUsers[3].id);
 
