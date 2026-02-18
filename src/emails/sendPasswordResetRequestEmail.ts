@@ -1,6 +1,6 @@
-import { getEmailConfig, getMailTransporter } from './getMailTransporter';
-import { logError } from './logger';
-import { inputSanitizer } from './sanitizer';
+import { getEmailConfig, getMailTransporter } from '../helpers/getMailTransporter';
+import { logError } from '../helpers/logger';
+import { inputSanitizer } from '../helpers/sanitizer';
 import { buildEmail, getBestLanguage } from 'upsignon-mail';
 
 export const sendPasswordResetRequestEmail = async (
