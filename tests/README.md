@@ -40,10 +40,29 @@ tests/
 │   ├── testDatabase.ts     # Database lifecycle management
 │   └── testHelpers.ts      # Reusable test utilities
 ├── fixtures/               # Test data templates
-│   ├── users.ts
-│   └── shamirConfigs.ts
+│   ├── admins.ts
+│   ├── banks.ts
+│   ├── shamirConfigs.ts
+│   ├── shamirHolders.ts
+│   ├── shamirRecoveryRequests.ts
+│   ├── shamirShares.ts
+│   ├── userDevices.ts
+│   └── users.ts
 └── integration/            # Integration tests
+    ├── helpers/            # Helper function tests
+    │   └── getAdminsEmailsForBank.test.ts
     └── shamirRecovery/     # Shamir recovery route tests
+        ├── abortShamirRecovery.test.ts
+        ├── denyShamirRequestApproval.test.ts
+        ├── finishShamirRecovery.test.ts
+        ├── getShamirConfigs.test.ts
+        ├── getShamirStatus.test.ts
+        ├── openShamirShares.test.ts
+        ├── requestShamirRecovery.test.ts
+        ├── retrieveShamirConfigChangeToApprove.test.ts
+        ├── retrieveShamirRecoveriesToApprove.test.ts
+        ├── signShamirConfigChange.test.ts
+        └── upsertShamirBackup.test.ts
 ```
 
 ## Environment Configuration
@@ -56,6 +75,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASS=postgres
+DB_NAME=postgres
 ```
 
 ## Test Database Strategy

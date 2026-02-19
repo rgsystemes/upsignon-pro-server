@@ -70,6 +70,7 @@ import { denyShamirRequestApproval } from './api2/routes/shamirRecovery/denySham
 import { retrieveShamirConfigChangeToApprove } from './api2/routes/shamirRecovery/retrieveShamirConfigChangeToApprove';
 import { checkPublicKeys2 } from './api2/routes/data/checkUserPublicKey';
 import { signShamirConfigChange } from './api2/routes/shamirRecovery/signShamirConfigChange';
+import { shamirSecurityAlert } from './api2/routes/shamirRecovery/shamirSecurityAlert';
 
 export const app = express();
 
@@ -291,6 +292,7 @@ app.post(
   retrieveShamirConfigChangeToApprove,
 );
 app.post(['/:bankUUID/api2/sign-shamir-config-change'], signShamirConfigChange);
+app.post(['/:bankUUID/api2/shamir-security-alert'], shamirSecurityAlert);
 
 if (module === require.main) {
   runMigrations()

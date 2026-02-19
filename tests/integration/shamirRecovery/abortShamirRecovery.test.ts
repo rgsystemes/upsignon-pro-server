@@ -22,7 +22,7 @@ import {
   addTestShamirRecoveryRequests,
   pendingRecoveryRequest1,
 } from '../../fixtures/shamirRecoveryRequests';
-import { addTestShamirShares, sharesConfig1 } from '../../fixtures/shamirShares';
+import { addTestShamirShares } from '../../fixtures/shamirShares';
 
 const mockRes = () => {
   return {

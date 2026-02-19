@@ -10,7 +10,6 @@ import {
   config1Approved,
   config2Approved,
   config3Pending,
-  approvingSignaturesConfig2,
   EnhancedShamirConfig,
   rawConfig3Change,
   approvingSignaturesConfig3,
@@ -200,6 +199,22 @@ describe('getShamirConfigs', () => {
         ],
         needsUpdate: false,
       });
+    });
+    it('should return empty array when the bank is flaged with has_broken_shamir_chain', async () => {
+      await addTestShamirConfigs([config1Approved, config2Approved, config3Pending]);
+      await addTestShamirHolders([...holdersConfig1, ...holdersConfig2, ...holdersConfig3]);
+      mockCheckBasicAuth2Success(testUsers[0].id);
+      const mockReq = {
+        body: {
+          userEmail: testUsers[0].email,
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await db.query('UPDATE banks SET has_broken_shamir_chain = true WHERE id=1');
+      await getShamirConfigs(mockReq, resMock);
+      expect(resMock.status).toHaveBeenCalledWith(200);
+      const jsonCall = (resMock.json as jest.Mock).mock.calls[0][0] as EnhancedShamirConfig[];
+      expect(jsonCall).toHaveLength(0);
     });
   });
   describe('needsUpdate flag', () => {

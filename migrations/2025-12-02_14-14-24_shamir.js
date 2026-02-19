@@ -52,11 +52,15 @@ exports.up = async function (db) {
         denied_by INTEGER[] DEFAULT '{}'
     )`,
   );
+  await db.query(
+    'ALTER TABLE banks ADD COLUMN IF NOT EXISTS has_broken_shamir_chain BOOL NOT NULL DEFAULT false',
+  );
   await db.query('COMMIT');
 };
 
 exports.down = async function (db) {
   await db.query('BEGIN');
+  await db.query('ALTER TABLE banks DROP COLUMN IF EXISTS has_broken_shamir_chain');
   await db.query('DROP TABLE IF EXISTS shamir_recovery_requests');
   await db.query('DROP TABLE IF EXISTS shamir_shares');
   await db.query('DROP TABLE IF EXISTS shamir_holders');

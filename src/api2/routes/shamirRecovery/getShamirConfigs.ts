@@ -47,6 +47,7 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
       LEFT JOIN users AS hu ON hu.id=sh.vault_id
       LEFT JOIN shamir_shares AS ss ON ss.shamir_config_id=sc.id AND ss.vault_id=u.id AND ss.holder_vault_id=sh.vault_id
       WHERE u.id=$1
+      AND NOT b.has_broken_shamir_chain
       GROUP BY sc.id, b.id
       ORDER BY sc.created_at ASC
       `,
