@@ -49,7 +49,7 @@ export const checkPublicKeys2 = async (req: Request, res: Response) => {
 
     let matchesSigningPublicKey = true;
     if (userPublicKeysRes.rows[0].signing_public_key !== signingPublicKey) {
-      if (!!userPublicKeysRes.rows[0].signing_public__key) {
+      if (!!userPublicKeysRes.rows[0].signing_public_key) {
         // The signing key has been set before but has changed
         matchesSigningPublicKey = false;
         const message = `---------------\nWARNING! POTENTIAL HACK DETECTED!\nThe signing public key for user ${basicAuth.userEmail} that was found in the database did not match the public key registered in the user's private space. The database public signing key was\n\n${userPublicKeysRes.rows[0].signing_public_key}\n\nwhile the user's expected public key was\n\n${signingPublicKey}\n\nA database request to update the signing key for this user with his expected signing key will be made right after this message.\n---------------`;
