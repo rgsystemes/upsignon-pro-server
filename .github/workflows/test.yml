@@ -4,7 +4,8 @@ on:
   push:
     branches: [master, production]
   pull_request:
-    branches: [master, production]
+    branches:
+      - '**'
 
 jobs:
   test:
@@ -45,6 +46,7 @@ jobs:
           echo "DB_PORT=5432" >> .env.test.local
           echo "DB_USER=postgres" >> .env.test.local
           echo "DB_PASS=postgres" >> .env.test.local
+          echo "DB_NAME=postgres" >> .env.test.local
 
       - name: Build TypeScript
         run: yarn run tsc
@@ -57,6 +59,7 @@ jobs:
           DB_PORT: 5432
           DB_USER: postgres
           DB_PASS: postgres
+          DB_NAME: postgres
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
