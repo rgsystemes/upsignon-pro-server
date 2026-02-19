@@ -41,12 +41,12 @@ jobs:
 
       - name: Setup test environment
         run: |
-          cp .env.test .env.test.local
-          echo "DB_HOST=localhost" >> .env.test.local
-          echo "DB_PORT=5432" >> .env.test.local
-          echo "DB_USER=postgres" >> .env.test.local
-          echo "DB_PASS=postgres" >> .env.test.local
-          echo "DB_NAME=postgres" >> .env.test.local
+          touch .env.test
+          echo "DB_HOST=localhost" >> .env.test
+          echo "DB_PORT=5432" >> .env.test
+          echo "DB_USER=postgres" >> .env.test
+          echo "DB_PASS=postgres" >> .env.test
+          echo "DB_NAME=postgres" >> .env.test
 
       - name: Build TypeScript
         run: yarn run tsc
