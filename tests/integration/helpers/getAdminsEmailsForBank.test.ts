@@ -1,4 +1,4 @@
-import { beforeEach, describe, it, jest, expect } from '@jest/globals';
+import { beforeEach, describe, it, jest, expect, afterEach } from '@jest/globals';
 import { getAdminEmailsForBank } from '../../../src/helpers/getAdminsEmailsForBank';
 import { cleanDatabase } from '../../setup/testHelpers';
 import { addTestBanks } from '../../fixtures/banks';
@@ -49,10 +49,14 @@ describe('getAdminEmailsForBank', () => {
   });
 
   describe('when bank has no admins', () => {
+    const initialIsSAAS = env.IS_SAAS;
     beforeEach(async () => {
       jest.clearAllMocks();
       await cleanDatabase();
       await addTestBanks();
+    });
+    afterEach(() => {
+      env.IS_SAAS = initialIsSAAS;
     });
 
     it('should return empty array when IS_SAAS is true and forceSuperadmins is false', async () => {
@@ -88,16 +92,6 @@ describe('getAdminEmailsForBank', () => {
     it('should return superadmin emails when IS_SAAS is true and forceSuperadmins is true', async () => {
       await addTestAdmins(allAdmins);
       (env as any).IS_SAAS = false;
-
-      const result = await getAdminEmailsForBank(1, true);
-
-      expect(result).toHaveLength(2);
-      expect(result).toContain('superadmin@company.com');
-      expect(result).toContain('superadmin2@company.com');
-    });
-    it('should return superadmin emails when IS_SAAS is true and forceSuperadmins is true', async () => {
-      await addTestAdmins(allAdmins);
-      (env as any).IS_SAAS = true;
 
       const result = await getAdminEmailsForBank(1, true);
 

@@ -104,7 +104,7 @@ export const allAdmins: Admin[] = [
 ];
 export const superadmins: Admin[] = [superAdmin1, superAdmin2];
 export const restrictedSuperadmins: Admin[] = [superAdmin1, superAdmin2];
-export const bankAdmins: Admin[] = [superAdmin1, superAdmin2];
+export const bankAdmins: Admin[] = [restrictedSuperAdmin1, restrictedSuperAdmin2];
 
 const adminBank1: AdminBank = {
   admin_id: basicAdmin1.id,

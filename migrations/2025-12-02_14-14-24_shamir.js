@@ -66,6 +66,6 @@ exports.down = async function (db) {
   await db.query('DROP TABLE IF EXISTS shamir_holders');
   await db.query('DROP TABLE IF EXISTS shamir_configs');
   await db.query('DROP TYPE IF EXISTS shamir_status');
-  await db.query('ALTER TABLE users DROP COLUMN IF EXISTS signin_public_key');
+  await db.query('ALTER TABLE users DROP COLUMN IF EXISTS signing_public_key');
   await db.query('COMMIT');
 };
