@@ -111,9 +111,15 @@ describe('getAdminEmailsForBank', () => {
     });
 
     it('should handle bank with no matching ID', async () => {
+      (env as any).IS_SAAS = false;
       const result = await getAdminEmailsForBank(999, false);
+      expect(result).toHaveLength(2);
+      expect(result).toContain('superadmin@company.com');
+      expect(result).toContain('superadmin2@company.com');
 
-      expect(result).toHaveLength(0);
+      (env as any).IS_SAAS = true;
+      const result2 = await getAdminEmailsForBank(999, false);
+      expect(result2).toHaveLength(0);
     });
   });
 
