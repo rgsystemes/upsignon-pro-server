@@ -12,7 +12,7 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
       res.status(401).end();
       return;
     }
-    const { vaultId, deviceId } = deviceAuth;
+    const { vaultId } = deviceAuth;
 
     const setupResult = await db.query(
       `SELECT
@@ -44,17 +44,15 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
       FROM shamir_configs AS sc
       INNER JOIN shamir_recovery_requests AS srr
         ON srr.shamir_config_id=sc.id
-      INNER JOIN user_devices AS ud
-        ON srr.device_id=ud.id
       INNER JOIN shamir_shares AS ss
-        ON ud.user_id=ss.vault_id
-        AND ss.holder_vault_id != $2
+        ON srr.vault_id=ss.vault_id
+        AND ss.holder_vault_id != srr.vault_id
       WHERE
         srr.status='PENDING'
-        AND srr.device_id=$1
+        AND srr.vault_id=$1
       GROUP BY srr.id, sc.id
       ORDER BY srr.created_at DESC LIMIT 1`,
-      [deviceId, vaultId],
+      [vaultId],
     );
     const recoveryRequest = requestRes.rows[0];
     if (!recoveryRequest) {

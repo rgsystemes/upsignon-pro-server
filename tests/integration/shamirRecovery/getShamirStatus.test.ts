@@ -20,12 +20,10 @@ jest.mock('../../../src/helpers/logger', () => ({
 }));
 
 import { checkDeviceAuth } from '../../../src/api2/helpers/authorizationChecks';
-import { db } from '../../../src/helpers/db';
 import { addTestShamirHolders, holdersConfig1, holdersConfig2 } from '../../fixtures/shamirHolders';
-import { addTestShamirShares, sharesConfig1, sharesConfig2 } from '../../fixtures/shamirShares';
+import { addTestShamirShares, sharesConfig2 } from '../../fixtures/shamirShares';
 import {
   addTestShamirRecoveryRequests,
-  completedRecoveryRequest,
   deniedRecoveryRequest,
   pendingRecoveryRequest1,
 } from '../../fixtures/shamirRecoveryRequests';
@@ -122,7 +120,6 @@ describe('getShamirStatus', () => {
 
     it('should return pending status when recovery request exists but not enough shares', async () => {
       const u = testUsers[0];
-      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
       await addTestShamirHolders([...holdersConfig1, ...holdersConfig2]);
       await addTestShamirShares(sharesConfig2);
@@ -146,7 +143,6 @@ describe('getShamirStatus', () => {
 
     it('should return refused status when recovery request is refused', async () => {
       const u = testUsers[0];
-      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
       await addTestShamirHolders([...holdersConfig1, ...holdersConfig2]);
       await addTestShamirShares(sharesConfig2);
@@ -168,7 +164,6 @@ describe('getShamirStatus', () => {
 
     it('should return ready status when enough shares are open', async () => {
       const u = testUsers[0];
-      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
 
       await addTestShamirHolders([...holdersConfig1, ...holdersConfig2]);
@@ -217,7 +212,7 @@ describe('getShamirStatus', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: d.id,
+          vault_id: u.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: threeDaysAgo,
@@ -251,7 +246,6 @@ describe('getShamirStatus', () => {
 
     it('should return the most recent pending recovery request', async () => {
       const u = testUsers[0];
-      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
 
       await addTestShamirHolders([...holdersConfig1, ...holdersConfig2]);
@@ -259,7 +253,7 @@ describe('getShamirStatus', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: 1,
+          vault_id: 1,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: new Date('2024-01-05T16:00:00Z'),
@@ -270,7 +264,7 @@ describe('getShamirStatus', () => {
         },
         {
           id: 2,
-          device_id: 1,
+          vault_id: 1,
           public_key: 'tempPublicKey2ForRecovery',
           shamir_config_id: 2,
           created_at: new Date('2024-01-06T16:00:00Z'),

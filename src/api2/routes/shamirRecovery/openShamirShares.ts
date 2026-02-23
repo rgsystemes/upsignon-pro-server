@@ -31,7 +31,7 @@ export const openShamirShares = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const basicAuth = await checkBasicAuth2(req, { returningDeviceId: true });
+    const basicAuth = await checkBasicAuth2(req);
     if (!basicAuth.granted) {
       logInfo(req.body?.userEmail, 'openShamirShares fail: auth not granted');
       res.status(401).end();
@@ -39,13 +39,11 @@ export const openShamirShares = async (req: Request, res: Response): Promise<voi
     }
 
     const verifyRecoveryRequests = await db.query(
-      `SELECT
-        device_id
+      `SELECT 1
       FROM shamir_recovery_requests
-      INNER JOIN user_devices ON user_devices.id=shamir_recovery_requests.device_id
       WHERE
         shamir_config_id=$1
-        AND user_devices.user_id=$2
+        AND vault_id=$2
         AND status='PENDING'
         AND expiry_date > current_timestamp(0)`,
       [validatedBody.shamirConfigId, validatedBody.targetVaultId],

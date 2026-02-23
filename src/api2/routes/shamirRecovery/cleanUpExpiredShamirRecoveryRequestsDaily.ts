@@ -23,10 +23,8 @@ const cleanUpExpiredShamirRecoveryRequests = async () => {
         AND NOT EXISTS (
           SELECT 1
           FROM shamir_recovery_requests srr
-          INNER JOIN user_devices AS ud ON ud.id = srr.device_id
-          INNER JOIN users AS u ON u.id = ud.user_id
           WHERE
-          shamir_shares.vault_id = u.id
+          shamir_shares.vault_id = srr.vault_id
           AND srr.status = 'PENDING'
           AND srr.expiry_date >= CURRENT_TIMESTAMP(0)
         )`,

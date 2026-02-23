@@ -71,6 +71,8 @@ import { retrieveShamirConfigChangeToApprove } from './api2/routes/shamirRecover
 import { checkPublicKeys2 } from './api2/routes/data/checkUserPublicKey';
 import { signShamirConfigChange } from './api2/routes/shamirRecovery/signShamirConfigChange';
 import { shamirSecurityAlert } from './api2/routes/shamirRecovery/shamirSecurityAlert';
+import { getShamirRecoveryChallenge } from './api2/routes/shamirRecovery/getShamirRecoveryChallenge';
+import { getRecoveryKeyPair } from './api2/routes/shamirRecovery/getRecoveryKeyPair';
 
 export const app = express();
 
@@ -286,6 +288,8 @@ app.post(['/:bankUUID/api2/open-shamir-shares'], openShamirShares);
 app.post(['/:bankUUID/api2/deny-shamir-request-approval'], denyShamirRequestApproval);
 app.post(['/:bankUUID/api2/get-shamir-recovery-status'], getShamirStatus);
 app.post(['/:bankUUID/api2/abort-shamir-recovery'], abortShamirRecovery);
+app.post(['/:bankUUID/api2/get-shamir-recovery-challenge'], getShamirRecoveryChallenge);
+app.post(['/:bankUUID/api2/get-recovery-key-pair'], getRecoveryKeyPair);
 app.post(['/:bankUUID/api2/finish-shamir-recovery'], finishShamirRecovery);
 app.post(
   ['/:bankUUID/api2/retrieve-shamir-config-changes-to-approve'],

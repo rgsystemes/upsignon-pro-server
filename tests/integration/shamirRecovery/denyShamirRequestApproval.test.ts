@@ -108,7 +108,6 @@ describe('denyShamirRequestApproval', () => {
     it('should successfully deny pending recovery request', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
-      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const futureDate = new Date();
@@ -117,7 +116,7 @@ describe('denyShamirRequestApproval', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: new Date(),
@@ -156,7 +155,6 @@ describe('denyShamirRequestApproval', () => {
     it('should not deny request twice from same holder', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
-      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const futureDate = new Date();
@@ -165,7 +163,7 @@ describe('denyShamirRequestApproval', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: new Date(),
@@ -203,7 +201,6 @@ describe('denyShamirRequestApproval', () => {
     it('should not deny completed recovery request', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
-      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const pastDate = new Date();
@@ -214,7 +211,7 @@ describe('denyShamirRequestApproval', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: pastDate,
@@ -252,7 +249,6 @@ describe('denyShamirRequestApproval', () => {
     it('should not deny expired recovery request', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
-      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const pastDate = new Date();
@@ -261,7 +257,7 @@ describe('denyShamirRequestApproval', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: pastDate,
@@ -299,7 +295,6 @@ describe('denyShamirRequestApproval', () => {
     it('should not deny if user is not a holder for this vault', async () => {
       const nonHolder = testUsers[2];
       const requestingUser = testUsers[0];
-      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(nonHolder.id);
 
       const futureDate = new Date();
@@ -308,7 +303,7 @@ describe('denyShamirRequestApproval', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: new Date(),
@@ -347,7 +342,6 @@ describe('denyShamirRequestApproval', () => {
       const holder1 = testUsers[1];
       const holder2 = testUsers[3];
       const requestingUser = testUsers[0];
-      const requestingDevice = deviceForUser(requestingUser.id);
 
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 7);
@@ -355,7 +349,7 @@ describe('denyShamirRequestApproval', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: new Date(),

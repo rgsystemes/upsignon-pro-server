@@ -82,7 +82,6 @@ describe('abortShamirRecovery', () => {
 
     it('should successfully abort pending recovery request', async () => {
       const u = testUsers[0];
-      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
 
       await addTestShamirRecoveryRequests([{ ...pendingRecoveryRequest1, shamir_config_id: 1 }]);
@@ -99,8 +98,8 @@ describe('abortShamirRecovery', () => {
       expect(resMock.end).toHaveBeenCalled();
 
       const requests = await db.query(
-        'SELECT * FROM shamir_recovery_requests WHERE device_id = $1',
-        [d.id],
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
       );
 
       expect(requests.rows).toHaveLength(1);
@@ -109,13 +108,12 @@ describe('abortShamirRecovery', () => {
 
     it('should clear open shares when aborting recovery', async () => {
       const u = testUsers[0];
-      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
 
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: d.id,
+          vault_id: u.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 1,
           created_at: new Date('2024-01-10T10:00:00Z'),
@@ -156,14 +154,14 @@ describe('abortShamirRecovery', () => {
 
     it('should only abort pending requests, not completed ones', async () => {
       const u = testUsers[0];
-      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
 
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: d.id,
+          vault_id: u.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair: '',
           shamir_config_id: 1,
           created_at: new Date('2024-01-10T10:00:00Z'),
           completed_at: null,
@@ -173,8 +171,9 @@ describe('abortShamirRecovery', () => {
         },
         {
           id: 2,
-          device_id: d.id,
+          vault_id: u.id,
           public_key: 'tempPublicKey1ForRecovery2',
+          protected_recovery_key_pair: '',
           shamir_config_id: 1,
           created_at: new Date('2024-02-10T10:00:00Z'),
           completed_at: null,
@@ -196,8 +195,8 @@ describe('abortShamirRecovery', () => {
       expect(resMock.end).toHaveBeenCalled();
 
       const requests = await db.query(
-        'SELECT * FROM shamir_recovery_requests WHERE device_id = $1 ORDER BY status',
-        [d.id],
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1 ORDER BY status',
+        [u.id],
       );
 
       expect(requests.rows).toHaveLength(2);

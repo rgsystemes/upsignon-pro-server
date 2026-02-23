@@ -8,14 +8,14 @@ export const abortShamirRecovery = async (req: Request, res: Response): Promise<
     const deviceAuth = await checkDeviceAuth(req);
     if (!deviceAuth.granted) {
       logInfo(req.body?.userEmail, 'abortShamirRecovery fail: device auth not granted');
-      res.status(401).end();
+      res.status(401).json({ error: 'badDeviceSession' });
       return;
     }
-    const { vaultId, deviceId } = deviceAuth;
+    const { vaultId } = deviceAuth;
 
     await db.query(
-      `UPDATE shamir_recovery_requests SET status='ABORTED' WHERE device_id=$1 AND status='PENDING'`,
-      [deviceId],
+      `UPDATE shamir_recovery_requests SET status='ABORTED' WHERE vault_id=$1 AND status='PENDING'`,
+      [vaultId],
     );
     await db.query('UPDATE shamir_shares SET open_shares=null WHERE vault_id=$1', [vaultId]);
 

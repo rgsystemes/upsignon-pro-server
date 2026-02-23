@@ -5,11 +5,7 @@ import { Request, Response } from 'express';
 import { addTestUsers, testUsers } from '../../fixtures/users';
 import { addTestBanks } from '../../fixtures/banks';
 import { addTestDevices, deviceForUser } from '../../fixtures/userDevices';
-import {
-  addTestShamirConfigs,
-  config1Approved,
-  validShamirConfigChain,
-} from '../../fixtures/shamirConfigs';
+import { addTestShamirConfigs, config1Approved } from '../../fixtures/shamirConfigs';
 
 jest.mock('../../../src/api2/helpers/authorizationChecks', () => ({
   checkDeviceAuth: jest.fn(),
@@ -123,7 +119,6 @@ describe('requestShamirRecovery', () => {
 
     it('should reject if a pending not expired recovery request already exists', async () => {
       const u = testUsers[0];
-      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
       await addTestShamirConfigs([config1Approved]);
       await addTestShamirHolders(holdersConfig1);
@@ -135,7 +130,7 @@ describe('requestShamirRecovery', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: d.id,
+          vault_id: u.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 1,
           created_at: threeDaysAgo,
@@ -150,6 +145,7 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
           publicKey: 'new-public-key',
+          protectedPrivateKey: 'protected-private-key',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -167,6 +163,7 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
           publicKey: 'test-public-key',
+          protectedPrivateKey: 'protected-private-key',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -197,6 +194,7 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
           publicKey: 'test-public-key',
+          protectedPrivateKey: 'protected-private-key',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -206,8 +204,8 @@ describe('requestShamirRecovery', () => {
       expect(resMock.end).toHaveBeenCalled();
 
       const requests = await db.query(
-        'SELECT * FROM shamir_recovery_requests WHERE device_id = $1',
-        [deviceForUser(u.id).id],
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
       );
 
       expect(requests.rows).toHaveLength(1);
@@ -235,6 +233,7 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
           publicKey: 'test-public-key',
+          protectedPrivateKey: 'protected-private-key',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -259,6 +258,7 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
           publicKey: 'test-public-key',
+          protectedPrivateKey: 'protected-private-key',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -270,8 +270,8 @@ describe('requestShamirRecovery', () => {
       expect(resMock.end).toHaveBeenCalled();
 
       const requests = await db.query(
-        'SELECT * FROM shamir_recovery_requests WHERE device_id = $1',
-        [deviceForUser(u.id).id],
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
       );
 
       expect(requests.rows).toHaveLength(1);
@@ -285,7 +285,6 @@ describe('requestShamirRecovery', () => {
 
     it('should allow new request if previous request expired', async () => {
       const u = testUsers[0];
-      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
       await addTestShamirShares(sharesConfig1);
       let oneMonthBack = new Date();
@@ -296,7 +295,7 @@ describe('requestShamirRecovery', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: d.id,
+          vault_id: u.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 1,
           created_at: oneMonthBack,
@@ -311,6 +310,7 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
           publicKey: 'new-public-key',
+          protectedPrivateKey: 'protected-private-key',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -320,14 +320,15 @@ describe('requestShamirRecovery', () => {
       expect(resMock.end).toHaveBeenCalled();
 
       const requests = await db.query(
-        'SELECT * FROM shamir_recovery_requests WHERE device_id = $1 ORDER BY expiry_date',
-        [d.id],
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1 ORDER BY expiry_date',
+        [u.id],
       );
 
       expect(requests.rows).toHaveLength(2);
       expect(requests.rows[0].public_key).toBe('tempPublicKey1ForRecovery');
       expect(requests.rows[0].status).toBe('PENDING');
       expect(requests.rows[1].public_key).toBe('new-public-key');
+      expect(requests.rows[1].protected_recovery_key_pair).toBe('protected-private-key');
       expect(requests.rows[1].status).toBe('PENDING');
     });
   });

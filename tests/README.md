@@ -10,24 +10,46 @@ This project uses Jest for testing with a PostgreSQL ephemeral database strategy
 - Node.js 20+ and Yarn installed
 - All dependencies installed: `yarn install`
 
-## Running Tests
+## Running
 
-### All tests
+### Local Development
+
+**Database Setup Option 1: Use Docker (Recommended)**
 
 ```bash
+# Start PostgreSQL in Docker
+docker-compose -f docker-compose.test.yml up -d
+
+# Verify it's running
+docker-compose -f docker-compose.test.yml ps
+```
+
+**Database setup Option 2: Use Local PostgreSQL**
+
+Ensure PostgreSQL is running on localhost:5432 with:
+
+- User: `postgres`
+- Password: `postgres`
+
+```bash
+# On macOS (Homebrew)
+brew services start postgresql
+
+# On Linux
+sudo systemctl start postgresql
+```
+
+**Run tests**
+
+```bash
+# Run all tests
 yarn test
-```
 
-### Watch mode
-
-```bash
-yarn test:watch
-```
-
-### With coverage
-
-```bash
+# Run with coverage
 yarn test:coverage
+
+# Watch mode
+yarn test:watch
 ```
 
 ## Test Structure
@@ -148,19 +170,6 @@ describe('POST /:bankUUID/api2/my-endpoint', () => {
 });
 ```
 
-## CI/CD
-
-Tests run automatically on GitHub Actions for:
-
-- Push to `master` or `production` branches
-- Pull requests to `master` or `production` branches
-
-The CI environment:
-
-- Uses PostgreSQL 15 service container
-- Runs tests with coverage reporting
-- Uploads coverage to Codecov
-
 ## Troubleshooting
 
 ### "Database already exists"
@@ -169,29 +178,6 @@ The test database wasn't properly cleaned up. Manually drop it:
 
 ```bash
 psql -U postgres -c "DROP DATABASE IF EXISTS upsignon_test_*"
-```
-
-### "Connection refused"
-
-Ensure PostgreSQL is running:
-
-```bash
-# Check if PostgreSQL is running
-pg_isready
-
-# Start PostgreSQL (macOS with Homebrew)
-brew services start postgresql
-
-# Start PostgreSQL (Linux)
-sudo systemctl start postgresql
-```
-
-### Tests timeout
-
-Increase the timeout in `jest.config.js`:
-
-```javascript
-testTimeout: 60000; // 60 seconds
 ```
 
 ## Best Practices

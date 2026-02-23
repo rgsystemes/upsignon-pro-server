@@ -86,13 +86,12 @@ describe('finishShamirRecovery', () => {
 
     it('should successfully complete pending recovery request', async () => {
       const u = testUsers[0];
-      const d = deviceForUser(u.id);
       mockCheckBasicAuth2Success(u.id);
 
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: d.id,
+          vault_id: u.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 1,
           created_at: new Date('2024-01-10T10:00:00Z'),
@@ -115,8 +114,8 @@ describe('finishShamirRecovery', () => {
       expect(resMock.end).toHaveBeenCalled();
 
       const requests = await db.query(
-        'SELECT * FROM shamir_recovery_requests WHERE device_id = $1',
-        [d.id],
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
       );
 
       expect(requests.rows).toHaveLength(1);
@@ -126,13 +125,12 @@ describe('finishShamirRecovery', () => {
 
     it('should clear open shares when finishing recovery', async () => {
       const u = testUsers[0];
-      const d = deviceForUser(u.id);
       mockCheckBasicAuth2Success(u.id);
 
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: d.id,
+          vault_id: u.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 1,
           created_at: new Date('2024-01-10T10:00:00Z'),
@@ -173,14 +171,13 @@ describe('finishShamirRecovery', () => {
 
     it('should only complete pending requests, not already completed ones', async () => {
       const u = testUsers[0];
-      const d = deviceForUser(u.id);
       mockCheckBasicAuth2Success(u.id);
 
       const initialCompletedAt = new Date('2024-01-11T10:00:00Z');
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: d.id,
+          vault_id: u.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 1,
           created_at: new Date('2024-01-10T10:00:00Z'),
@@ -203,8 +200,8 @@ describe('finishShamirRecovery', () => {
       expect(resMock.end).toHaveBeenCalled();
 
       const afterRequests = await db.query(
-        'SELECT * FROM shamir_recovery_requests WHERE device_id = $1',
-        [d.id],
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
       );
 
       expect(afterRequests.rows).toHaveLength(1);

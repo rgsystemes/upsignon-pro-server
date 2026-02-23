@@ -109,7 +109,6 @@ describe('openShamirShares', () => {
     it('should successfully open shares for pending recovery request', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
-      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const futureDate = new Date();
@@ -118,7 +117,7 @@ describe('openShamirShares', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: new Date(),
@@ -182,7 +181,6 @@ describe('openShamirShares', () => {
     it('should reject if recovery request is expired', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
-      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const pastDate = new Date();
@@ -191,7 +189,7 @@ describe('openShamirShares', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: pastDate,
@@ -223,7 +221,6 @@ describe('openShamirShares', () => {
     it('should reject if recovery request is completed', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
-      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const pastDate = new Date();
@@ -234,7 +231,7 @@ describe('openShamirShares', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: pastDate,
@@ -267,7 +264,6 @@ describe('openShamirShares', () => {
       const holder1 = testUsers[1];
       const holder2 = testUsers[3];
       const requestingUser = testUsers[0];
-      const requestingDevice = deviceForUser(requestingUser.id);
 
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 7);
@@ -275,7 +271,7 @@ describe('openShamirShares', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: new Date(),
@@ -338,7 +334,6 @@ describe('openShamirShares', () => {
     it('should update existing open shares if holder submits again', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
-      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const futureDate = new Date();
@@ -347,7 +342,7 @@ describe('openShamirShares', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: new Date(),
