@@ -118,7 +118,7 @@ describe('openShamirShares', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: new Date(),
@@ -191,7 +191,7 @@ describe('openShamirShares', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: pastDate,
@@ -234,7 +234,7 @@ describe('openShamirShares', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: pastDate,
@@ -275,7 +275,7 @@ describe('openShamirShares', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: new Date(),
@@ -347,7 +347,7 @@ describe('openShamirShares', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
           shamir_config_id: 2,
           created_at: new Date(),

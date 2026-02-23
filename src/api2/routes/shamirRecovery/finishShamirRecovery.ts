@@ -5,7 +5,7 @@ import { checkBasicAuth2 } from '../../helpers/authorizationChecks';
 
 export const finishShamirRecovery = async (req: Request, res: Response): Promise<void> => {
   try {
-    const basicAuth = await checkBasicAuth2(req, { returningDeviceId: true });
+    const basicAuth = await checkBasicAuth2(req);
     if (!basicAuth.granted) {
       logInfo(req.body?.userEmail, 'finishShamirRecovery fail: auth not granted');
       res.status(401).end();
@@ -13,8 +13,8 @@ export const finishShamirRecovery = async (req: Request, res: Response): Promise
     }
 
     await db.query(
-      `UPDATE shamir_recovery_requests SET status='COMPLETED', completed_at=current_timestamp(0) WHERE device_id=$1 AND status='PENDING'`,
-      [basicAuth.deviceId],
+      `UPDATE shamir_recovery_requests SET status='COMPLETED', completed_at=current_timestamp(0) WHERE vault_id=$1 AND status='PENDING'`,
+      [basicAuth.userId],
     );
     await db.query('UPDATE shamir_shares SET open_shares=null WHERE vault_id=$1', [
       basicAuth.userId,

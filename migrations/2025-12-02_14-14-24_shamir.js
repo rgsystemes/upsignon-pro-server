@@ -42,8 +42,9 @@ exports.up = async function (db) {
   await db.query(
     `CREATE TABLE IF NOT EXISTS shamir_recovery_requests (
         id SERIAL PRIMARY KEY,
-        device_id INTEGER REFERENCES user_devices(id) ON DELETE CASCADE,
+        vault_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         public_key TEXT,
+        protected_private_key TEXT,
         shamir_config_id INTEGER REFERENCES shamir_configs(id) ON DELETE CASCADE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP(0),
         completed_at TIMESTAMP WITH TIME ZONE,

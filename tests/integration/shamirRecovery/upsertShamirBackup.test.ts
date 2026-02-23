@@ -9,6 +9,7 @@ import {
   addTestShamirConfigs,
   config1Approved,
   config2Approved,
+  config3Pending,
 } from '../../fixtures/shamirConfigs';
 
 jest.mock('../../../src/api2/helpers/authorizationChecks', () => ({
@@ -21,6 +22,18 @@ jest.mock('../../../src/helpers/logger', () => ({
 
 import { checkBasicAuth2 } from '../../../src/api2/helpers/authorizationChecks';
 import { db } from '../../../src/helpers/db';
+import { addTestShamirShares, sharesConfig1, sharesConfig2 } from '../../fixtures/shamirShares';
+import {
+  addTestShamirHolders,
+  holdersConfig1,
+  holdersConfig2,
+  holdersConfig3,
+} from '../../fixtures/shamirHolders';
+import {
+  addTestShamirRecoveryRequests,
+  pendingRecoveryRequest1,
+  pendingRecoveryRequest2,
+} from '../../fixtures/shamirRecoveryRequests';
 
 const mockRes = () => {
   return {
@@ -42,28 +55,6 @@ const mockCheckBasicAuth2Success = (userId: number) => {
       usesDeprecatedIntId: false,
     },
   });
-};
-
-const addTestShamirHolders = async (
-  holders: Array<{ vaultId: number; shamirConfigId: number; nbShares: number }>,
-) => {
-  for (const holder of holders) {
-    await db.query(
-      'INSERT INTO shamir_holders (vault_id, shamir_config_id, nb_shares) VALUES ($1, $2, $3)',
-      [holder.vaultId, holder.shamirConfigId, holder.nbShares],
-    );
-  }
-};
-
-const addTestRecoveryRequests = async (
-  requests: Array<{ deviceId: number; shamirConfigId: number; status: string }>,
-) => {
-  for (const req of requests) {
-    await db.query(
-      'INSERT INTO shamir_recovery_requests (device_id, shamir_config_id, status, public_key) VALUES ($1, $2, $3, $4)',
-      [req.deviceId, req.shamirConfigId, req.status, 'test-public-key'],
-    );
-  }
 };
 
 describe('upsertShamirBackup', () => {
@@ -194,7 +185,16 @@ describe('upsertShamirBackup', () => {
       const d = deviceForUser(u.id);
       mockCheckBasicAuth2Success(u.id);
 
-      await addTestShamirHolders([{ vaultId: testUsers[0].id, shamirConfigId: 1, nbShares: 2 }]);
+      await addTestShamirShares(sharesConfig1);
+      await addTestShamirHolders([
+        {
+          id: 1,
+          vault_id: 1,
+          shamir_config_id: 1,
+          nb_shares: 2,
+          created_at: new Date('2023-02-10T10:00:00Z'),
+        },
+      ]);
 
       const mockReq = {
         body: {
@@ -241,7 +241,7 @@ describe('upsertShamirBackup', () => {
       await addTestBanks();
       await addTestUsers();
       await addTestDevices();
-      await addTestShamirConfigs([config1Approved, config2Approved]);
+      await addTestShamirConfigs([config1Approved, config2Approved, config3Pending]);
     });
 
     it('should successfully create a new backup', async () => {
@@ -249,10 +249,7 @@ describe('upsertShamirBackup', () => {
       const d = deviceForUser(u.id);
       mockCheckBasicAuth2Success(u.id);
 
-      await addTestShamirHolders([
-        { vaultId: testUsers[0].id, shamirConfigId: 1, nbShares: 1 },
-        { vaultId: testUsers[1].id, shamirConfigId: 1, nbShares: 2 },
-      ]);
+      await addTestShamirHolders(holdersConfig1);
 
       const mockReq = {
         body: {
@@ -289,7 +286,7 @@ describe('upsertShamirBackup', () => {
       const d = deviceForUser(u.id);
       mockCheckBasicAuth2Success(u.id);
 
-      await addTestShamirHolders([{ vaultId: testUsers[0].id, shamirConfigId: 1, nbShares: 1 }]);
+      await addTestShamirHolders(holdersConfig1);
 
       await db.query(
         'INSERT INTO shamir_shares (vault_id, holder_vault_id, shamir_config_id, closed_shares) VALUES ($1, $2, $3, $4)',
@@ -322,17 +319,22 @@ describe('upsertShamirBackup', () => {
       const d = deviceForUser(u.id);
       mockCheckBasicAuth2Success(u.id);
 
-      await addTestShamirHolders([{ vaultId: testUsers[0].id, shamirConfigId: 1, nbShares: 1 }]);
+      await addTestShamirHolders(holdersConfig2);
 
-      await addTestRecoveryRequests([{ deviceId: d.id, shamirConfigId: 1, status: 'PENDING' }]);
+      await addTestShamirRecoveryRequests([pendingRecoveryRequest1]);
 
       const mockReq = {
         body: {
           userEmail: u.email,
           deviceId: d.device_unique_id,
           deviceSession: 'any-session',
-          shamirConfigId: 1,
-          holderShares: [{ holderId: testUsers[0].id, closedShares: ['share1'] }],
+          shamirConfigId: 2,
+          holderShares: [
+            { holderId: testUsers[0].id, closedShares: ['share1'] },
+            { holderId: testUsers[1].id, closedShares: ['share2'] },
+            { holderId: testUsers[3].id, closedShares: ['share4'] },
+            { holderId: testUsers[4].id, closedShares: ['share5'] },
+          ],
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -342,8 +344,8 @@ describe('upsertShamirBackup', () => {
       expect(resMock.end).toHaveBeenCalled();
 
       const requests = await db.query(
-        'SELECT * FROM shamir_recovery_requests WHERE device_id = $1',
-        [d.id],
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
       );
 
       expect(requests.rows).toHaveLength(1);
@@ -355,14 +357,33 @@ describe('upsertShamirBackup', () => {
       const d = deviceForUser(u.id);
       mockCheckBasicAuth2Success(u.id);
 
-      await addTestShamirHolders([
-        { vaultId: testUsers[0].id, shamirConfigId: 1, nbShares: 1 },
-        { vaultId: testUsers[0].id, shamirConfigId: 2, nbShares: 1 },
-      ]);
+      await addTestShamirHolders([...holdersConfig1, ...holdersConfig2, ...holdersConfig3]);
 
-      await addTestRecoveryRequests([
-        { deviceId: d.id, shamirConfigId: 1, status: 'PENDING' },
-        { deviceId: d.id, shamirConfigId: 2, status: 'PENDING' },
+      await addTestShamirRecoveryRequests([
+        {
+          id: 1,
+          vault_id: 1,
+          public_key: 'tempPublicKey1ForRecovery',
+          protected_private_key: '',
+          shamir_config_id: 2,
+          created_at: new Date('2024-01-10T10:00:00Z'),
+          completed_at: null,
+          status: 'PENDING',
+          expiry_date: new Date('2024-01-17T10:00:00Z'),
+          denied_by: [],
+        },
+        {
+          id: 2,
+          vault_id: 1,
+          public_key: 'tempPublicKey2ForRecovery',
+          protected_private_key: '',
+          shamir_config_id: 3,
+          created_at: new Date('2024-01-12T14:30:00Z'),
+          completed_at: null,
+          status: 'PENDING',
+          expiry_date: new Date('2024-01-19T14:30:00Z'),
+          denied_by: [],
+        },
       ]);
 
       const mockReq = {
@@ -370,7 +391,7 @@ describe('upsertShamirBackup', () => {
           userEmail: u.email,
           deviceId: d.device_unique_id,
           deviceSession: 'any-session',
-          shamirConfigId: 1,
+          shamirConfigId: 2,
           holderShares: [{ holderId: testUsers[0].id, closedShares: ['share1'] }],
         },
       } as unknown as Request;
@@ -381,8 +402,8 @@ describe('upsertShamirBackup', () => {
       expect(resMock.end).toHaveBeenCalled();
 
       const requests = await db.query(
-        'SELECT * FROM shamir_recovery_requests WHERE device_id = $1 ORDER BY shamir_config_id',
-        [d.id],
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1 ORDER BY shamir_config_id',
+        [u.id],
       );
 
       expect(requests.rows).toHaveLength(2);
@@ -396,9 +417,9 @@ describe('upsertShamirBackup', () => {
       mockCheckBasicAuth2Success(u.id);
 
       await addTestShamirHolders([
-        { vaultId: testUsers[0].id, shamirConfigId: 2, nbShares: 3 },
-        { vaultId: testUsers[1].id, shamirConfigId: 2, nbShares: 2 },
-        { vaultId: testUsers[2].id, shamirConfigId: 2, nbShares: 1 },
+        { id: 1, vault_id: testUsers[0].id, shamir_config_id: 2, nb_shares: 3 },
+        { id: 2, vault_id: testUsers[1].id, shamir_config_id: 2, nb_shares: 2 },
+        { id: 3, vault_id: testUsers[2].id, shamir_config_id: 2, nb_shares: 1 },
       ]);
 
       const mockReq = {

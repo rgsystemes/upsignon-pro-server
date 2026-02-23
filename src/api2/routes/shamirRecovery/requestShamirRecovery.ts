@@ -12,14 +12,16 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
       res.status(401).end();
       return;
     }
-    const { vaultId, deviceId } = deviceAuth;
+    const { vaultId } = deviceAuth;
 
     const expectedScheme = Joi.object({
       publicKey: Joi.string().required(),
+      protectedPrivateKey: Joi.string().required(),
     }).unknown();
 
     let validatedBody: {
       publicKey: string;
+      protectedPrivateKey: string;
     };
     try {
       validatedBody = Joi.attempt(req.body, expectedScheme);
@@ -33,9 +35,7 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
     const previousRequestsRes = await db.query(
       `SELECT COUNT(srr.id) as count
       FROM shamir_recovery_requests as srr
-      INNER JOIN user_devices as ud ON ud.id = srr.device_id
-      INNER JOIN users as u ON u.id = ud.user_id
-      WHERE srr.status = 'PENDING' AND u.id = $1 AND srr.expiry_date > current_timestamp(0)`,
+      WHERE srr.status = 'PENDING' AND srr.vault_id = $1 AND srr.expiry_date > current_timestamp(0)`,
       [vaultId],
     );
     if (previousRequestsRes.rows[0].count > 0) {
@@ -64,8 +64,8 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
     await db.query('UPDATE shamir_shares SET open_shares=null WHERE vault_id=$1', [vaultId]);
 
     await db.query(
-      `INSERT INTO shamir_recovery_requests (shamir_config_id, device_id, public_key, status, expiry_date) VALUES ($1, $2, $3, 'PENDING', CURRENT_TIMESTAMP(0) + INTERVAL '7 days')`,
-      [configId, deviceId, validatedBody.publicKey],
+      `INSERT INTO shamir_recovery_requests (shamir_config_id, vault_id, public_key, protected_private_key, status, expiry_date) VALUES ($1, $2, $3, $4, 'PENDING', CURRENT_TIMESTAMP(0) + INTERVAL '7 days')`,
+      [configId, vaultId, validatedBody.publicKey, validatedBody.protectedPrivateKey],
     );
     res.status(200).end();
     return;

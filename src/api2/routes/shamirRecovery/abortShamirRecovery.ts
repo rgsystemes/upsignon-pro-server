@@ -11,11 +11,11 @@ export const abortShamirRecovery = async (req: Request, res: Response): Promise<
       res.status(401).end();
       return;
     }
-    const { vaultId, deviceId } = deviceAuth;
+    const { vaultId } = deviceAuth;
 
     await db.query(
-      `UPDATE shamir_recovery_requests SET status='ABORTED' WHERE device_id=$1 AND status='PENDING'`,
-      [deviceId],
+      `UPDATE shamir_recovery_requests SET status='ABORTED' WHERE vault_id=$1 AND status='PENDING'`,
+      [vaultId],
     );
     await db.query('UPDATE shamir_shares SET open_shares=null WHERE vault_id=$1', [vaultId]);
 
