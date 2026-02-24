@@ -8,7 +8,7 @@ import { cleanOldRevokedDevices, cleanOrphanSharedVaults } from './dbCleaner';
 import { syncPeriodicallyWithMicrosoftEntra } from './syncWithMicrosoftEntra';
 import { aggregateStatsDaily } from './dailyStats';
 import { setupMSGraph } from './init_ms_graph';
-import { sendTrialEmailReminders } from './trialEmails';
+import { sendTrialEmailReminders } from '../emails/trialEmails';
 import { pullLicences } from '../licences';
 import { setupGlobalAgent } from './xmlHttpRequest';
 import { cleanUpExpiredShamirRecoveryRequestsDaily } from '../api2/routes/shamirRecovery/cleanUpExpiredShamirRecoveryRequestsDaily';

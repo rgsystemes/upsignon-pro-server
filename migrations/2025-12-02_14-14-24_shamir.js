@@ -2,6 +2,7 @@
 
 exports.up = async function (db) {
   await db.query('BEGIN');
+  await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS signing_public_key TEXT');
   await db.query(
     `CREATE TABLE IF NOT EXISTS shamir_configs (
         id SERIAL PRIMARY KEY,
@@ -51,15 +52,20 @@ exports.up = async function (db) {
         denied_by INTEGER[] DEFAULT '{}'
     )`,
   );
+  await db.query(
+    'ALTER TABLE banks ADD COLUMN IF NOT EXISTS has_broken_shamir_chain BOOL NOT NULL DEFAULT false',
+  );
   await db.query('COMMIT');
 };
 
 exports.down = async function (db) {
   await db.query('BEGIN');
+  await db.query('ALTER TABLE banks DROP COLUMN IF EXISTS has_broken_shamir_chain');
   await db.query('DROP TABLE IF EXISTS shamir_recovery_requests');
   await db.query('DROP TABLE IF EXISTS shamir_shares');
   await db.query('DROP TABLE IF EXISTS shamir_holders');
   await db.query('DROP TABLE IF EXISTS shamir_configs');
   await db.query('DROP TYPE IF EXISTS shamir_status');
+  await db.query('ALTER TABLE users DROP COLUMN IF EXISTS signing_public_key');
   await db.query('COMMIT');
 };

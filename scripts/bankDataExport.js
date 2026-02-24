@@ -22,8 +22,8 @@ async function exportDb(bankId, dbConnection) {
       'SELECT * FROM allowed_emails WHERE bank_id=$1',
       [bankId],
     );
-    // const data_stats = await db.query('SELECT * FROM data_stats WHERE bank_id=$1', [bankId]);
-    // const password_reset_request = await db.query(
+    // const data_stats = await dbConnection.query('SELECT * FROM data_stats WHERE bank_id=$1', [bankId]);
+    // const password_reset_request = await dbConnection.query(
     //   'SELECT * FROM password_reset_request WHERE bank_id=$1',
     //   [bankId],
     // );

@@ -1,10 +1,10 @@
 import Joi from 'joi';
-import { getNext8am, getRemainingDays, isMonday } from './dateHelper';
-import { db } from './db';
-import env from './env';
-import { getEmailConfig, getMailTransporter } from './getMailTransporter';
-import { logError, logInfo } from './logger';
-import { inputSanitizer } from './sanitizer';
+import { getNext8am, getRemainingDays, isMonday } from '../helpers/dateHelper';
+import { db } from '../helpers/db';
+import env from '../helpers/env';
+import { getEmailConfig, getMailTransporter } from '../helpers/getMailTransporter';
+import { logError, logInfo } from '../helpers/logger';
+import { inputSanitizer } from '../helpers/sanitizer';
 
 type TrialLine = {
   id: string;

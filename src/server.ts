@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import path from 'path';
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+require('dotenv').config({ path: path.join(__dirname, '..', envFile) });
+
+// ...existing code...
 
 import express from 'express';
 import { SessionStore } from './helpers/sessionStore';
@@ -44,7 +47,6 @@ import { disconnect2 } from './api2/routes/authentication/disconnect';
 import { backupPassword2 } from './api2/routes/passwordReset/backupPassword';
 import { getPasswordBackup2 } from './api2/routes/passwordReset/getPasswordBackup';
 import { renameDevice2 } from './api2/routes/devices/renameDevice';
-import { checkUserPublicKey2 } from './api2/routes/sharingRecipients/checkUserPublicKey';
 import { updateDeviceMetaData2 } from './api2/routes/devices/updateDeviceMetaData';
 import { logEvent } from './api2/routes/audit/logEvent';
 import libsodium from 'libsodium-wrappers';
@@ -65,8 +67,12 @@ import { finishShamirRecovery } from './api2/routes/shamirRecovery/finishShamirR
 import { getDevicesWithPasswordBackup } from './api2/routes/shamirRecovery/getDevicesWithPasswordBackup';
 import { authenticateDeviceOnly } from './api2/routes/authentication/authenticateDeviceOnly';
 import { denyShamirRequestApproval } from './api2/routes/shamirRecovery/denyShamirRequestApproval';
+import { retrieveShamirConfigChangeToApprove } from './api2/routes/shamirRecovery/retrieveShamirConfigChangeToApprove';
+import { checkPublicKeys2 } from './api2/routes/data/checkUserPublicKey';
+import { signShamirConfigChange } from './api2/routes/shamirRecovery/signShamirConfigChange';
+import { shamirSecurityAlert } from './api2/routes/shamirRecovery/shamirSecurityAlert';
 
-const app = express();
+export const app = express();
 
 // Set express trust-proxy so that secure sessions cookies can work
 app.set('trust proxy', 1);
@@ -212,8 +218,8 @@ app.post(['/:bankUUID/api2/delete-shared-vault', '/api2/delete-shared-vault'], d
 
 // SHARING RECIPIENTS
 app.post(
-  ['/:bankUUID/api2/check-user-public-key', '/api2/check-user-public-key'],
-  checkUserPublicKey2,
+  ['/:bankUUID/api2/check-user-public-keys', '/api2/check-user-public-keys'],
+  checkPublicKeys2,
 );
 app.post(
   [
@@ -281,6 +287,12 @@ app.post(['/:bankUUID/api2/deny-shamir-request-approval'], denyShamirRequestAppr
 app.post(['/:bankUUID/api2/get-shamir-recovery-status'], getShamirStatus);
 app.post(['/:bankUUID/api2/abort-shamir-recovery'], abortShamirRecovery);
 app.post(['/:bankUUID/api2/finish-shamir-recovery'], finishShamirRecovery);
+app.post(
+  ['/:bankUUID/api2/retrieve-shamir-config-changes-to-approve'],
+  retrieveShamirConfigChangeToApprove,
+);
+app.post(['/:bankUUID/api2/sign-shamir-config-change'], signShamirConfigChange);
+app.post(['/:bankUUID/api2/shamir-security-alert'], shamirSecurityAlert);
 
 if (module === require.main) {
   runMigrations()

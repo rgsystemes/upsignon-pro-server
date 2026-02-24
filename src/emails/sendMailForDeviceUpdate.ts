@@ -1,9 +1,9 @@
-import { isStrictlyLowerVersion } from './appVersionChecker';
-import { getNext8am, isMondayWednesdayFriday } from './dateHelper';
-import { db } from './db';
-import { getEmailConfig, getMailTransporter } from './getMailTransporter';
-import { logError } from './logger';
-import { inputSanitizer } from './sanitizer';
+import { isStrictlyLowerVersion } from '../helpers/appVersionChecker';
+import { getNext8am, isMondayWednesdayFriday } from '../helpers/dateHelper';
+import { db } from '../helpers/db';
+import { getEmailConfig, getMailTransporter } from '../helpers/getMailTransporter';
+import { logError } from '../helpers/logger';
+import { inputSanitizer } from '../helpers/sanitizer';
 
 const minVersionForNotification = '7.11.0';
 const endOfSupportDate = '11 mars 2025';

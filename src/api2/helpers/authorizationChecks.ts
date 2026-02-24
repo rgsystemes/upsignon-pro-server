@@ -9,7 +9,6 @@ import Joi from 'joi';
 export const checkBasicAuth2 = async (
   req: Request,
   options?: {
-    returningUserPublicKey?: true;
     returningData?: true;
     returningDeviceId?: true;
     checkIsOwnerForVaultId?: number;
@@ -21,7 +20,6 @@ export const checkBasicAuth2 = async (
       userEmail: string;
       deviceUId: string;
       userId: number;
-      sharingPublicKey: null | string;
       encryptedData: null | string;
       deviceId: null | number;
       granted: true;
@@ -64,9 +62,6 @@ export const checkBasicAuth2 = async (
     }
   }
 
-  const publicKeySelect = options?.returningUserPublicKey
-    ? 'u.sharing_public_key_2 AS sharing_public_key_2,'
-    : '';
   const dataSelect = options?.returningData ? 'u.encrypted_data_2 AS encrypted_data_2,' : '';
   const deviceIdSelect = options?.returningDeviceId ? 'ud.id AS device_id,' : '';
 
@@ -99,7 +94,6 @@ export const checkBasicAuth2 = async (
       : '';
 
   const query = `SELECT
-  ${publicKeySelect}
   ${dataSelect}
   ${deviceIdSelect}
   u.id AS user_id,
@@ -131,7 +125,6 @@ WHERE
     userEmail,
     deviceUId,
     userId: dbRes.rows[0].user_id,
-    sharingPublicKey: dbRes.rows[0].sharing_public_key_2,
     encryptedData: dbRes.rows[0].encrypted_data_2,
     deviceId: dbRes.rows[0].device_id,
     granted: true,
