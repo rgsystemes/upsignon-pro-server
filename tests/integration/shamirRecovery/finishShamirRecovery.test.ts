@@ -125,6 +125,7 @@ describe('finishShamirRecovery', () => {
       expect(requests.rows).toHaveLength(1);
       expect(requests.rows[0].status).toBe('COMPLETED');
       expect(requests.rows[0].completed_at).not.toBeNull();
+      expect(requests.rows[0].protected_recovery_key_pair).toBeNull();
     });
 
     it('should clear open shares when finishing recovery', async () => {
