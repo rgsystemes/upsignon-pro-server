@@ -9,7 +9,7 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
     const deviceAuth = await checkDeviceAuth(req);
     if (!deviceAuth.granted) {
       logInfo(req.body?.userEmail, 'getShamirStatus fail: device auth not granted');
-      res.status(401).end();
+      res.status(401).json({ error: 'badDeviceSession' });
       return;
     }
     const { vaultId } = deviceAuth;

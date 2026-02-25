@@ -65,7 +65,7 @@ describe('abortShamirRecovery', () => {
       await abortShamirRecovery(mockReq, resMock);
 
       expect(resMock.status).toHaveBeenCalledWith(401);
-      expect(resMock.end).toHaveBeenCalled();
+      expect(resMock.json).toHaveBeenCalledWith({ error: 'badDeviceSession' });
     });
   });
 
@@ -108,13 +108,17 @@ describe('abortShamirRecovery', () => {
 
     it('should clear open shares when aborting recovery', async () => {
       const u = testUsers[0];
+      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
 
       await addTestShamirRecoveryRequests([
         {
           id: 1,
           vault_id: u.id,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 1,
           created_at: new Date('2024-01-10T10:00:00Z'),
           completed_at: null,
@@ -154,12 +158,14 @@ describe('abortShamirRecovery', () => {
 
     it('should only abort pending requests, not completed ones', async () => {
       const u = testUsers[0];
+      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
 
       await addTestShamirRecoveryRequests([
         {
           id: 1,
           vault_id: u.id,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
           protected_recovery_key_pair: '',
           shamir_config_id: 1,
@@ -172,6 +178,7 @@ describe('abortShamirRecovery', () => {
         {
           id: 2,
           vault_id: u.id,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery2',
           protected_recovery_key_pair: '',
           shamir_config_id: 1,

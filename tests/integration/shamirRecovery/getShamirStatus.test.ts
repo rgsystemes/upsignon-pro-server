@@ -69,7 +69,7 @@ describe('getShamirStatus', () => {
       await getShamirStatus(mockReq, resMock);
 
       expect(resMock.status).toHaveBeenCalledWith(401);
-      expect(resMock.end).toHaveBeenCalled();
+      expect(resMock.json).toHaveBeenCalledWith({ error: 'badDeviceSession' });
     });
   });
 
@@ -164,6 +164,7 @@ describe('getShamirStatus', () => {
 
     it('should return ready status when enough shares are open', async () => {
       const u = testUsers[0];
+      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
 
       await addTestShamirHolders([...holdersConfig1, ...holdersConfig2]);
@@ -213,7 +214,10 @@ describe('getShamirStatus', () => {
         {
           id: 1,
           vault_id: u.id,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: threeDaysAgo,
           completed_at: null,
@@ -246,6 +250,7 @@ describe('getShamirStatus', () => {
 
     it('should return the most recent pending recovery request', async () => {
       const u = testUsers[0];
+      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
 
       await addTestShamirHolders([...holdersConfig1, ...holdersConfig2]);
@@ -254,7 +259,10 @@ describe('getShamirStatus', () => {
         {
           id: 1,
           vault_id: 1,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date('2024-01-05T16:00:00Z'),
           completed_at: null,
@@ -265,7 +273,10 @@ describe('getShamirStatus', () => {
         {
           id: 2,
           vault_id: 1,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey2ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date('2024-01-06T16:00:00Z'),
           completed_at: null,

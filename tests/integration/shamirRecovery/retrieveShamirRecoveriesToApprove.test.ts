@@ -132,6 +132,7 @@ describe('retrieveShamirRecoveriesToApprove', () => {
         {
           id: 1,
           vault_id: 1,
+          creator_device_id: 1,
           public_key: 'tempPublicKey1ForRecovery',
           protected_recovery_key_pair: 'protected_recovery_key_pair_1',
           shamir_config_id: 2,
@@ -144,6 +145,7 @@ describe('retrieveShamirRecoveriesToApprove', () => {
         {
           id: 2,
           vault_id: 1,
+          creator_device_id: 1,
           public_key: 'tempPublicKey2ForRecovery',
           protected_recovery_key_pair: 'protected_recovery_key_pair_2',
           shamir_config_id: 2,
@@ -156,6 +158,7 @@ describe('retrieveShamirRecoveriesToApprove', () => {
         {
           id: 3,
           vault_id: 1,
+          creator_device_id: 1,
           public_key: 'tempPublicKey2ForRecovery',
           protected_recovery_key_pair: 'protected_recovery_key_pair_3',
           shamir_config_id: 2,
@@ -168,6 +171,7 @@ describe('retrieveShamirRecoveriesToApprove', () => {
         {
           id: 4,
           vault_id: 2,
+          creator_device_id: 2,
           public_key: 'tempPublicKey3ForRecovery',
           protected_recovery_key_pair: 'protected_recovery_key_pair_4',
           shamir_config_id: 2,
@@ -238,7 +242,10 @@ describe('retrieveShamirRecoveriesToApprove', () => {
         {
           id: 4,
           vault_id: 2,
+          creator_device_id: 2,
           public_key: 'tempPublicKey3ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: threeDaysAgo,
           completed_at: null,
@@ -285,7 +292,10 @@ describe('retrieveShamirRecoveriesToApprove', () => {
         {
           id: 4,
           vault_id: 2,
+          creator_device_id: 2,
           public_key: 'tempPublicKey3ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: threeDaysAgo,
           completed_at: null,
@@ -358,7 +368,10 @@ describe('retrieveShamirRecoveriesToApprove', () => {
         {
           id: 4,
           vault_id: 1,
+          creator_device_id: 1,
           public_key: 'tempPublicKey2ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 1,
           created_at: threeDaysAgo,
           completed_at: null,

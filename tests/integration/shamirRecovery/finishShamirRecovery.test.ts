@@ -86,13 +86,17 @@ describe('finishShamirRecovery', () => {
 
     it('should successfully complete pending recovery request', async () => {
       const u = testUsers[0];
+      const d = deviceForUser(u.id);
       mockCheckBasicAuth2Success(u.id);
 
       await addTestShamirRecoveryRequests([
         {
           id: 1,
           vault_id: u.id,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 1,
           created_at: new Date('2024-01-10T10:00:00Z'),
           completed_at: null,
@@ -125,13 +129,17 @@ describe('finishShamirRecovery', () => {
 
     it('should clear open shares when finishing recovery', async () => {
       const u = testUsers[0];
+      const d = deviceForUser(u.id);
       mockCheckBasicAuth2Success(u.id);
 
       await addTestShamirRecoveryRequests([
         {
           id: 1,
           vault_id: u.id,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 1,
           created_at: new Date('2024-01-10T10:00:00Z'),
           completed_at: null,
@@ -171,6 +179,7 @@ describe('finishShamirRecovery', () => {
 
     it('should only complete pending requests, not already completed ones', async () => {
       const u = testUsers[0];
+      const d = deviceForUser(u.id);
       mockCheckBasicAuth2Success(u.id);
 
       const initialCompletedAt = new Date('2024-01-11T10:00:00Z');
@@ -178,7 +187,10 @@ describe('finishShamirRecovery', () => {
         {
           id: 1,
           vault_id: u.id,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 1,
           created_at: new Date('2024-01-10T10:00:00Z'),
           completed_at: initialCompletedAt,

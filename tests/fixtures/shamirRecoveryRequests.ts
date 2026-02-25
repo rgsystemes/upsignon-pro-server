@@ -27,18 +27,20 @@ export type ShamirRecoveryRequest = {
   id: number;
   vault_id: number;
   public_key?: string | null;
-  protected_recovery_key_pair?: string | null;
+  protected_recovery_key_pair: string;
   shamir_config_id: number;
   created_at?: Date;
   completed_at?: Date | null;
   status: ShamirStatus;
   expiry_date?: Date | null;
   denied_by?: number[];
+  creator_device_id: number;
 };
 
 export const pendingRecoveryRequest1: ShamirRecoveryRequest = {
   id: 1,
   vault_id: 1,
+  creator_device_id: 1,
   public_key: 'tempPublicKey1ForRecovery',
   protected_recovery_key_pair: '',
   shamir_config_id: 2,
@@ -52,6 +54,7 @@ export const pendingRecoveryRequest1: ShamirRecoveryRequest = {
 export const pendingRecoveryRequest2: ShamirRecoveryRequest = {
   id: 2,
   vault_id: 2,
+  creator_device_id: 2,
   public_key: 'tempPublicKey2ForRecovery',
   protected_recovery_key_pair: '',
   shamir_config_id: 2,
@@ -65,6 +68,7 @@ export const pendingRecoveryRequest2: ShamirRecoveryRequest = {
 export const completedRecoveryRequest: ShamirRecoveryRequest = {
   id: 3,
   vault_id: 3,
+  creator_device_id: 3,
   public_key: 'tempPublicKey3ForRecovery',
   protected_recovery_key_pair: '',
   shamir_config_id: 2,
@@ -78,6 +82,7 @@ export const completedRecoveryRequest: ShamirRecoveryRequest = {
 export const abortedRecoveryRequest: ShamirRecoveryRequest = {
   id: 4,
   vault_id: 4,
+  creator_device_id: 4,
   public_key: 'tempPublicKey4ForRecovery',
   protected_recovery_key_pair: '',
   shamir_config_id: 2,
@@ -91,6 +96,7 @@ export const abortedRecoveryRequest: ShamirRecoveryRequest = {
 export const deniedRecoveryRequest: ShamirRecoveryRequest = {
   id: 1,
   vault_id: 1,
+  creator_device_id: 1,
   public_key: 'tempPublicKey1ForRecovery',
   protected_recovery_key_pair: '',
   shamir_config_id: 2,
@@ -104,6 +110,7 @@ export const deniedRecoveryRequest: ShamirRecoveryRequest = {
 export const expiredRecoveryRequest: ShamirRecoveryRequest = {
   id: 6,
   vault_id: 1,
+  creator_device_id: 1,
   public_key: 'tempPublicKey6ForRecovery',
   protected_recovery_key_pair: '',
   shamir_config_id: 1,
@@ -127,8 +134,8 @@ export const addTestShamirRecoveryRequests = async (requests: ShamirRecoveryRequ
   for (const request of requests) {
     await db.query(
       `INSERT INTO shamir_recovery_requests
-       (id, vault_id, public_key, protected_recovery_key_pair, shamir_config_id, created_at, completed_at, status, expiry_date, denied_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+       (id, vault_id, public_key, protected_recovery_key_pair, shamir_config_id, created_at, completed_at, status, expiry_date, denied_by, creator_device_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
       [
         request.id,
         request.vault_id,
@@ -140,6 +147,7 @@ export const addTestShamirRecoveryRequests = async (requests: ShamirRecoveryRequ
         request.status,
         request.expiry_date,
         request.denied_by,
+        request.creator_device_id,
       ],
     );
   }

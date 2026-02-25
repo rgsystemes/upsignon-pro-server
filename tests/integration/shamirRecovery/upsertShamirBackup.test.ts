@@ -363,6 +363,7 @@ describe('upsertShamirBackup', () => {
         {
           id: 1,
           vault_id: 1,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
           protected_recovery_key_pair: '',
           shamir_config_id: 2,
@@ -375,6 +376,7 @@ describe('upsertShamirBackup', () => {
         {
           id: 2,
           vault_id: 1,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey2ForRecovery',
           protected_recovery_key_pair: '',
           shamir_config_id: 3,

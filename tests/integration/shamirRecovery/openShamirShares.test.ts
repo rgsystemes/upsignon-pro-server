@@ -109,6 +109,7 @@ describe('openShamirShares', () => {
     it('should successfully open shares for pending recovery request', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
+      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const futureDate = new Date();
@@ -118,7 +119,10 @@ describe('openShamirShares', () => {
         {
           id: 1,
           vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date(),
           completed_at: null,
@@ -181,6 +185,7 @@ describe('openShamirShares', () => {
     it('should reject if recovery request is expired', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
+      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const pastDate = new Date();
@@ -190,7 +195,10 @@ describe('openShamirShares', () => {
         {
           id: 1,
           vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: pastDate,
           completed_at: null,
@@ -221,6 +229,7 @@ describe('openShamirShares', () => {
     it('should reject if recovery request is completed', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
+      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const pastDate = new Date();
@@ -232,7 +241,10 @@ describe('openShamirShares', () => {
         {
           id: 1,
           vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: pastDate,
           completed_at: pastDate,
@@ -264,6 +276,7 @@ describe('openShamirShares', () => {
       const holder1 = testUsers[1];
       const holder2 = testUsers[3];
       const requestingUser = testUsers[0];
+      const requestingDevice = deviceForUser(requestingUser.id);
 
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 7);
@@ -272,7 +285,10 @@ describe('openShamirShares', () => {
         {
           id: 1,
           vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date(),
           completed_at: null,
@@ -334,6 +350,7 @@ describe('openShamirShares', () => {
     it('should update existing open shares if holder submits again', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
+      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const futureDate = new Date();
@@ -343,7 +360,10 @@ describe('openShamirShares', () => {
         {
           id: 1,
           vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date(),
           completed_at: null,

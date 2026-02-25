@@ -108,6 +108,7 @@ describe('denyShamirRequestApproval', () => {
     it('should successfully deny pending recovery request', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
+      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const futureDate = new Date();
@@ -117,7 +118,10 @@ describe('denyShamirRequestApproval', () => {
         {
           id: 1,
           vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date(),
           completed_at: null,
@@ -155,6 +159,7 @@ describe('denyShamirRequestApproval', () => {
     it('should not deny request twice from same holder', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
+      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const futureDate = new Date();
@@ -164,7 +169,10 @@ describe('denyShamirRequestApproval', () => {
         {
           id: 1,
           vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date(),
           completed_at: null,
@@ -201,6 +209,7 @@ describe('denyShamirRequestApproval', () => {
     it('should not deny completed recovery request', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
+      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const pastDate = new Date();
@@ -212,7 +221,10 @@ describe('denyShamirRequestApproval', () => {
         {
           id: 1,
           vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: pastDate,
           completed_at: pastDate,
@@ -249,6 +261,7 @@ describe('denyShamirRequestApproval', () => {
     it('should not deny expired recovery request', async () => {
       const holder = testUsers[1];
       const requestingUser = testUsers[0];
+      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(holder.id);
 
       const pastDate = new Date();
@@ -258,7 +271,10 @@ describe('denyShamirRequestApproval', () => {
         {
           id: 1,
           vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: pastDate,
           completed_at: null,
@@ -295,6 +311,7 @@ describe('denyShamirRequestApproval', () => {
     it('should not deny if user is not a holder for this vault', async () => {
       const nonHolder = testUsers[2];
       const requestingUser = testUsers[0];
+      const requestingDevice = deviceForUser(requestingUser.id);
       mockCheckBasicAuth2Success(nonHolder.id);
 
       const futureDate = new Date();
@@ -304,7 +321,10 @@ describe('denyShamirRequestApproval', () => {
         {
           id: 1,
           vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date(),
           completed_at: null,
@@ -342,6 +362,7 @@ describe('denyShamirRequestApproval', () => {
       const holder1 = testUsers[1];
       const holder2 = testUsers[3];
       const requestingUser = testUsers[0];
+      const requestingDevice = deviceForUser(requestingUser.id);
 
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 7);
@@ -350,7 +371,10 @@ describe('denyShamirRequestApproval', () => {
         {
           id: 1,
           vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date(),
           completed_at: null,
