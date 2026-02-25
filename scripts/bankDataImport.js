@@ -315,6 +315,21 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
         ud.enrollment_method,
       ],
     );
+
+    const newDeviceId = insertedRes.rows[0].id;
+
+    if (data.shamir_recovery_requests) {
+      data.shamir_recovery_requests = data.shamir_recovery_requests.map((row) => {
+        if (row.creator_device_id === ud.id) {
+          return {
+            ...row,
+            newDeviceId: newDeviceId,
+          };
+        } else {
+          return row;
+        }
+      });
+    }
   }
 
   // BANK SSO CONFIG
@@ -472,7 +487,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
     for (var i = 0; i < data.shamir_recovery_requests.length; i++) {
       const srr = data.shamir_recovery_requests[i];
       await dbConnection.query(
-        'INSERT INTO shamir_recovery_requests (vault_id, public_key, protected_recovery_key_pair, shamir_config_id, created_at, completed_at, status, expiry_date, denied_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$7,$8,$9)',
+        'INSERT INTO shamir_recovery_requests (vault_id, public_key, protected_recovery_key_pair, shamir_config_id, created_at, completed_at, status, expiry_date, denied_by, creator_device_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
         [
           srr.newVaultId,
           srr.public_key,
@@ -483,6 +498,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
           srr.status,
           srr.expiry_date,
           srr.denied_by,
+          srr.newDeviceId,
         ],
       );
     }

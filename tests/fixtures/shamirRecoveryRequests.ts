@@ -1,22 +1,25 @@
 /**
                                       Table « public.shamir_recovery_requests »
-     Colonne           |           Type           | Collationnement | NULL-able |                      Par défaut
------------------------+--------------------------+-----------------+-----------+-------------------------------------------------------
- id                    | integer                  |                 | not null  | nextval('shamir_recovery_requests_id_seq'::regclass)
- vault_id              | integer                  |                 |           |
- public_key            | text                     |                 |           |
+           Colonne           |           Type           | Collationnement | NULL-able |                      Par défaut
+-----------------------------+--------------------------+-----------------+-----------+------------------------------------------------------
+ id                          | integer                  |                 | not null  | nextval('shamir_recovery_requests_id_seq'::regclass)
+ vault_id                    | integer                  |                 |           |
+ creator_device_id           | integer                  |                 |           |
+ public_key                  | text                     |                 |           |
  protected_recovery_key_pair | text                     |                 |           |
- shamir_config_id      | integer                  |                 |           |
- created_at            | timestamp with time zone |                 |           | CURRENT_TIMESTAMP(0)
- completed_at          | timestamp with time zone |                 |           |
- status                | shamir_status            |                 |           |
- expiry_date           | timestamp with time zone |                 |           |
- denied_by             | integer[]                |                 |           | '{}'::integer[]
+ shamir_config_id            | integer                  |                 |           |
+ created_at                  | timestamp with time zone |                 |           | CURRENT_TIMESTAMP(0)
+ completed_at                | timestamp with time zone |                 |           |
+ status                      | shamir_status            |                 |           |
+ expiry_date                 | timestamp with time zone |                 |           |
+ denied_by                   | integer[]                |                 |           | '{}'::integer[]
 Index :
     "shamir_recovery_requests_pkey" PRIMARY KEY, btree (id)
 Contraintes de clés étrangères :
-    "shamir_recovery_requests_vault_id_fkey" FOREIGN KEY (device_id) REFERENCES users(id) ON DELETE CASCADE
+    "shamir_recovery_requests_creator_device_id_fkey" FOREIGN KEY (creator_device_id) REFERENCES user_devices(id) ON DELETE CASCADE
     "shamir_recovery_requests_shamir_config_id_fkey" FOREIGN KEY (shamir_config_id) REFERENCES shamir_configs(id) ON DELETE CASCADE
+    "shamir_recovery_requests_vault_id_fkey" FOREIGN KEY (vault_id) REFERENCES users(id) ON DELETE CASCADE
+
  */
 
 import { db } from '../../src/helpers/db';
@@ -26,6 +29,7 @@ export type ShamirStatus = 'PENDING' | 'ABORTED' | 'COMPLETED';
 export type ShamirRecoveryRequest = {
   id: number;
   vault_id: number;
+  creator_device_id: number;
   public_key?: string | null;
   protected_recovery_key_pair: string;
   shamir_config_id: number;
@@ -34,7 +38,6 @@ export type ShamirRecoveryRequest = {
   status: ShamirStatus;
   expiry_date?: Date | null;
   denied_by?: number[];
-  creator_device_id: number;
 };
 
 export const pendingRecoveryRequest1: ShamirRecoveryRequest = {

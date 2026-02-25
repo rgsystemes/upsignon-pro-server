@@ -43,7 +43,7 @@ exports.up = async function (db) {
     `CREATE TABLE IF NOT EXISTS shamir_recovery_requests (
         id SERIAL PRIMARY KEY,
         vault_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        creator_device_id INTEGER REFERENCES user_devices(id) ON DELETE CASCADE,
+        creator_device_id INTEGER REFERENCES user_devices(id) ON DELETE SET NULL,
         public_key TEXT,
         protected_recovery_key_pair TEXT,
         shamir_config_id INTEGER REFERENCES shamir_configs(id) ON DELETE CASCADE,
