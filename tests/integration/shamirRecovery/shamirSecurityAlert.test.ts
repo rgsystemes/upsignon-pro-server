@@ -17,7 +17,7 @@ jest.mock('../../../src/emails/sendShamirSecurityAlertToAdmins', () => ({
 
 import { checkBasicAuth2 } from '../../../src/api2/helpers/authorizationChecks';
 import { db } from '../../../src/helpers/db';
-import { sendShamirSecurityAlertToAdmins } from '../../../src/emails/sendShamirSecurityAlertToAdmins';
+import { sendShamirSecurityAlertToAdmins } from '../../../src/emails/shamir/sendShamirSecurityAlertToAdmins';
 
 const mockRes = () => {
   return {
