@@ -19,7 +19,7 @@ const cleanUpExpiredShamirRecoveryRequests = async () => {
   try {
     // 1. Get all expired shamir recovery requests still marked as PENDING
     const expiredRequestsRes = await db.query(
-      `SELECT srr.id, srr.vault_id, u.email as vault_email
+      `SELECT srr.id, srr.vault_id, u.email as vault_email, has_expiry_mail_been_sent
        FROM shamir_recovery_requests srr
        INNER JOIN users u ON u.id = srr.vault_id
        WHERE srr.status = 'PENDING' AND srr.expiry_date < CURRENT_TIMESTAMP(0)`,
@@ -28,14 +28,16 @@ const cleanUpExpiredShamirRecoveryRequests = async () => {
 
     // 2. For each expired request, clear open_shares and send email
     for (const req of expiredRequestsRes.rows) {
+      if (req.has_expiry_mail_been_sent) continue;
+
       // Clear open_shares for this vault
       await db.query(`UPDATE shamir_shares SET open_shares = NULL WHERE vault_id = $1`, [
         req.vault_id,
       ]);
-      // Mark the request as expired (optional: set status to EXPIRED)
-      await db.query(`UPDATE shamir_recovery_requests SET status = 'EXPIRED' WHERE id = $1`, [
-        req.id,
-      ]);
+      await db.query(
+        `UPDATE shamir_recovery_requests SET has_expiry_mail_been_sent = true WHERE id = $1`,
+        [req.id],
+      );
       // Get support email
       const supportEmail = await getSupportEmail(req.vault_id);
       // Send expiration email to the user
