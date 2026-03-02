@@ -4,7 +4,7 @@ export const isShamirRecoveryRequestApproved = async (vaultId: number) => {
   // Get the latest pending recovery request for this vault
   const requestRes = await db.query(
     `SELECT
-			SUM(ARRAY_LENGTH(ss.open_shares)) >= sc.min_shares AS approved
+			SUM(ARRAY_LENGTH(COALESCE(ss.open_shares, '{}'::text[]), 1)) >= sc.min_shares AS approved
 		FROM shamir_configs AS sc
 		INNER JOIN shamir_recovery_requests AS srr
 			ON srr.shamir_config_id=sc.id

@@ -7,9 +7,9 @@ import { hashPasswordChallengeResultForSecureStorageV2 } from '../../helpers/pas
 import { sendShamirRecoveryRequestInitiatedToUser } from '../../../emails/shamir/sendShamirRecoveryRequestInitiated';
 import { getSupportEmail } from './_supportEmail';
 import { sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons } from '../../../emails/shamir/sendShamirRecoveryRequestAwaitingApproval';
-import { getDeviceInfoForVaultId } from '../../helpers/getDeviceInfoForVaultId';
-import { getBankNameForVaultId } from '../../helpers/getBankNameForVaultId';
+import { getDeviceInfo } from '../../helpers/getDeviceInfoForVaultId';
 import { getShareholdersEmailsForVault } from './_trustedPersonsEmails';
+import { inputSanitizer } from '../../../helpers/sanitizer';
 
 export const requestShamirRecovery = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -74,24 +74,27 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
       validatedBody.protectedKeyPair,
     );
     const insertedRequestRes = await db.query(
-      `INSERT INTO shamir_recovery_requests (shamir_config_id, vault_id, public_key, protected_recovery_key_pair, status, expiry_date, creator_device_id) VALUES ($1, $2, $3, $4, 'PENDING', CURRENT_TIMESTAMP(0) + INTERVAL '7 days', $5) RETURNING expiry_date, created_at`,
+      `INSERT INTO shamir_recovery_requests (shamir_config_id, vault_id, public_key, protected_recovery_key_pair, status, expiry_date, creator_device_id) VALUES ($1, $2, $3, $4, 'PENDING', CURRENT_TIMESTAMP(0) + INTERVAL '7 days', $5) RETURNING id, expiry_date, created_at`,
       [configId, vaultId, validatedBody.publicKey, secureStorageProtectedKeyPair, deviceId],
     );
 
     // Send confirmation email to user and notification email to shareholders
-    const insertedRequest = insertedRequestRes.rows[0]! as { expiry_date: Date; created_at: Date };
+    const insertedRequest = insertedRequestRes.rows[0]! as {
+      id: number;
+      expiry_date: Date;
+      created_at: Date;
+    };
     const acceptLanguage = req.headers['accept-language'];
     const supportEmail = await getSupportEmail(vaultId);
-    const deviceInfo = await getDeviceInfoForVaultId(vaultId);
-    const bankName = await getBankNameForVaultId(vaultId);
-    const trustedPersonEmails = await getShareholdersEmailsForVault(vaultId);
+    const deviceInfo = await getDeviceInfo(deviceAuth.deviceId);
+    const trustedPersonEmails = await getShareholdersEmailsForVault(vaultId, insertedRequest.id);
     await sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons({
       trustedPersonEmails,
       vaultEmail,
       expiryDate: insertedRequest.expiry_date,
       requestDate: insertedRequest.created_at,
-      deviceName: deviceInfo?.name || '--',
-      deviceType: deviceInfo?.type || '--',
+      deviceName: inputSanitizer.cleanForHTMLInjections(deviceInfo?.device_name || '--'),
+      deviceType: inputSanitizer.cleanForHTMLInjections(deviceInfo?.device_type || '--'),
       supportEmail,
       acceptLanguage,
     });

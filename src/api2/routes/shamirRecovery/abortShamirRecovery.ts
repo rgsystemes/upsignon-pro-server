@@ -16,22 +16,25 @@ export const abortShamirRecovery = async (req: Request, res: Response): Promise<
     }
     const { vaultId } = deviceAuth;
 
-    await db.query(
-      `UPDATE shamir_recovery_requests SET status='ABORTED' WHERE vault_id=$1 AND status='PENDING'`,
+    const updatedRequestsRes = await db.query(
+      `UPDATE shamir_recovery_requests SET status='ABORTED' WHERE vault_id=$1 AND status='PENDING' RETURNING id`,
       [vaultId],
     );
     await db.query('UPDATE shamir_shares SET open_shares=null WHERE vault_id=$1', [vaultId]);
 
     // send an email to trustedPersons
-    const acceptLanguage = req.headers['accept-language'];
-    const supportEmail = await getSupportEmail(vaultId);
-    const holdersEmails = await getShareholdersEmailsForVault(vaultId);
-    await sendShamirRecoveryRequestCancelledToTrustedPersons({
-      vaultEmail: req.body?.userEmail,
-      trustedPersonEmails: holdersEmails,
-      supportEmail,
-      acceptLanguage,
-    });
+    const updatedReq = updatedRequestsRes.rows[0];
+    if (!!updatedReq) {
+      const acceptLanguage = req.headers['accept-language'];
+      const supportEmail = await getSupportEmail(vaultId);
+      const holdersEmails = await getShareholdersEmailsForVault(vaultId, updatedReq.id);
+      await sendShamirRecoveryRequestCancelledToTrustedPersons({
+        vaultEmail: req.body?.userEmail,
+        trustedPersonEmails: holdersEmails,
+        supportEmail,
+        acceptLanguage,
+      });
+    }
     res.status(200).end();
     return;
   } catch (e) {

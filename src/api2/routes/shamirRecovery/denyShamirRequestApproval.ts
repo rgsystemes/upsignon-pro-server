@@ -40,20 +40,21 @@ export const denyShamirRequestApproval = async (req: Request, res: Response): Pr
     }
 
     const updatedRow = await db.query(
-      `UPDATE shamir_recovery_requests AS srr
-        SET denied_by=array_append(denied_by, $1)
-      FROM shamir_shares AS ss
-      INNER JOIN users AS u ON u.id = srr.vault_id
-      WHERE
-        ss.vault_id=srr.vault_id
-        AND srr.status='PENDING'
-        AND srr.expiry_date > current_timestamp(0)
-        AND NOT($1 = ANY(srr.denied_by))
-        AND ss.holder_vault_id=$1
-        AND ss.vault_id=$2
-        AND ss.shamir_config_id=$3
-      RETURNING srr.id, u.email
-      `,
+      `UPDATE shamir_recovery_requests
+          SET denied_by = array_append(denied_by, $1)
+          WHERE
+            status = 'PENDING'
+            AND expiry_date > current_timestamp(0)
+            AND NOT($1 = ANY(denied_by))
+            AND vault_id = $2
+            AND $1 IN (
+              SELECT holder_vault_id
+              FROM shamir_shares
+              WHERE vault_id = $2 AND shamir_config_id = $3
+            )
+          RETURNING id,
+            (SELECT email FROM users WHERE id = vault_id) AS email
+        `,
       [basicAuth.userId, validatedBody.targetVaultId, validatedBody.shamirConfigId],
     );
 
