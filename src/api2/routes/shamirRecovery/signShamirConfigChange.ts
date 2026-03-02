@@ -3,7 +3,7 @@ import { db } from '../../../helpers/db';
 import { logError, logInfo } from '../../../helpers/logger';
 import { checkBasicAuth2 } from '../../helpers/authorizationChecks';
 import Joi from 'joi';
-import { ShamirChange, ShamirChangeSignature } from './types';
+import { ShamirChange, ShamirChangeSignature, ShamirShareholderFootprint } from './types';
 import libsodium from 'libsodium-wrappers';
 import { fromBase64 } from '../../helpers/base64Convert';
 import { sendShamirConfigChangeApprovedToAdminsCCTrustedPersons } from '../../../emails/shamir/sendShamirConfigChangeApproved';
@@ -119,6 +119,13 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
       return;
     }
 
+    const authorityShareHolders = authorityConfig.shareholders;
+    const initialTotalRefusingShares = totalSigningShares({
+      authorityShareHolders,
+      changeSignatures: signatures,
+      approvedValue: false,
+    });
+
     // Store the signature
     const changeSignature: ShamirChangeSignature = {
       holderVaultId: basicAuth.userId,
@@ -143,25 +150,15 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
     }
 
     if (!updatedConfig.is_active) {
-      const authorityShareHolders = authorityConfig.shareholders;
-
       const changeSignatures: ShamirChangeSignature[] = updatedConfig.change_signatures;
       // Count the number of approving shares.
       // BEWARE not to count the same shareholder twice !
       // (if someone manually edited the signatures array in db to duplicate a signature several times for instance)
-      const totalApprovingShares: number = authorityShareHolders.reduce(
-        (sum: number, nextShareholder) => {
-          const signature = changeSignatures.find(
-            (s) => s.holderVaultId === nextShareholder.vaultId,
-          );
-          if (signature && signature.approved) {
-            return sum + nextShareholder.nbShares;
-          } else {
-            return sum;
-          }
-        },
-        0,
-      );
+      const totalApprovingShares: number = totalSigningShares({
+        authorityShareHolders,
+        changeSignatures,
+        approvedValue: true,
+      });
 
       const acceptLanguage = req.headers['accept-language'];
       const trustedPersonEmails = await getShareholdersEmailsForConfig(authorityConfig.configId);
@@ -190,23 +187,20 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
       }
 
       // in case that signature makes it impossible to ever have the new config approved, notify admins and shareholders
-      const totalRefusingShares: number = authorityShareHolders.reduce(
-        (sum: number, nextShareholder) => {
-          const signature = changeSignatures.find(
-            (s) => s.holderVaultId === nextShareholder.vaultId,
-          );
-          if (signature && !signature.approved) {
-            return sum + nextShareholder.nbShares;
-          } else {
-            return sum;
-          }
-        },
-        0,
-      );
+      const totalRefusingShares: number = totalSigningShares({
+        authorityShareHolders,
+        changeSignatures,
+        approvedValue: false,
+      });
       const totalAvailableShares = authorityShareHolders.reduce((sum: number, nextShareholder) => {
         return sum + nextShareholder.nbShares;
       }, 0);
-      if (authorityConfig.minShares > totalAvailableShares - totalRefusingShares) {
+      if (
+        // now irremediably refused
+        authorityConfig.minShares > totalAvailableShares - totalRefusingShares &&
+        // previously still approvable
+        authorityConfig.minShares <= totalAvailableShares - initialTotalRefusingShares
+      ) {
         await sendShamirConfigChangeRejectedToAdminsCCTrustedPersons({
           trustedPersonEmails,
           supportEmail: authorityConfig.supportEmail,
@@ -225,4 +219,24 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
     res.status(400).end();
     return;
   }
+};
+
+const totalSigningShares = ({
+  authorityShareHolders,
+  changeSignatures,
+  approvedValue,
+}: {
+  authorityShareHolders: ShamirShareholderFootprint[];
+  changeSignatures: ShamirChangeSignature[] | null;
+  approvedValue: boolean;
+}): number => {
+  if (!changeSignatures) return 0;
+  return authorityShareHolders.reduce((sum: number, nextShareholder) => {
+    const signature = changeSignatures.find((s) => s.holderVaultId === nextShareholder.vaultId);
+    if (signature && signature.approved == approvedValue) {
+      return sum + nextShareholder.nbShares;
+    } else {
+      return sum;
+    }
+  }, 0);
 };
