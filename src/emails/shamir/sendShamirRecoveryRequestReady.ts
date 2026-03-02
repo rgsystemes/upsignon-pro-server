@@ -6,9 +6,9 @@ import { inputSanitizer } from '../../helpers/sanitizer';
 type TShamirRecoveryRequestReady = {
   vaultEmail: string;
   supportEmail: string;
-  acceptLanguage: string;
+  acceptLanguage: string | undefined;
 };
-export const sendShamirRecoveryRequestReady = async ({
+export const sendShamirRecoveryRequestReadyToUser = async ({
   vaultEmail,
   supportEmail,
   acceptLanguage,
@@ -35,6 +35,6 @@ export const sendShamirRecoveryRequestReady = async ({
       html: html,
     });
   } catch (e) {
-    logError('sendShamirRecoveryRequestReady error:', e);
+    logError('sendShamirRecoveryRequestReadyToUser error:', e);
   }
 };

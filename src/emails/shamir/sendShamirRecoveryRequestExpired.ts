@@ -6,9 +6,9 @@ import { inputSanitizer } from '../../helpers/sanitizer';
 type TShamirRecoveryRequestExpired = {
   vaultEmail: string;
   supportEmail: string;
-  acceptLanguage: string;
+  acceptLanguage: string | undefined;
 };
-export const sendShamirRecoveryRequestExpired = async ({
+export const sendShamirRecoveryRequestExpiredToUser = async ({
   vaultEmail,
   supportEmail,
   acceptLanguage,
@@ -35,6 +35,6 @@ export const sendShamirRecoveryRequestExpired = async ({
       html: html,
     });
   } catch (e) {
-    logError('sendShamirRecoveryRequestExpired error:', e);
+    logError('sendShamirRecoveryRequestExpiredToUser error:', e);
   }
 };

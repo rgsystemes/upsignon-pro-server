@@ -3,6 +3,10 @@ import { db } from '../../../helpers/db';
 import { logError, logInfo } from '../../../helpers/logger';
 import { checkBasicAuth2 } from '../../helpers/authorizationChecks';
 import Joi from 'joi';
+import { isShamirRecoveryRequestApproved } from './_isShamirRecoveryRequestApproved';
+import { sendShamirRecoveryRequestReadyToUser } from '../../../emails/shamir/sendShamirRecoveryRequestReady';
+import { getSupportEmail } from './_supportEmail';
+import { getEmailForVaultId } from '../../helpers/getEmailForVaultId';
 
 export const openShamirShares = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -66,6 +70,20 @@ export const openShamirShares = async (req: Request, res: Response): Promise<voi
       ],
     );
 
+    // If the request is now approved, send an email to the user
+    const isApproved = await isShamirRecoveryRequestApproved(validatedBody.targetVaultId);
+    if (isApproved) {
+      const supportEmail = await getSupportEmail(validatedBody.targetVaultId);
+      const acceptLanguage = req.headers['accept-language'];
+      const vaultEmail = await getEmailForVaultId(validatedBody.targetVaultId);
+      if (vaultEmail) {
+        await sendShamirRecoveryRequestReadyToUser({
+          vaultEmail,
+          supportEmail,
+          acceptLanguage,
+        });
+      }
+    }
     res.status(200).end();
     return;
   } catch (e) {

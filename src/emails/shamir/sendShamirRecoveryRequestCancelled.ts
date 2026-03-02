@@ -6,11 +6,10 @@ import { inputSanitizer } from '../../helpers/sanitizer';
 type TShamirRecoveryRequestCancelled = {
   vaultEmail: string;
   trustedPersonEmails: string[];
-  bankId: number;
   supportEmail: string;
-  acceptLanguage: string;
+  acceptLanguage: string | undefined;
 };
-export const sendShamirRecoveryRequestCancelled = async ({
+export const sendShamirRecoveryRequestCancelledToTrustedPersons = async ({
   vaultEmail,
   trustedPersonEmails,
   supportEmail,
@@ -39,6 +38,6 @@ export const sendShamirRecoveryRequestCancelled = async ({
       html: html,
     });
   } catch (e) {
-    logError('sendShamirRecoveryRequestCancelled error:', e);
+    logError('sendShamirRecoveryRequestCancelledToTrustedPersons error:', e);
   }
 };

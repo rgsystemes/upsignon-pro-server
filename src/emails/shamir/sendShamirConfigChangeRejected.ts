@@ -9,15 +9,15 @@ type TShamirConfigChangeRejected = {
   supportEmail: string;
   bankId: number;
   bankName: string;
-  shamirConfigName: string;
-  acceptLanguage: string;
+  currentShamirConfigName: string;
+  acceptLanguage: string | undefined;
 };
-export const sendShamirConfigChangeRejected = async ({
+export const sendShamirConfigChangeRejectedToAdminsCCTrustedPersons = async ({
   trustedPersonEmails,
   supportEmail,
   bankId,
   bankName,
-  shamirConfigName,
+  currentShamirConfigName,
   acceptLanguage,
 }: TShamirConfigChangeRejected): Promise<void> => {
   try {
@@ -26,7 +26,8 @@ export const sendShamirConfigChangeRejected = async ({
 
     // prevent HTML injections
     const safeBankName = inputSanitizer.cleanForHTMLInjections(bankName);
-    const safeShamirConfigName = inputSanitizer.cleanForHTMLInjections(shamirConfigName);
+    const safeCurrentShamirConfigName =
+      inputSanitizer.cleanForHTMLInjections(currentShamirConfigName);
     const safeTrustedPersonEmails = trustedPersonEmails.map(inputSanitizer.cleanForHTMLInjections);
     const safeSupportEmail = inputSanitizer.cleanForHTMLInjections(supportEmail);
 
@@ -37,8 +38,8 @@ export const sendShamirConfigChangeRejected = async ({
       templateName: 'configChangeRequestRejected',
       locales: getBestLanguage(acceptLanguage),
       args: {
-        // bankName: safeBankName,
-        shamirConfigName: safeShamirConfigName,
+        bankName: safeBankName,
+        currentShamirConfigName: safeCurrentShamirConfigName,
       },
     });
 
@@ -52,6 +53,6 @@ export const sendShamirConfigChangeRejected = async ({
       html: html,
     });
   } catch (e) {
-    logError('sendShamirConfigChangeRejected error:', e);
+    logError('sendShamirConfigChangeRejectedToAdminsCCTrustedPersons error:', e);
   }
 };

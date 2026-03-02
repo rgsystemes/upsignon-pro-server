@@ -3,6 +3,9 @@ import { db } from '../../../helpers/db';
 import { logError, logInfo } from '../../../helpers/logger';
 import { checkBasicAuth2 } from '../../helpers/authorizationChecks';
 import Joi from 'joi';
+import { isShamirRecoveryRequestRefused } from './_isShamirRecoveryRequestRefused';
+import { sendShamirRecoveryRequestDeniedToUser } from '../../../emails/shamir/sendShamirRecoveryRequestDenied';
+import { getSupportEmail } from './_supportEmail';
 
 export const denyShamirRequestApproval = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -36,10 +39,11 @@ export const denyShamirRequestApproval = async (req: Request, res: Response): Pr
       return;
     }
 
-    await db.query(
+    const updatedRow = await db.query(
       `UPDATE shamir_recovery_requests AS srr
         SET denied_by=array_append(denied_by, $1)
       FROM shamir_shares AS ss
+      INNER JOIN users AS u ON u.id = srr.vault_id
       WHERE
         ss.vault_id=srr.vault_id
         AND srr.status='PENDING'
@@ -48,9 +52,25 @@ export const denyShamirRequestApproval = async (req: Request, res: Response): Pr
         AND ss.holder_vault_id=$1
         AND ss.vault_id=$2
         AND ss.shamir_config_id=$3
+      RETURNING srr.id, u.email
       `,
       [basicAuth.userId, validatedBody.targetVaultId, validatedBody.shamirConfigId],
     );
+
+    // If the recovery request is now denied, send an email to the user
+    if (updatedRow.rows.length !== 0) {
+      const updatedReq = updatedRow.rows[0];
+      const isRequestRefused = await isShamirRecoveryRequestRefused(updatedReq.id);
+      if (isRequestRefused) {
+        const supportEmail = await getSupportEmail(validatedBody.targetVaultId);
+        const acceptLanguage = req.headers['accept-language'];
+        await sendShamirRecoveryRequestDeniedToUser({
+          vaultEmail: updatedReq.email,
+          supportEmail,
+          acceptLanguage,
+        });
+      }
+    }
 
     res.status(200).end();
     return;

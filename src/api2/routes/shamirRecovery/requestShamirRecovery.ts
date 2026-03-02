@@ -4,6 +4,12 @@ import { logError, logInfo } from '../../../helpers/logger';
 import Joi from 'joi';
 import { checkDeviceAuth } from '../../helpers/authorizationChecks';
 import { hashPasswordChallengeResultForSecureStorageV2 } from '../../helpers/passwordChallengev2';
+import { sendShamirRecoveryRequestInitiatedToUser } from '../../../emails/shamir/sendShamirRecoveryRequestInitiated';
+import { getSupportEmail } from './_supportEmail';
+import { sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons } from '../../../emails/shamir/sendShamirRecoveryRequestAwaitingApproval';
+import { getDeviceInfoForVaultId } from '../../helpers/getDeviceInfoForVaultId';
+import { getBankNameForVaultId } from '../../helpers/getBankNameForVaultId';
+import { getShareholdersEmailsForVault } from './_trustedPersonsEmails';
 
 export const requestShamirRecovery = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -13,7 +19,7 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
       res.status(401).json({ error: 'badDeviceSession' });
       return;
     }
-    const { vaultId, deviceId } = deviceAuth;
+    const { vaultEmail, vaultId, deviceId } = deviceAuth;
 
     const expectedScheme = Joi.object({
       publicKey: Joi.string().required(),
@@ -67,10 +73,33 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
     const secureStorageProtectedKeyPair = hashPasswordChallengeResultForSecureStorageV2(
       validatedBody.protectedKeyPair,
     );
-    await db.query(
-      `INSERT INTO shamir_recovery_requests (shamir_config_id, vault_id, public_key, protected_recovery_key_pair, status, expiry_date, creator_device_id) VALUES ($1, $2, $3, $4, 'PENDING', CURRENT_TIMESTAMP(0) + INTERVAL '7 days', $5)`,
+    const insertedRequestRes = await db.query(
+      `INSERT INTO shamir_recovery_requests (shamir_config_id, vault_id, public_key, protected_recovery_key_pair, status, expiry_date, creator_device_id) VALUES ($1, $2, $3, $4, 'PENDING', CURRENT_TIMESTAMP(0) + INTERVAL '7 days', $5) RETURNING expiry_date, created_at`,
       [configId, vaultId, validatedBody.publicKey, secureStorageProtectedKeyPair, deviceId],
     );
+
+    // Send confirmation email to user and notification email to shareholders
+    const insertedRequest = insertedRequestRes.rows[0]! as { expiry_date: Date; created_at: Date };
+    const acceptLanguage = req.headers['accept-language'];
+    const supportEmail = await getSupportEmail(vaultId);
+    const deviceInfo = await getDeviceInfoForVaultId(vaultId);
+    const bankName = await getBankNameForVaultId(vaultId);
+    const trustedPersonEmails = await getShareholdersEmailsForVault(vaultId);
+    await sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons({
+      trustedPersonEmails,
+      vaultEmail,
+      expiryDate: insertedRequest.expiry_date,
+      requestDate: insertedRequest.created_at,
+      deviceName: deviceInfo?.name || '--',
+      deviceType: deviceInfo?.type || '--',
+      supportEmail,
+      acceptLanguage,
+    });
+    await sendShamirRecoveryRequestInitiatedToUser({
+      vaultEmail,
+      supportEmail,
+      acceptLanguage,
+    });
     res.status(200).end();
     return;
   } catch (e) {

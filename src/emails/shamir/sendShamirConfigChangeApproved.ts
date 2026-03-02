@@ -9,16 +9,18 @@ type TShamirConfigChangeApproved = {
   supportEmail: string;
   bankId: number;
   bankName: string;
-  shamirConfigName: string;
+  currentShamirConfigName: string;
+  nextShamirConfigName: string;
   nbApprovers: number;
-  acceptLanguage: string;
+  acceptLanguage: string | undefined;
 };
-export const sendShamirConfigChangeApproved = async ({
+export const sendShamirConfigChangeApprovedToAdminsCCTrustedPersons = async ({
   trustedPersonEmails,
   supportEmail,
   bankId,
   bankName,
-  shamirConfigName,
+  currentShamirConfigName,
+  nextShamirConfigName,
   nbApprovers,
   acceptLanguage,
 }: TShamirConfigChangeApproved): Promise<void> => {
@@ -28,7 +30,9 @@ export const sendShamirConfigChangeApproved = async ({
 
     // prevent HTML injections
     const safeBankName = inputSanitizer.cleanForHTMLInjections(bankName);
-    const safeShamirConfigName = inputSanitizer.cleanForHTMLInjections(shamirConfigName);
+    const safeCurrentShamirConfigName =
+      inputSanitizer.cleanForHTMLInjections(currentShamirConfigName);
+    const safeNextShamirConfigName = inputSanitizer.cleanForHTMLInjections(nextShamirConfigName);
     const safeTrustedPersonEmails = trustedPersonEmails.map(inputSanitizer.cleanForHTMLInjections);
     const safeSupportEmail = inputSanitizer.cleanForHTMLInjections(supportEmail);
 
@@ -39,8 +43,10 @@ export const sendShamirConfigChangeApproved = async ({
       templateName: 'configChangeRequestApproved',
       locales: getBestLanguage(acceptLanguage),
       args: {
-        shamirConfigName: safeShamirConfigName,
+        currentShamirConfigName: safeCurrentShamirConfigName,
+        nextShamirConfigName: safeNextShamirConfigName,
         nbApprovers: nbApprovers,
+        bankName: safeBankName,
       },
     });
 
@@ -54,6 +60,6 @@ export const sendShamirConfigChangeApproved = async ({
       html: html,
     });
   } catch (e) {
-    logError('sendShamirConfigChangeApproved error:', e);
+    logError('sendShamirConfigChangeApprovedToAdminsCCTrustedPersons error:', e);
   }
 };

@@ -5,18 +5,16 @@ import { inputSanitizer } from '../../helpers/sanitizer';
 
 type TShamirRecoveryRequestAwaitingApproval = {
   trustedPersonEmails: string[];
-  bankName: string;
   vaultEmail: string;
   expiryDate: Date;
   requestDate: Date;
   deviceName: string;
   deviceType: string;
   supportEmail: string;
-  acceptLanguage: string;
+  acceptLanguage: string | undefined;
 };
-export const sendShamirRecoveryRequestAwaitingApproval = async ({
+export const sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons = async ({
   trustedPersonEmails,
-  bankName,
   vaultEmail,
   expiryDate,
   requestDate,
@@ -30,7 +28,6 @@ export const sendShamirRecoveryRequestAwaitingApproval = async ({
     const transporter = getMailTransporter(emailConfig, { debug: false });
 
     // prevent HTML injections
-    const safeBankName = inputSanitizer.cleanForHTMLInjections(bankName);
     const safeVaultEmail = inputSanitizer.cleanForHTMLInjections(vaultEmail);
     const safeDeviceName = inputSanitizer.cleanForHTMLInjections(deviceName);
     const safeDeviceType = inputSanitizer.cleanForHTMLInjections(deviceType);
@@ -41,7 +38,6 @@ export const sendShamirRecoveryRequestAwaitingApproval = async ({
       templateName: 'recoveryRequestAwaitingApproval',
       locales: getBestLanguage(acceptLanguage),
       args: {
-        // bankName: safeBankName,
         vaultEmail: safeVaultEmail,
         expiryDate,
         requestDate,
@@ -59,6 +55,6 @@ export const sendShamirRecoveryRequestAwaitingApproval = async ({
       html: html,
     });
   } catch (e) {
-    logError('sendShamirRecoveryRequestAwaitingApproval error:', e);
+    logError('sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons error:', e);
   }
 };
