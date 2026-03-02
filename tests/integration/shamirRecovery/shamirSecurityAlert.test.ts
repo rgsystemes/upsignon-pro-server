@@ -11,7 +11,7 @@ jest.mock('../../../src/helpers/logger', () => ({
   logInfo: jest.fn(),
   logError: jest.fn(),
 }));
-jest.mock('../../../src/emails/sendShamirSecurityAlertToAdmins', () => ({
+jest.mock('../../../src/emails/shamir/sendShamirSecurityAlertToAdmins', () => ({
   sendShamirSecurityAlertToAdmins: jest.fn(),
 }));
 

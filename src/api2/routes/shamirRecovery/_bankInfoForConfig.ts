@@ -1,4 +1,3 @@
-import { septeoSupportEmail } from '../../../emails/constants';
 import { db } from '../../../helpers/db';
 
 export async function getBankInfoForConfig(

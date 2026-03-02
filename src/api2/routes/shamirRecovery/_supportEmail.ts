@@ -15,5 +15,5 @@ export async function getSupportEmail(vaultId: number): Promise<string> {
     [vaultId],
   );
   if (res.rowCount === 0) return septeoSupportEmail;
-  return res.rows[0].support_email;
+  return res.rows[0].support_email || septeoSupportEmail;
 }

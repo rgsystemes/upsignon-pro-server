@@ -57,6 +57,7 @@ export const openShamirShares = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    const wasAlreadyApproved = await isShamirRecoveryRequestApproved(validatedBody.targetVaultId);
     await db.query(
       `UPDATE shamir_shares
       SET open_shares=$1, open_at=current_timestamp(0)
@@ -72,7 +73,7 @@ export const openShamirShares = async (req: Request, res: Response): Promise<voi
 
     // If the request is now approved, send an email to the user
     const isApproved = await isShamirRecoveryRequestApproved(validatedBody.targetVaultId);
-    if (isApproved) {
+    if (isApproved && !wasAlreadyApproved) {
       const supportEmail = await getSupportEmail(validatedBody.targetVaultId);
       const acceptLanguage = req.headers['accept-language'];
       const vaultEmail = await getEmailForVaultId(validatedBody.targetVaultId);

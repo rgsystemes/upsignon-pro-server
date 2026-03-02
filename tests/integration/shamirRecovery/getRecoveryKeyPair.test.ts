@@ -18,7 +18,6 @@ jest.mock('../../../src/helpers/logger', () => ({
 import { checkDeviceAuth } from '../../../src/api2/helpers/authorizationChecks';
 import { db } from '../../../src/helpers/db';
 import { addTestShamirRecoveryRequests } from '../../fixtures/shamirRecoveryRequests';
-import { fromBase64 } from '../../../src/api2/helpers/base64Convert';
 
 const mockRes = () => {
   return {
