@@ -58,6 +58,9 @@ describe('requestShamirRecovery', () => {
           userEmail: testUsers[0].email,
           publicKey: 'test-public-key',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await requestShamirRecovery(mockReq, resMock);
@@ -83,6 +86,9 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await requestShamirRecovery(mockReq, resMock);
@@ -98,6 +104,9 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
           publicKey: 123,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -152,6 +161,9 @@ describe('requestShamirRecovery', () => {
           protectedKeyPair:
             'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await requestShamirRecovery(mockReq, resMock);
@@ -170,6 +182,9 @@ describe('requestShamirRecovery', () => {
           publicKey: 'test-public-key',
           protectedKeyPair:
             'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -203,6 +218,9 @@ describe('requestShamirRecovery', () => {
           protectedKeyPair:
             'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await requestShamirRecovery(mockReq, resMock);
@@ -232,6 +250,9 @@ describe('requestShamirRecovery', () => {
           publicKey: 'test-public-key',
           protectedKeyPair:
             'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -273,6 +294,9 @@ describe('requestShamirRecovery', () => {
           protectedKeyPair:
             'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await requestShamirRecovery(mockReq, resMock);
@@ -298,6 +322,9 @@ describe('requestShamirRecovery', () => {
           publicKey: 'test-public-key',
           protectedKeyPair:
             'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -355,6 +382,9 @@ describe('requestShamirRecovery', () => {
           publicKey: 'new-public-key',
           protectedKeyPair:
             'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();

@@ -68,6 +68,9 @@ describe('denyShamirRequestApproval', () => {
           targetVaultId: 1,
           shamirConfigId: 2,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await denyShamirRequestApproval(mockReq, resMock);
@@ -83,6 +86,9 @@ describe('denyShamirRequestApproval', () => {
         body: {
           userEmail: testUsers[0].email,
           deviceSession: 'session1',
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -139,6 +145,9 @@ describe('denyShamirRequestApproval', () => {
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await denyShamirRequestApproval(mockReq, resMock);
@@ -189,6 +198,9 @@ describe('denyShamirRequestApproval', () => {
           deviceId: deviceForUser(holder.id).device_unique_id,
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -242,6 +254,9 @@ describe('denyShamirRequestApproval', () => {
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await denyShamirRequestApproval(mockReq, resMock);
@@ -292,6 +307,9 @@ describe('denyShamirRequestApproval', () => {
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await denyShamirRequestApproval(mockReq, resMock);
@@ -341,6 +359,9 @@ describe('denyShamirRequestApproval', () => {
           deviceId: deviceForUser(nonHolder.id).device_unique_id,
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();

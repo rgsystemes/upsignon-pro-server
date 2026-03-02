@@ -64,6 +64,9 @@ describe('getShamirStatus', () => {
         body: {
           userEmail: testUsers[0].email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirStatus(mockReq, resMock);
@@ -91,6 +94,9 @@ describe('getShamirStatus', () => {
         body: {
           userEmail: u.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirStatus(mockReq, resMock);
@@ -110,6 +116,9 @@ describe('getShamirStatus', () => {
         body: {
           userEmail: u.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirStatus(mockReq, resMock);
@@ -128,6 +137,9 @@ describe('getShamirStatus', () => {
       const mockReq = {
         body: {
           userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -151,6 +163,9 @@ describe('getShamirStatus', () => {
       const mockReq = {
         body: {
           userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -231,6 +246,9 @@ describe('getShamirStatus', () => {
         body: {
           userEmail: u.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirStatus(mockReq, resMock);
@@ -289,6 +307,9 @@ describe('getShamirStatus', () => {
       const mockReq = {
         body: {
           userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();

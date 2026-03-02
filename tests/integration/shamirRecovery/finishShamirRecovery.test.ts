@@ -64,6 +64,9 @@ describe('finishShamirRecovery', () => {
         body: {
           userEmail: testUsers[0].email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await finishShamirRecovery(mockReq, resMock);
@@ -109,6 +112,9 @@ describe('finishShamirRecovery', () => {
       const mockReq = {
         body: {
           userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -165,6 +171,9 @@ describe('finishShamirRecovery', () => {
         body: {
           userEmail: u.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await finishShamirRecovery(mockReq, resMock);
@@ -205,6 +214,9 @@ describe('finishShamirRecovery', () => {
         body: {
           userEmail: u.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await finishShamirRecovery(mockReq, resMock);
@@ -229,6 +241,9 @@ describe('finishShamirRecovery', () => {
       const mockReq = {
         body: {
           userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();

@@ -4,7 +4,7 @@ import { cleanDatabase } from '../../setup/testHelpers';
 import { Request, Response } from 'express';
 import { addTestUsers, testUsers } from '../../fixtures/users';
 import { addTestBanks, testBanks } from '../../fixtures/banks';
-import { addTestDevices, deviceForUser, testDevices } from '../../fixtures/userDevices';
+import { addTestDevices, deviceForUser } from '../../fixtures/userDevices';
 import {
   addTestShamirConfigs,
   approvingSignaturesConfig2,
@@ -19,6 +19,19 @@ import {
 jest.mock('../../../src/api2/helpers/authorizationChecks', () => ({
   checkBasicAuth2: jest.fn(),
 }));
+jest.mock(
+  '../../../src/emails/shamir/sendShamirConfigChangeApprovedToAdminsCCTrustedPersons',
+  () => ({
+    sendShamirConfigChangeApprovedToAdminsCCTrustedPersons: jest.fn(),
+  }),
+);
+jest.mock(
+  '../../../src/emails/shamir/sendShamirConfigChangeRejectedToAdminsCCTrustedPersons',
+  () => ({
+    sendShamirConfigChangeRejectedToAdminsCCTrustedPersons: jest.fn(),
+  }),
+);
+
 jest.mock('../../../src/helpers/logger', () => ({
   logInfo: jest.fn(),
   logError: jest.fn(),
@@ -50,16 +63,6 @@ const mockCheckBasicAuth2Success = (userId: number) => {
 };
 
 describe('signShamirConfigChange', () => {
-  let testUserId: number;
-  let testUserEmail: string;
-  let testDeviceId: number;
-  let testDeviceUniqueId: string;
-  let testPublicKey: string;
-  let testSigningSecretKey: string;
-  let testSigningPublicKey: string;
-  let testBankId: number;
-  let shamirConfigId: number;
-
   describe('body validations', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
@@ -82,6 +85,9 @@ describe('signShamirConfigChange', () => {
           signedAt: approvingSignaturesConfig2[0].signedAt,
           approved: approvingSignaturesConfig2[0].approved,
           signature: approvingSignaturesConfig2[0].signature,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -137,6 +143,9 @@ describe('signShamirConfigChange', () => {
           approved: approvingSignaturesConfig2[0].approved,
           signature: approvingSignaturesConfig2[0].signature,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await signShamirConfigChange(mockReq, resMock);
@@ -170,6 +179,9 @@ describe('signShamirConfigChange', () => {
           approved: nonSenseApprovingSignaturesConfig1[0].approved,
           signature: nonSenseApprovingSignaturesConfig1[0].signature,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await signShamirConfigChange(mockReq, resMock);
@@ -194,6 +206,9 @@ describe('signShamirConfigChange', () => {
           approved: unlegitimateApprovingSignaturesConfig2[0].approved,
           signature: unlegitimateApprovingSignaturesConfig2[0].signature,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await signShamirConfigChange(mockReq, resMock);
@@ -217,6 +232,9 @@ describe('signShamirConfigChange', () => {
           signedAt: approvingSignaturesConfig2[0].signedAt,
           approved: approvingSignaturesConfig2[0].approved,
           signature: approvingSignaturesConfig2[0].signature,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -257,6 +275,9 @@ describe('signShamirConfigChange', () => {
           approved: approvingSignaturesConfig2[0].approved,
           signature: approvingSignaturesConfig3[0].signature,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await signShamirConfigChange(mockReq, resMock);
@@ -286,6 +307,9 @@ describe('signShamirConfigChange', () => {
           signedAt: approvingSignaturesConfig2[0].signedAt,
           approved: approvingSignaturesConfig2[0].approved,
           signature: approvingSignaturesConfig2[0].signature,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -342,6 +366,9 @@ describe('signShamirConfigChange', () => {
           approved: approvingSignaturesConfig3[1].approved,
           signature: approvingSignaturesConfig3[1].signature,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await signShamirConfigChange(mockReq, resMock);
@@ -390,6 +417,9 @@ describe('signShamirConfigChange', () => {
           approved: approvingSignaturesConfig2[0].approved,
           signature: approvingSignaturesConfig2[0].signature,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await signShamirConfigChange(mockReq, resMock);
@@ -430,6 +460,9 @@ describe('signShamirConfigChange', () => {
           signedAt: approvingSignaturesConfig3[0].signedAt,
           approved: approvingSignaturesConfig3[0].approved,
           signature: approvingSignaturesConfig3[0].signature,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();

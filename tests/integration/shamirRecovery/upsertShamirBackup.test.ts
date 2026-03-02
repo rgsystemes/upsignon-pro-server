@@ -80,6 +80,9 @@ describe('upsertShamirBackup', () => {
           shamirConfigId: 'not-a-number',
           holderShares: [{ holderId: 1, closedShares: ['share1'] }],
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await upsertShamirBackup(mockReq, resMock);
@@ -99,6 +102,9 @@ describe('upsertShamirBackup', () => {
           deviceSession: 'any-session',
           shamirConfigId: 1,
           holderShares: [{ holderId: 1, closedShares: ['share1'] }],
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -120,6 +126,9 @@ describe('upsertShamirBackup', () => {
           shamirConfigId: 1,
           holderShares: [{ holderId: 1, closedShares: ['share1'] }],
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await upsertShamirBackup(mockReq, resMock);
@@ -139,6 +148,9 @@ describe('upsertShamirBackup', () => {
           deviceId: d.device_unique_id,
           deviceSession: 'any-session',
           shamirConfigId: 1,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -160,6 +172,9 @@ describe('upsertShamirBackup', () => {
           deviceSession: 'any-session',
           shamirConfigId: 1,
           holderShares: [{ holderId: 1 }],
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -204,6 +219,9 @@ describe('upsertShamirBackup', () => {
           shamirConfigId: 1,
           holderShares: [{ holderId: testUsers[0].id, closedShares: ['share1'] }],
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await upsertShamirBackup(mockReq, resMock);
@@ -224,6 +242,9 @@ describe('upsertShamirBackup', () => {
           deviceSession: 'any-session',
           shamirConfigId: 1,
           holderShares: [{ holderId: 999, closedShares: ['share1'] }],
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -261,6 +282,9 @@ describe('upsertShamirBackup', () => {
             { holderId: testUsers[0].id, closedShares: ['share1'] },
             { holderId: testUsers[1].id, closedShares: ['share2', 'share3'] },
           ],
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -301,6 +325,9 @@ describe('upsertShamirBackup', () => {
           shamirConfigId: 1,
           holderShares: [{ holderId: testUsers[0].id, closedShares: ['new-share'] }],
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await upsertShamirBackup(mockReq, resMock);
@@ -335,6 +362,9 @@ describe('upsertShamirBackup', () => {
             { holderId: testUsers[3].id, closedShares: ['share4'] },
             { holderId: testUsers[4].id, closedShares: ['share5'] },
           ],
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -396,6 +426,9 @@ describe('upsertShamirBackup', () => {
           shamirConfigId: 2,
           holderShares: [{ holderId: testUsers[0].id, closedShares: ['share1'] }],
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await upsertShamirBackup(mockReq, resMock);
@@ -435,6 +468,9 @@ describe('upsertShamirBackup', () => {
             { holderId: testUsers[1].id, closedShares: ['s4', 's5'] },
             { holderId: testUsers[2].id, closedShares: ['s6'] },
           ],
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();

@@ -69,6 +69,9 @@ describe('openShamirShares', () => {
           shamirConfigId: 2,
           openShares: ['share1', 'share2'],
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await openShamirShares(mockReq, resMock);
@@ -84,6 +87,9 @@ describe('openShamirShares', () => {
         body: {
           userEmail: testUsers[0].email,
           deviceSession: 'session1',
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -142,6 +148,9 @@ describe('openShamirShares', () => {
           shamirConfigId: 2,
           openShares,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await openShamirShares(mockReq, resMock);
@@ -173,6 +182,9 @@ describe('openShamirShares', () => {
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
           openShares,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -217,6 +229,9 @@ describe('openShamirShares', () => {
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
           openShares,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -263,6 +278,9 @@ describe('openShamirShares', () => {
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
           openShares,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();

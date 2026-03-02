@@ -78,6 +78,9 @@ describe('getShamirConfigs', () => {
         body: {
           userEmail: testUsers[0].email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirConfigs(mockReq, resMock);
@@ -92,6 +95,9 @@ describe('getShamirConfigs', () => {
       const mockReq = {
         body: {
           userEmail: testUsers[0].email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -109,6 +115,9 @@ describe('getShamirConfigs', () => {
         body: {
           userEmail: testUsers[0].email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirConfigs(mockReq, resMock);
@@ -122,6 +131,9 @@ describe('getShamirConfigs', () => {
       const mockReq = {
         body: {
           userEmail: testUsers[0].email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -145,6 +157,9 @@ describe('getShamirConfigs', () => {
       const mockReq = {
         body: {
           userEmail: testUsers[0].email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -208,6 +223,9 @@ describe('getShamirConfigs', () => {
         body: {
           userEmail: testUsers[0].email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await db.query('UPDATE banks SET has_broken_shamir_chain = true WHERE id=1');
@@ -231,6 +249,9 @@ describe('getShamirConfigs', () => {
         body: {
           userEmail: testUsers[0].email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirConfigs(mockReq, resMock);
@@ -251,6 +272,9 @@ describe('getShamirConfigs', () => {
       const mockReq = {
         body: {
           userEmail: testUsers[0].email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -273,6 +297,9 @@ describe('getShamirConfigs', () => {
         body: {
           userEmail: testUsers[0].email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirConfigs(mockReq, resMock);
@@ -287,6 +314,9 @@ describe('getShamirConfigs', () => {
       const mockReq = {
         body: {
           userEmail: testUsers[0].email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -310,6 +340,9 @@ describe('getShamirConfigs', () => {
         body: {
           userEmail: testUsers[0].email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirConfigs(mockReq, resMock);
@@ -330,6 +363,9 @@ describe('getShamirConfigs', () => {
         body: {
           userEmail: testUsers[3].email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirConfigs(mockReq, resMock);
@@ -349,6 +385,9 @@ describe('getShamirConfigs', () => {
       const mockReq = {
         body: {
           userEmail: testUsers[0].email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
