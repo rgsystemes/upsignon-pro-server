@@ -42,6 +42,7 @@ const mockCheckDeviceAuthSuccess = (userId: number) => {
     granted: true,
     vaultId: userId,
     deviceId: d.id,
+    vaultEmail: 'mocked@testbank.com',
   });
 };
 
@@ -116,7 +117,7 @@ describe('abortShamirRecovery', () => {
       expect(requests.rows).toHaveLength(1);
       expect(requests.rows[0].status).toBe('ABORTED');
       expect(sendShamirRecoveryRequestCancelledToTrustedPersons).toHaveBeenCalledWith({
-        vaultEmail: 'user2@testbank1.com',
+        vaultEmail: 'mocked@testbank.com',
         trustedPersonEmails: ['user1@testbank1.com'],
         supportEmail: 'support@testbank1.com',
         acceptLanguage: 'fr',
