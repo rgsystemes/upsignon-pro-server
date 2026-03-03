@@ -17,9 +17,13 @@ jest.mock('../../../src/helpers/logger', () => ({
   logInfo: jest.fn(),
   logError: jest.fn(),
 }));
+jest.mock('../../../src/emails/shamir/sendShamirRecoveryRequestReady', () => ({
+  sendShamirRecoveryRequestReadyToUser: jest.fn(),
+}));
 
 import { checkBasicAuth2 } from '../../../src/api2/helpers/authorizationChecks';
 import { db } from '../../../src/helpers/db';
+import { sendShamirRecoveryRequestReadyToUser } from '../../../src/emails/shamir/sendShamirRecoveryRequestReady';
 
 const mockRes = () => {
   return {
@@ -37,6 +41,7 @@ const mockCheckBasicAuth2Success = (userId: number) => {
     granted: true,
     userId,
     deviceId: d.id,
+    vaultEmail: 'mocked@bank1.com',
     bankIds: {
       publicId: b.public_id,
       internalId: b.id,
@@ -78,6 +83,7 @@ describe('openShamirShares', () => {
 
       expect(resMock.status).toHaveBeenCalledWith(401);
       expect(resMock.end).toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestReadyToUser).not.toHaveBeenCalled();
     });
 
     it('should reject request with invalid body', async () => {
@@ -97,6 +103,7 @@ describe('openShamirShares', () => {
 
       expect(resMock.status).toHaveBeenCalledWith(403);
       expect(resMock.end).toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestReadyToUser).not.toHaveBeenCalled();
     });
   });
 
@@ -166,6 +173,12 @@ describe('openShamirShares', () => {
       expect(shares.rows).toHaveLength(1);
       expect(shares.rows[0].open_shares).toEqual(openShares);
       expect(shares.rows[0].open_at).not.toBeNull();
+
+      expect(sendShamirRecoveryRequestReadyToUser).toHaveBeenCalledWith({
+        vaultEmail: 'user1@testbank1.com',
+        supportEmail: 'security@testbank1.com',
+        acceptLanguage: 'fr',
+      });
     });
 
     it('should reject if no pending recovery request exists', async () => {
@@ -192,6 +205,7 @@ describe('openShamirShares', () => {
 
       expect(resMock.status).toHaveBeenCalledWith(403);
       expect(resMock.json).toHaveBeenCalledWith({ error: 'no_pending_recovery_request' });
+      expect(sendShamirRecoveryRequestReadyToUser).not.toHaveBeenCalled();
     });
 
     it('should reject if recovery request is expired', async () => {
@@ -239,6 +253,7 @@ describe('openShamirShares', () => {
 
       expect(resMock.status).toHaveBeenCalledWith(403);
       expect(resMock.json).toHaveBeenCalledWith({ error: 'no_pending_recovery_request' });
+      expect(sendShamirRecoveryRequestReadyToUser).not.toHaveBeenCalled();
     });
 
     it('should reject if recovery request is completed', async () => {
@@ -288,6 +303,7 @@ describe('openShamirShares', () => {
 
       expect(resMock.status).toHaveBeenCalledWith(403);
       expect(resMock.json).toHaveBeenCalledWith({ error: 'no_pending_recovery_request' });
+      expect(sendShamirRecoveryRequestReadyToUser).not.toHaveBeenCalled();
     });
 
     it('should allow multiple holders to open shares for the same request', async () => {
@@ -327,6 +343,9 @@ describe('openShamirShares', () => {
           shamirConfigId: 2,
           openShares: openShares1,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock1 = mockRes();
       await openShamirShares(mockReq1, resMock1);
@@ -343,6 +362,9 @@ describe('openShamirShares', () => {
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
           openShares: openShares2,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock2 = mockRes();
@@ -363,6 +385,12 @@ describe('openShamirShares', () => {
       );
       expect(share2.rows).toHaveLength(1);
       expect(share2.rows[0].open_shares).toEqual(openShares2);
+
+      expect(sendShamirRecoveryRequestReadyToUser).toHaveBeenCalledWith({
+        vaultEmail: 'user1@testbank1.com',
+        supportEmail: 'security@testbank1.com',
+        acceptLanguage: 'fr',
+      });
     });
 
     it('should update existing open shares if holder submits again', async () => {
@@ -401,6 +429,9 @@ describe('openShamirShares', () => {
           shamirConfigId: 2,
           openShares: firstOpenShares,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock1 = mockRes();
       await openShamirShares(mockReq1, resMock1);
@@ -417,6 +448,9 @@ describe('openShamirShares', () => {
           shamirConfigId: 2,
           openShares: secondOpenShares,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock2 = mockRes();
       await openShamirShares(mockReq2, resMock2);
@@ -430,6 +464,113 @@ describe('openShamirShares', () => {
 
       expect(shares.rows).toHaveLength(1);
       expect(shares.rows[0].open_shares).toEqual(secondOpenShares);
+    });
+  });
+
+  describe('email not resent', () => {
+    beforeEach(async () => {
+      jest.clearAllMocks();
+      await cleanDatabase();
+      await addTestBanks();
+      await addTestUsers();
+      await addTestDevices();
+      await addTestShamirConfigs([config2Approved]);
+      await addTestShamirHolders(holdersConfig2);
+    });
+    it('should not resend approved email when request is already approved', async () => {
+      const holder = testUsers[1];
+      const requestingUser = testUsers[0];
+      const requestingDevice = deviceForUser(requestingUser.id);
+      mockCheckBasicAuth2Success(holder.id);
+
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 7);
+
+      await addTestShamirRecoveryRequests([
+        {
+          id: 1,
+          vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
+          public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+          shamir_config_id: 2,
+          created_at: new Date(),
+          completed_at: null,
+          status: 'PENDING',
+          expiry_date: futureDate,
+          denied_by: [],
+        },
+      ]);
+      await addTestShamirShares([
+        {
+          vault_id: 1,
+          holder_vault_id: 1,
+          shamir_config_id: 2,
+          closed_shares: ['encryptedShare1ForHolder1Config2'],
+          open_shares: null,
+          created_at: new Date('2023-03-01T15:00:00Z'),
+          open_at: new Date('2023-03-01T15:00:00Z'),
+        },
+        {
+          vault_id: 1,
+          holder_vault_id: 2,
+          shamir_config_id: 2,
+          closed_shares: ['encryptedShare1ForHolder2Config2'],
+          open_shares: null,
+          created_at: new Date('2023-03-01T15:00:00Z'),
+          open_at: new Date('2023-03-01T15:00:00Z'),
+        },
+        {
+          vault_id: 1,
+          holder_vault_id: 4,
+          shamir_config_id: 2,
+          closed_shares: ['encryptedShare1ForHolder4Config2'],
+          open_shares: ['openShare1', 'openShare2'],
+          created_at: new Date('2023-03-01T15:00:00Z'),
+          open_at: new Date('2023-03-01T15:00:00Z'),
+        },
+        {
+          vault_id: 1,
+          holder_vault_id: 5,
+          shamir_config_id: 2,
+          closed_shares: ['encryptedShare1ForHolder5Config2'],
+          open_shares: ['openShare3'],
+          created_at: new Date('2023-03-01T15:00:00Z'),
+          open_at: new Date('2023-03-01T15:00:00Z'),
+        },
+      ]);
+
+      const openShares = ['openShare4'];
+      const mockReq = {
+        body: {
+          userEmail: holder.email,
+          deviceSession: 'session2',
+          deviceId: deviceForUser(holder.id).device_unique_id,
+          targetVaultId: requestingUser.id,
+          shamirConfigId: 2,
+          openShares,
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await openShamirShares(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(200);
+      expect(resMock.end).toHaveBeenCalled();
+
+      const shares = await db.query(
+        'SELECT open_shares, open_at FROM shamir_shares WHERE vault_id = $1 AND holder_vault_id = $2 AND shamir_config_id = $3',
+        [requestingUser.id, holder.id, 2],
+      );
+
+      expect(shares.rows).toHaveLength(1);
+      expect(shares.rows[0].open_shares).toEqual(openShares);
+      expect(shares.rows[0].open_at).not.toBeNull();
+
+      expect(sendShamirRecoveryRequestReadyToUser).not.toHaveBeenCalled();
     });
   });
 });

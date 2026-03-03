@@ -108,6 +108,9 @@ describe('signShamirConfigChange', () => {
           approved: approvingSignaturesConfig2[0].approved,
           signature: approvingSignaturesConfig2[0].signature,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock2 = mockRes();
       await signShamirConfigChange(mockReq2, resMock2);

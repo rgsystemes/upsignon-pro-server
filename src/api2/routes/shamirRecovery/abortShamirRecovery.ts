@@ -20,7 +20,10 @@ export const abortShamirRecovery = async (req: Request, res: Response): Promise<
       `UPDATE shamir_recovery_requests SET status='ABORTED' WHERE vault_id=$1 AND status='PENDING' RETURNING id`,
       [vaultId],
     );
-    await db.query('UPDATE shamir_shares SET open_shares=null WHERE vault_id=$1', [vaultId]);
+    await db.query(
+      'UPDATE shamir_shares SET open_shares = null, open_at = null WHERE vault_id=$1',
+      [vaultId],
+    );
 
     // send an email to trustedPersons
     const updatedReq = updatedRequestsRes.rows[0];
