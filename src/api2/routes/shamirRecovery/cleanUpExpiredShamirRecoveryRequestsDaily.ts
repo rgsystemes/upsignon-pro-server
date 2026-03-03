@@ -31,9 +31,10 @@ const cleanUpExpiredShamirRecoveryRequests = async () => {
       if (req.has_expiry_mail_been_sent) continue;
 
       // Clear open_shares for this vault
-      await db.query(`UPDATE shamir_shares SET open_shares = NULL WHERE vault_id = $1`, [
-        req.vault_id,
-      ]);
+      await db.query(
+        `UPDATE shamir_shares SET open_shares = NULL, open_at = NULL WHERE vault_id = $1`,
+        [req.vault_id],
+      );
       await db.query(
         `UPDATE shamir_recovery_requests SET has_expiry_mail_been_sent = true WHERE id = $1`,
         [req.id],

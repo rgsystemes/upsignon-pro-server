@@ -11,7 +11,8 @@ export async function getSupportEmail(vaultId: number): Promise<string> {
     `SELECT sc.support_email
      FROM shamir_configs sc
      INNER JOIN shamir_recovery_requests srr ON sc.id = srr.shamir_config_id
-     WHERE srr.vault_id = $1`,
+     WHERE srr.vault_id = $1
+     ORDER BY created_at DESC LIMIT 1`,
     [vaultId],
   );
   if (res.rowCount === 0) return septeoSupportEmail;

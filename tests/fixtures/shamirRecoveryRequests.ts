@@ -16,7 +16,7 @@
 Index :
     "shamir_recovery_requests_pkey" PRIMARY KEY, btree (id)
 Contraintes de clés étrangères :
-    "shamir_recovery_requests_creator_device_id_fkey" FOREIGN KEY (creator_device_id) REFERENCES user_devices(id) ON DELETE CASCADE
+    "shamir_recovery_requests_creator_device_id_fkey" FOREIGN KEY (creator_device_id) REFERENCES user_devices(id) ON DELETE SET NULL
     "shamir_recovery_requests_shamir_config_id_fkey" FOREIGN KEY (shamir_config_id) REFERENCES shamir_configs(id) ON DELETE CASCADE
     "shamir_recovery_requests_vault_id_fkey" FOREIGN KEY (vault_id) REFERENCES users(id) ON DELETE CASCADE
 

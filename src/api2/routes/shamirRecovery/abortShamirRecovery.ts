@@ -14,7 +14,7 @@ export const abortShamirRecovery = async (req: Request, res: Response): Promise<
       res.status(401).json({ error: 'badDeviceSession' });
       return;
     }
-    const { vaultId } = deviceAuth;
+    const { vaultId, vaultEmail } = deviceAuth;
 
     const updatedRequestsRes = await db.query(
       `UPDATE shamir_recovery_requests SET status='ABORTED' WHERE vault_id=$1 AND status='PENDING' RETURNING id`,
@@ -32,7 +32,7 @@ export const abortShamirRecovery = async (req: Request, res: Response): Promise<
       const supportEmail = await getSupportEmail(vaultId);
       const holdersEmails = await getShareholdersEmailsForVault(vaultId, updatedReq.id);
       await sendShamirRecoveryRequestCancelledToTrustedPersons({
-        vaultEmail: req.body?.userEmail,
+        vaultEmail: vaultEmail,
         trustedPersonEmails: holdersEmails,
         supportEmail,
         acceptLanguage,
