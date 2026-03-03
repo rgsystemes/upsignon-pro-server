@@ -20,12 +20,10 @@ jest.mock('../../../src/helpers/logger', () => ({
 }));
 
 import { checkDeviceAuth } from '../../../src/api2/helpers/authorizationChecks';
-import { db } from '../../../src/helpers/db';
 import { addTestShamirHolders, holdersConfig1, holdersConfig2 } from '../../fixtures/shamirHolders';
-import { addTestShamirShares, sharesConfig1, sharesConfig2 } from '../../fixtures/shamirShares';
+import { addTestShamirShares, sharesConfig2 } from '../../fixtures/shamirShares';
 import {
   addTestShamirRecoveryRequests,
-  completedRecoveryRequest,
   deniedRecoveryRequest,
   pendingRecoveryRequest1,
 } from '../../fixtures/shamirRecoveryRequests';
@@ -71,7 +69,7 @@ describe('getShamirStatus', () => {
       await getShamirStatus(mockReq, resMock);
 
       expect(resMock.status).toHaveBeenCalledWith(401);
-      expect(resMock.end).toHaveBeenCalled();
+      expect(resMock.json).toHaveBeenCalledWith({ error: 'badDeviceSession' });
     });
   });
 
@@ -122,7 +120,6 @@ describe('getShamirStatus', () => {
 
     it('should return pending status when recovery request exists but not enough shares', async () => {
       const u = testUsers[0];
-      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
       await addTestShamirHolders([...holdersConfig1, ...holdersConfig2]);
       await addTestShamirShares(sharesConfig2);
@@ -146,7 +143,6 @@ describe('getShamirStatus', () => {
 
     it('should return refused status when recovery request is refused', async () => {
       const u = testUsers[0];
-      const d = deviceForUser(u.id);
       mockCheckDeviceAuthSuccess(u.id);
       await addTestShamirHolders([...holdersConfig1, ...holdersConfig2]);
       await addTestShamirShares(sharesConfig2);
@@ -217,8 +213,11 @@ describe('getShamirStatus', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: d.id,
+          vault_id: u.id,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: threeDaysAgo,
           completed_at: null,
@@ -259,8 +258,11 @@ describe('getShamirStatus', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: 1,
+          vault_id: 1,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date('2024-01-05T16:00:00Z'),
           completed_at: null,
@@ -270,8 +272,11 @@ describe('getShamirStatus', () => {
         },
         {
           id: 2,
-          device_id: 1,
+          vault_id: 1,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey2ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date('2024-01-06T16:00:00Z'),
           completed_at: null,

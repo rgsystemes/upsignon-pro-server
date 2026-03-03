@@ -131,8 +131,10 @@ describe('retrieveShamirRecoveriesToApprove', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: 1,
+          vault_id: 1,
+          creator_device_id: 1,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair: 'protected_recovery_key_pair_1',
           shamir_config_id: 2,
           created_at: threeDaysAgo,
           completed_at: threeDaysAgo,
@@ -142,8 +144,10 @@ describe('retrieveShamirRecoveriesToApprove', () => {
         },
         {
           id: 2,
-          device_id: 1,
+          vault_id: 1,
+          creator_device_id: 1,
           public_key: 'tempPublicKey2ForRecovery',
+          protected_recovery_key_pair: 'protected_recovery_key_pair_2',
           shamir_config_id: 2,
           created_at: tenDaysAgo,
           completed_at: null,
@@ -153,8 +157,10 @@ describe('retrieveShamirRecoveriesToApprove', () => {
         },
         {
           id: 3,
-          device_id: 1,
+          vault_id: 1,
+          creator_device_id: 1,
           public_key: 'tempPublicKey2ForRecovery',
+          protected_recovery_key_pair: 'protected_recovery_key_pair_3',
           shamir_config_id: 2,
           created_at: threeDaysAgo,
           completed_at: null,
@@ -164,8 +170,10 @@ describe('retrieveShamirRecoveriesToApprove', () => {
         },
         {
           id: 4,
-          device_id: 2,
+          vault_id: 2,
+          creator_device_id: 2,
           public_key: 'tempPublicKey3ForRecovery',
+          protected_recovery_key_pair: 'protected_recovery_key_pair_4',
           shamir_config_id: 2,
           created_at: threeDaysAgo,
           completed_at: null,
@@ -192,14 +200,18 @@ describe('retrieveShamirRecoveriesToApprove', () => {
       const u2 = testUsers[1];
       expect(jsonCall.pendingRecoveryRequests[0].userVaultId).toBe(u1.id);
       expect(jsonCall.pendingRecoveryRequests[0].email).toBe(u1.email);
-      expect(jsonCall.pendingRecoveryRequests[0].deviceName).toBe(deviceForUser(u1.id).device_name);
+      expect(jsonCall.pendingRecoveryRequests[0].recoveryPublicKey).toBe(
+        'tempPublicKey2ForRecovery',
+      );
       expect(jsonCall.pendingRecoveryRequests[0].shamirConfigId).toBe(2);
       expect(jsonCall.pendingRecoveryRequests[0].closedShares).toEqual([
         'encryptedShare1ForHolder2Config2',
       ]);
       expect(jsonCall.pendingRecoveryRequests[1].userVaultId).toBe(u2.id);
       expect(jsonCall.pendingRecoveryRequests[1].email).toBe(u2.email);
-      expect(jsonCall.pendingRecoveryRequests[1].deviceName).toBe(deviceForUser(u2.id).device_name);
+      expect(jsonCall.pendingRecoveryRequests[1].recoveryPublicKey).toBe(
+        'tempPublicKey3ForRecovery',
+      );
       expect(jsonCall.pendingRecoveryRequests[1].shamirConfigId).toBe(2);
       expect(jsonCall.pendingRecoveryRequests[1].closedShares).toEqual([
         'encryptedShare2ForHolder2Config2',
@@ -229,8 +241,11 @@ describe('retrieveShamirRecoveriesToApprove', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 4,
-          device_id: 2,
+          vault_id: 2,
+          creator_device_id: 2,
           public_key: 'tempPublicKey3ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: threeDaysAgo,
           completed_at: null,
@@ -276,8 +291,11 @@ describe('retrieveShamirRecoveriesToApprove', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 4,
-          device_id: 2,
+          vault_id: 2,
+          creator_device_id: 2,
           public_key: 'tempPublicKey3ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: threeDaysAgo,
           completed_at: null,
@@ -349,8 +367,11 @@ describe('retrieveShamirRecoveriesToApprove', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 4,
-          device_id: 1,
+          vault_id: 1,
+          creator_device_id: 1,
           public_key: 'tempPublicKey2ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 1,
           created_at: threeDaysAgo,
           completed_at: null,
@@ -373,70 +394,6 @@ describe('retrieveShamirRecoveriesToApprove', () => {
       expect(jsonCall.isShamirTrustedPerson).toBe(true);
       expect(jsonCall.pendingRecoveryRequests).toHaveLength(1);
       expect(jsonCall.pendingRecoveryRequests[0].requestedAt).toEqual(threeDaysAgo);
-    });
-  });
-  describe('other checks', () => {
-    beforeEach(async () => {
-      jest.clearAllMocks();
-      await cleanDatabase();
-      await addTestBanks();
-      await addTestUsers();
-      await addTestShamirConfigs([config1Approved, config2Approved]);
-    });
-    it('should not return requests for unauthorized devices', async () => {
-      const holder = testUsers[1];
-      mockCheckBasicAuth2Success(holder.id);
-      const testDevices = [
-        device1,
-        { ...device2, authorization_status: 'REVOKED_BY_ADMIN' },
-        device3,
-        device4,
-        device5,
-      ];
-      for (let d of testDevices) {
-        await addTestDevice(d);
-      }
-      await addTestShamirHolders(holdersConfig2);
-      await addTestShamirShares([
-        {
-          vault_id: 2,
-          holder_vault_id: 2,
-          shamir_config_id: 2,
-          closed_shares: ['encryptedShare2ForHolder2Config2'],
-          open_shares: null,
-          created_at: new Date('2023-03-01T15:05:00Z'),
-          open_at: null,
-        },
-      ]);
-      let threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-      let threeDaysAgoPlusSevenDays = new Date(threeDaysAgo);
-      threeDaysAgoPlusSevenDays.setDate(threeDaysAgoPlusSevenDays.getDate() + 7);
-      await addTestShamirRecoveryRequests([
-        {
-          id: 4,
-          device_id: 2,
-          public_key: 'tempPublicKey3ForRecovery',
-          shamir_config_id: 2,
-          created_at: threeDaysAgo,
-          completed_at: null,
-          status: 'PENDING',
-          expiry_date: threeDaysAgoPlusSevenDays,
-          denied_by: [3],
-        },
-      ]);
-
-      const mockReq = {
-        body: {
-          userEmail: holder.email,
-        },
-      } as unknown as Request;
-      const resMock = mockRes();
-      await retrieveShamirRecoveriesToApprove(mockReq, resMock);
-
-      expect(resMock.status).toHaveBeenCalledWith(200);
-      const jsonCall = (resMock.json as jest.Mock).mock.calls[0][0] as any;
-      expect(jsonCall.pendingRecoveryRequests).toEqual([]);
     });
   });
 });

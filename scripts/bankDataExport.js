@@ -52,7 +52,7 @@ async function exportDb(bankId, dbConnection) {
       [bankId],
     );
     const shamir_recovery_requests = await dbConnection.query(
-      'SELECT srr.* FROM shamir_recovery_requests srr INNER JOIN user_devices ud ON srr.device_id = ud.id WHERE ud.bank_id=$1',
+      'SELECT srr.* FROM shamir_recovery_requests srr INNER JOIN users u ON srr.vault_id = u.id WHERE u.bank_id=$1',
       [bankId],
     );
 

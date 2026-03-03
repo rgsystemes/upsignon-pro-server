@@ -92,8 +92,11 @@ describe('finishShamirRecovery', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: d.id,
+          vault_id: u.id,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 1,
           created_at: new Date('2024-01-10T10:00:00Z'),
           completed_at: null,
@@ -115,13 +118,14 @@ describe('finishShamirRecovery', () => {
       expect(resMock.end).toHaveBeenCalled();
 
       const requests = await db.query(
-        'SELECT * FROM shamir_recovery_requests WHERE device_id = $1',
-        [d.id],
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
       );
 
       expect(requests.rows).toHaveLength(1);
       expect(requests.rows[0].status).toBe('COMPLETED');
       expect(requests.rows[0].completed_at).not.toBeNull();
+      expect(requests.rows[0].protected_recovery_key_pair).toBeNull();
     });
 
     it('should clear open shares when finishing recovery', async () => {
@@ -132,8 +136,11 @@ describe('finishShamirRecovery', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: d.id,
+          vault_id: u.id,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 1,
           created_at: new Date('2024-01-10T10:00:00Z'),
           completed_at: null,
@@ -180,8 +187,11 @@ describe('finishShamirRecovery', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: d.id,
+          vault_id: u.id,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 1,
           created_at: new Date('2024-01-10T10:00:00Z'),
           completed_at: initialCompletedAt,
@@ -203,8 +213,8 @@ describe('finishShamirRecovery', () => {
       expect(resMock.end).toHaveBeenCalled();
 
       const afterRequests = await db.query(
-        'SELECT * FROM shamir_recovery_requests WHERE device_id = $1',
-        [d.id],
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
       );
 
       expect(afterRequests.rows).toHaveLength(1);

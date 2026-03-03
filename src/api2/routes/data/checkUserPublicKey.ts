@@ -30,7 +30,7 @@ export const checkPublicKeys2 = async (req: Request, res: Response) => {
       [basicAuth.userId],
     );
     if (!userPublicKeysRes.rows[0]) {
-      res.status(401).end();
+      res.status(400).end();
       return;
     }
 

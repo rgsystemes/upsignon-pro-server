@@ -5,11 +5,7 @@ import { Request, Response } from 'express';
 import { addTestUsers, testUsers } from '../../fixtures/users';
 import { addTestBanks } from '../../fixtures/banks';
 import { addTestDevices, deviceForUser } from '../../fixtures/userDevices';
-import {
-  addTestShamirConfigs,
-  config1Approved,
-  validShamirConfigChain,
-} from '../../fixtures/shamirConfigs';
+import { addTestShamirConfigs, config1Approved } from '../../fixtures/shamirConfigs';
 
 jest.mock('../../../src/api2/helpers/authorizationChecks', () => ({
   checkDeviceAuth: jest.fn(),
@@ -67,7 +63,7 @@ describe('requestShamirRecovery', () => {
       await requestShamirRecovery(mockReq, resMock);
 
       expect(resMock.status).toHaveBeenCalledWith(401);
-      expect(resMock.end).toHaveBeenCalled();
+      expect(resMock.json).toHaveBeenCalledWith({ error: 'badDeviceSession' });
     });
   });
 
@@ -135,8 +131,11 @@ describe('requestShamirRecovery', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: d.id,
+          vault_id: u.id,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 1,
           created_at: threeDaysAgo,
           completed_at: null,
@@ -150,6 +149,8 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
           publicKey: 'new-public-key',
+          protectedKeyPair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -167,6 +168,8 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
           publicKey: 'test-public-key',
+          protectedKeyPair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -197,6 +200,8 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
           publicKey: 'test-public-key',
+          protectedKeyPair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -206,14 +211,44 @@ describe('requestShamirRecovery', () => {
       expect(resMock.end).toHaveBeenCalled();
 
       const requests = await db.query(
-        'SELECT * FROM shamir_recovery_requests WHERE device_id = $1',
-        [deviceForUser(u.id).id],
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
       );
 
       expect(requests.rows).toHaveLength(1);
       expect(requests.rows[0].status).toBe('PENDING');
       expect(requests.rows[0].public_key).toBe('test-public-key');
       expect(requests.rows[0].shamir_config_id).toBe(1);
+    });
+
+    it('should hash the passwordChallengeResponse part to add security', async () => {
+      const u = testUsers[0];
+      mockCheckDeviceAuthSuccess(u.id);
+      await addTestShamirShares(sharesConfig1);
+
+      const mockReq = {
+        body: {
+          userEmail: u.email,
+          publicKey: 'test-public-key',
+          protectedKeyPair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await requestShamirRecovery(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(200);
+      expect(resMock.end).toHaveBeenCalled();
+
+      const requests = await db.query(
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
+      );
+
+      expect(requests.rows).toHaveLength(1);
+      expect(requests.rows[0].protected_recovery_key_pair).toBe(
+        'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-WnsgG/wqKY5ifR5zP5NbXYBAoP9kOqKunSl3GAzy7Mc=-encryptedKeyPair',
+      );
     });
 
     it('should clear open shares when requesting recovery', async () => {
@@ -235,6 +270,8 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
           publicKey: 'test-public-key',
+          protectedKeyPair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -259,6 +296,8 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
           publicKey: 'test-public-key',
+          protectedKeyPair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -270,8 +309,8 @@ describe('requestShamirRecovery', () => {
       expect(resMock.end).toHaveBeenCalled();
 
       const requests = await db.query(
-        'SELECT * FROM shamir_recovery_requests WHERE device_id = $1',
-        [deviceForUser(u.id).id],
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
       );
 
       expect(requests.rows).toHaveLength(1);
@@ -296,8 +335,11 @@ describe('requestShamirRecovery', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: d.id,
+          vault_id: u.id,
+          creator_device_id: d.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 1,
           created_at: oneMonthBack,
           completed_at: null,
@@ -311,6 +353,8 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
           publicKey: 'new-public-key',
+          protectedKeyPair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -320,14 +364,17 @@ describe('requestShamirRecovery', () => {
       expect(resMock.end).toHaveBeenCalled();
 
       const requests = await db.query(
-        'SELECT * FROM shamir_recovery_requests WHERE device_id = $1 ORDER BY expiry_date',
-        [d.id],
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1 ORDER BY expiry_date',
+        [u.id],
       );
 
       expect(requests.rows).toHaveLength(2);
       expect(requests.rows[0].public_key).toBe('tempPublicKey1ForRecovery');
       expect(requests.rows[0].status).toBe('PENDING');
       expect(requests.rows[1].public_key).toBe('new-public-key');
+      expect(requests.rows[1].protected_recovery_key_pair).toContain(
+        'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-',
+      );
       expect(requests.rows[1].status).toBe('PENDING');
     });
   });

@@ -29,9 +29,9 @@ export const retrieveShamirRecoveriesToApprove = async (
         srr.created_at AS requested_at,
         srr.expiry_date AS expiry_date
       FROM shamir_recovery_requests AS srr
-      INNER JOIN user_devices AS ud ON ud.id = srr.device_id
-      INNER JOIN users AS u ON u.id = ud.user_id
-      INNER JOIN banks AS b ON b.id = ud.bank_id
+      INNER JOIN users AS u ON u.id = srr.vault_id
+      INNER JOIN user_devices AS ud ON ud.id=srr.creator_device_id
+      INNER JOIN banks AS b ON b.id = u.bank_id
       INNER JOIN shamir_shares AS ss ON ss.vault_id = u.id AND ss.shamir_config_id=srr.shamir_config_id
       INNER JOIN shamir_configs AS sc ON sc.id = srr.shamir_config_id
       INNER JOIN shamir_holders AS sh ON sh.vault_id=ss.holder_vault_id AND sh.shamir_config_id=ss.shamir_config_id
@@ -39,7 +39,6 @@ export const retrieveShamirRecoveriesToApprove = async (
         srr.status='PENDING'
         AND srr.expiry_date > current_timestamp(0)
         AND (ss.open_shares IS NULL OR ARRAY_LENGTH(ss.open_shares, 1) < ARRAY_LENGTH(ss.closed_shares, 1))
-        AND ud.authorization_status = 'AUTHORIZED'
         AND ss.holder_vault_id = $1
         AND NOT($1 = ANY(srr.denied_by))
       `,
@@ -67,7 +66,7 @@ export const retrieveShamirRecoveriesToApprove = async (
         deviceName: prr.device_name,
         osFamily: prr.os_family,
         deviceType: prr.device_type,
-        devicePublicKey: prr.public_key,
+        recoveryPublicKey: prr.public_key,
         bankName: prr.bank_name,
         shamirConfigId: prr.shamir_config_id,
         closedShares: prr.closed_shares,

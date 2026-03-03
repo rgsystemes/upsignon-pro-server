@@ -117,8 +117,11 @@ describe('denyShamirRequestApproval', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date(),
           completed_at: null,
@@ -165,8 +168,11 @@ describe('denyShamirRequestApproval', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date(),
           completed_at: null,
@@ -214,8 +220,11 @@ describe('denyShamirRequestApproval', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: pastDate,
           completed_at: pastDate,
@@ -261,8 +270,11 @@ describe('denyShamirRequestApproval', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: pastDate,
           completed_at: null,
@@ -308,8 +320,11 @@ describe('denyShamirRequestApproval', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date(),
           completed_at: null,
@@ -355,8 +370,11 @@ describe('denyShamirRequestApproval', () => {
       await addTestShamirRecoveryRequests([
         {
           id: 1,
-          device_id: requestingDevice.id,
+          vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
           public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
           shamir_config_id: 2,
           created_at: new Date(),
           completed_at: null,

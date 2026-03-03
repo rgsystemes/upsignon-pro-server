@@ -78,12 +78,10 @@ export const upsertShamirBackup = async (req: Request, res: Response): Promise<v
       await db.query(
         `UPDATE shamir_recovery_requests
         SET status='ABORTED'
-        FROM user_devices
         WHERE
-          shamir_recovery_requests.device_id=user_devices.id
-          AND shamir_recovery_requests.status='PENDING'
-          AND user_devices.user_id=$1
-          AND shamir_recovery_requests.shamir_config_id=$2`,
+          vault_id=$1
+          AND status='PENDING'
+          AND shamir_config_id=$2`,
         [basicAuth.userId, validatedBody.shamirConfigId],
       );
       await db.query('COMMIT');
