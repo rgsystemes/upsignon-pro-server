@@ -76,24 +76,9 @@ export const retrieveShamirConfigChangeToApprove = async (
     }[] = [];
 
     allShamirConfigsForHolder.rows.forEach((scfh: ShamirConfigHistoryForBank) => {
-      if (scfh.all_configs.length === 0) {
-        // should not happen
-        return;
-      }
-      // 2a - case of first shamir config for the bank
-      if (scfh.all_configs.length === 1) {
-        // we know the user is a shareholder, we only need to check their signature
-        const changeSignatures = scfh.all_configs[0].changeSignatures;
-        const hasSigned = changeSignatures.some((cs: ShamirChangeSignature) => {
-          return cs.holderVaultId === basicAuth.userId;
-        });
-        if (!hasSigned) {
-          changesToBeSigned.push({
-            bankPublicId: scfh.public_id,
-            bankName: scfh.bank_name,
-            shamirConfigHistory: scfh.all_configs,
-          });
-        }
+      if (scfh.all_configs.length <= 1) {
+        // 0 should not happen
+        // 1 means it's the first config, no need to approve it
         return;
       }
 
