@@ -14,12 +14,20 @@ jest.mock('../../../src/helpers/logger', () => ({
   logInfo: jest.fn(),
   logError: jest.fn(),
 }));
+jest.mock('../../../src/emails/shamir/sendShamirRecoveryRequestAwaitingApproval', () => ({
+  sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons: jest.fn(),
+}));
+jest.mock('../../../src/emails/shamir/sendShamirRecoveryRequestInitiated', () => ({
+  sendShamirRecoveryRequestInitiatedToUser: jest.fn(),
+}));
 
 import { checkDeviceAuth } from '../../../src/api2/helpers/authorizationChecks';
 import { db } from '../../../src/helpers/db';
 import { addTestShamirHolders, holdersConfig1 } from '../../fixtures/shamirHolders';
 import { addTestShamirShares, sharesConfig1 } from '../../fixtures/shamirShares';
 import { addTestShamirRecoveryRequests } from '../../fixtures/shamirRecoveryRequests';
+import { sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons } from '../../../src/emails/shamir/sendShamirRecoveryRequestAwaitingApproval';
+import { sendShamirRecoveryRequestInitiatedToUser } from '../../../src/emails/shamir/sendShamirRecoveryRequestInitiated';
 
 const mockRes = () => {
   return {
@@ -35,6 +43,7 @@ const mockCheckDeviceAuthSuccess = (userId: number) => {
     granted: true,
     vaultId: userId,
     deviceId: d.id,
+    vaultEmail: 'mocked@testbank1.com',
   });
 };
 
@@ -58,12 +67,17 @@ describe('requestShamirRecovery', () => {
           userEmail: testUsers[0].email,
           publicKey: 'test-public-key',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await requestShamirRecovery(mockReq, resMock);
 
       expect(resMock.status).toHaveBeenCalledWith(401);
       expect(resMock.json).toHaveBeenCalledWith({ error: 'badDeviceSession' });
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).not.toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestInitiatedToUser).not.toHaveBeenCalled();
     });
   });
 
@@ -83,12 +97,17 @@ describe('requestShamirRecovery', () => {
         body: {
           userEmail: u.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await requestShamirRecovery(mockReq, resMock);
 
       expect(resMock.status).toHaveBeenCalledWith(403);
       expect(resMock.end).toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).not.toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestInitiatedToUser).not.toHaveBeenCalled();
     });
 
     it('should reject request with invalid publicKey type', async () => {
@@ -99,12 +118,17 @@ describe('requestShamirRecovery', () => {
           userEmail: u.email,
           publicKey: 123,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await requestShamirRecovery(mockReq, resMock);
 
       expect(resMock.status).toHaveBeenCalledWith(403);
       expect(resMock.end).toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).not.toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestInitiatedToUser).not.toHaveBeenCalled();
     });
   });
 
@@ -152,12 +176,17 @@ describe('requestShamirRecovery', () => {
           protectedKeyPair:
             'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await requestShamirRecovery(mockReq, resMock);
 
       expect(resMock.status).toHaveBeenCalledWith(403);
       expect(resMock.json).toHaveBeenCalledWith({ error: 'shamir_recovery_already_pending' });
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).not.toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestInitiatedToUser).not.toHaveBeenCalled();
     });
 
     it('should reject if shamir config is not found', async () => {
@@ -171,12 +200,17 @@ describe('requestShamirRecovery', () => {
           protectedKeyPair:
             'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await requestShamirRecovery(mockReq, resMock);
 
       expect(resMock.status).toHaveBeenCalledWith(403);
       expect(resMock.json).toHaveBeenCalledWith({ error: 'shamir_config_not_found' });
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).not.toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestInitiatedToUser).not.toHaveBeenCalled();
     });
   });
 
@@ -203,6 +237,9 @@ describe('requestShamirRecovery', () => {
           protectedKeyPair:
             'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await requestShamirRecovery(mockReq, resMock);
@@ -219,6 +256,22 @@ describe('requestShamirRecovery', () => {
       expect(requests.rows[0].status).toBe('PENDING');
       expect(requests.rows[0].public_key).toBe('test-public-key');
       expect(requests.rows[0].shamir_config_id).toBe(1);
+
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).toHaveBeenCalledWith({
+        trustedPersonEmails: ['user1@testbank1.com'],
+        vaultEmail: 'mocked@testbank1.com',
+        expiryDate: requests.rows[0].expiry_date,
+        requestDate: requests.rows[0].created_at,
+        deviceName: 'iPhone 15',
+        deviceType: 'PHONE',
+        supportEmail: 'support@testbank1.com',
+        acceptLanguage: 'fr',
+      });
+      expect(sendShamirRecoveryRequestInitiatedToUser).toHaveBeenCalledWith({
+        vaultEmail: 'mocked@testbank1.com',
+        supportEmail: 'support@testbank1.com',
+        acceptLanguage: 'fr',
+      });
     });
 
     it('should hash the passwordChallengeResponse part to add security', async () => {
@@ -232,6 +285,9 @@ describe('requestShamirRecovery', () => {
           publicKey: 'test-public-key',
           protectedKeyPair:
             'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -249,6 +305,9 @@ describe('requestShamirRecovery', () => {
       expect(requests.rows[0].protected_recovery_key_pair).toBe(
         'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-WnsgG/wqKY5ifR5zP5NbXYBAoP9kOqKunSl3GAzy7Mc=-encryptedKeyPair',
       );
+
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestInitiatedToUser).toHaveBeenCalled();
     });
 
     it('should clear open shares when requesting recovery', async () => {
@@ -272,6 +331,9 @@ describe('requestShamirRecovery', () => {
           publicKey: 'test-public-key',
           protectedKeyPair:
             'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -298,6 +360,9 @@ describe('requestShamirRecovery', () => {
           publicKey: 'test-public-key',
           protectedKeyPair:
             'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -356,6 +421,9 @@ describe('requestShamirRecovery', () => {
           protectedKeyPair:
             'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await requestShamirRecovery(mockReq, resMock);
@@ -376,6 +444,9 @@ describe('requestShamirRecovery', () => {
         'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-',
       );
       expect(requests.rows[1].status).toBe('PENDING');
+
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestInitiatedToUser).toHaveBeenCalled();
     });
   });
 });

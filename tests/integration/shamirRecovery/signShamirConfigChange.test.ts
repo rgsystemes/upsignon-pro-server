@@ -4,7 +4,7 @@ import { cleanDatabase } from '../../setup/testHelpers';
 import { Request, Response } from 'express';
 import { addTestUsers, testUsers } from '../../fixtures/users';
 import { addTestBanks, testBanks } from '../../fixtures/banks';
-import { addTestDevices, deviceForUser, testDevices } from '../../fixtures/userDevices';
+import { addTestDevices, deviceForUser } from '../../fixtures/userDevices';
 import {
   addTestShamirConfigs,
   approvingSignaturesConfig2,
@@ -13,12 +13,20 @@ import {
   config2Approved,
   config3Pending,
   nonSenseApprovingSignaturesConfig1,
+  refusingSignaturesConfig3,
   unlegitimateApprovingSignaturesConfig2,
 } from '../../fixtures/shamirConfigs';
 
 jest.mock('../../../src/api2/helpers/authorizationChecks', () => ({
   checkBasicAuth2: jest.fn(),
 }));
+jest.mock('../../../src/emails/shamir/sendShamirConfigChangeApproved', () => ({
+  sendShamirConfigChangeApprovedToAdminsCCTrustedPersons: jest.fn(),
+}));
+jest.mock('../../../src/emails/shamir/sendShamirConfigChangeRejected', () => ({
+  sendShamirConfigChangeRejectedToAdminsCCTrustedPersons: jest.fn(),
+}));
+
 jest.mock('../../../src/helpers/logger', () => ({
   logInfo: jest.fn(),
   logError: jest.fn(),
@@ -26,6 +34,14 @@ jest.mock('../../../src/helpers/logger', () => ({
 
 import { checkBasicAuth2 } from '../../../src/api2/helpers/authorizationChecks';
 import { db } from '../../../src/helpers/db';
+import { sendShamirConfigChangeApprovedToAdminsCCTrustedPersons } from '../../../src/emails/shamir/sendShamirConfigChangeApproved';
+import { sendShamirConfigChangeRejectedToAdminsCCTrustedPersons } from '../../../src/emails/shamir/sendShamirConfigChangeRejected';
+import {
+  addTestShamirHolders,
+  holdersConfig1,
+  holdersConfig2,
+  holdersConfig3,
+} from '../../fixtures/shamirHolders';
 
 const mockRes = () => {
   return {
@@ -50,16 +66,6 @@ const mockCheckBasicAuth2Success = (userId: number) => {
 };
 
 describe('signShamirConfigChange', () => {
-  let testUserId: number;
-  let testUserEmail: string;
-  let testDeviceId: number;
-  let testDeviceUniqueId: string;
-  let testPublicKey: string;
-  let testSigningSecretKey: string;
-  let testSigningPublicKey: string;
-  let testBankId: number;
-  let shamirConfigId: number;
-
   describe('body validations', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
@@ -83,6 +89,9 @@ describe('signShamirConfigChange', () => {
           approved: approvingSignaturesConfig2[0].approved,
           signature: approvingSignaturesConfig2[0].signature,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await signShamirConfigChange(mockReq, resMock);
@@ -98,6 +107,9 @@ describe('signShamirConfigChange', () => {
           shamirConfigId: 2,
           approved: approvingSignaturesConfig2[0].approved,
           signature: approvingSignaturesConfig2[0].signature,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock2 = mockRes();
@@ -137,6 +149,9 @@ describe('signShamirConfigChange', () => {
           approved: approvingSignaturesConfig2[0].approved,
           signature: approvingSignaturesConfig2[0].signature,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await signShamirConfigChange(mockReq, resMock);
@@ -170,6 +185,9 @@ describe('signShamirConfigChange', () => {
           approved: nonSenseApprovingSignaturesConfig1[0].approved,
           signature: nonSenseApprovingSignaturesConfig1[0].signature,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await signShamirConfigChange(mockReq, resMock);
@@ -194,6 +212,9 @@ describe('signShamirConfigChange', () => {
           approved: unlegitimateApprovingSignaturesConfig2[0].approved,
           signature: unlegitimateApprovingSignaturesConfig2[0].signature,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await signShamirConfigChange(mockReq, resMock);
@@ -217,6 +238,9 @@ describe('signShamirConfigChange', () => {
           signedAt: approvingSignaturesConfig2[0].signedAt,
           approved: approvingSignaturesConfig2[0].approved,
           signature: approvingSignaturesConfig2[0].signature,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -257,6 +281,9 @@ describe('signShamirConfigChange', () => {
           approved: approvingSignaturesConfig2[0].approved,
           signature: approvingSignaturesConfig3[0].signature,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await signShamirConfigChange(mockReq, resMock);
@@ -286,6 +313,9 @@ describe('signShamirConfigChange', () => {
           signedAt: approvingSignaturesConfig2[0].signedAt,
           approved: approvingSignaturesConfig2[0].approved,
           signature: approvingSignaturesConfig2[0].signature,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -342,6 +372,9 @@ describe('signShamirConfigChange', () => {
           approved: approvingSignaturesConfig3[1].approved,
           signature: approvingSignaturesConfig3[1].signature,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await signShamirConfigChange(mockReq, resMock);
@@ -365,6 +398,10 @@ describe('signShamirConfigChange', () => {
         shId - 1,
       ]);
       expect(previousConfig.rows[0].is_active).toBe(true);
+
+      // Should NOT send approval or rejection emails
+      expect(sendShamirConfigChangeApprovedToAdminsCCTrustedPersons).not.toHaveBeenCalled();
+      expect(sendShamirConfigChangeRejectedToAdminsCCTrustedPersons).not.toHaveBeenCalled();
     });
     it('should activate the config if the consensus is now reached (with one approver)', async () => {
       await addTestShamirConfigs([
@@ -375,6 +412,7 @@ describe('signShamirConfigChange', () => {
           change_signatures: null,
         },
       ]);
+      await addTestShamirHolders([...holdersConfig1, ...holdersConfig2]);
       const u = testUsers[0];
       const d = deviceForUser(u.id);
       const shId = 2;
@@ -389,6 +427,9 @@ describe('signShamirConfigChange', () => {
           signedAt: approvingSignaturesConfig2[0].signedAt,
           approved: approvingSignaturesConfig2[0].approved,
           signature: approvingSignaturesConfig2[0].signature,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -413,9 +454,24 @@ describe('signShamirConfigChange', () => {
         shId - 1,
       ]);
       expect(previousConfig.rows[0].is_active).toBe(false);
+
+      // Should send approval email
+      expect(sendShamirConfigChangeApprovedToAdminsCCTrustedPersons).toHaveBeenCalledWith({
+        trustedPersonEmails: ['user1@testbank1.com'],
+        supportEmail: 'support@testbank1.com',
+        bankId: 1,
+        bankName: 'Bank 1',
+        currentShamirConfigName: 'Shamir 1',
+        nextShamirConfigName: 'Shamir 2',
+        nbApprovers: 1,
+        acceptLanguage: 'fr',
+      });
+      expect(sendShamirConfigChangeRejectedToAdminsCCTrustedPersons).not.toHaveBeenCalled();
     });
     it('should activate the config if the consensus is now reached (with three approvers)', async () => {
       await addTestShamirConfigs([config1Approved, config2Approved, config3Pending]);
+      await addTestShamirHolders([...holdersConfig1, ...holdersConfig2, ...holdersConfig3]);
+
       const u = testUsers[0];
       const d = deviceForUser(u.id);
       const shId = 3;
@@ -430,6 +486,9 @@ describe('signShamirConfigChange', () => {
           signedAt: approvingSignaturesConfig3[0].signedAt,
           approved: approvingSignaturesConfig3[0].approved,
           signature: approvingSignaturesConfig3[0].signature,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -454,6 +513,209 @@ describe('signShamirConfigChange', () => {
         shId - 1,
       ]);
       expect(previousConfig.rows[0].is_active).toBe(false);
+
+      // Should send approval email
+      expect(sendShamirConfigChangeApprovedToAdminsCCTrustedPersons).toHaveBeenCalledWith({
+        trustedPersonEmails: [
+          'user1@testbank1.com',
+          'user2@testbank1.com',
+          'user1@testbank2.com',
+          'user2@testbank2.com',
+        ],
+        supportEmail: 'security@testbank1.com',
+        bankId: 1,
+        bankName: 'Bank 1',
+        currentShamirConfigName: 'Shamir 2',
+        nextShamirConfigName: 'Shamir 3',
+        nbApprovers: 3,
+        acceptLanguage: 'fr',
+      });
+      expect(sendShamirConfigChangeRejectedToAdminsCCTrustedPersons).not.toHaveBeenCalled();
+    });
+
+    it('should not resend approval emails on surplus approval', async () => {
+      await addTestShamirConfigs([
+        config1Approved,
+        {
+          ...config2Approved,
+          is_active: false,
+        },
+        {
+          ...config3Pending,
+          is_active: true,
+          change_signatures: [
+            approvingSignaturesConfig3[1],
+            approvingSignaturesConfig3[2],
+            approvingSignaturesConfig3[3],
+          ],
+        },
+      ]);
+      await addTestShamirHolders([...holdersConfig1, ...holdersConfig2, ...holdersConfig3]);
+
+      const u = testUsers[0];
+      const d = deviceForUser(u.id);
+      const shId = 3;
+      mockCheckBasicAuth2Success(u.id);
+
+      const mockReq = {
+        body: {
+          userEmail: u.email,
+          deviceId: d.id,
+          deviceSession: 'any-session',
+          shamirConfigId: shId,
+          signedAt: approvingSignaturesConfig3[0].signedAt,
+          approved: approvingSignaturesConfig3[0].approved,
+          signature: approvingSignaturesConfig3[0].signature,
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await signShamirConfigChange(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(200);
+      expect(resMock.end).toHaveBeenCalled();
+
+      const updatedConfig = await db.query(
+        `SELECT is_active, change_signatures FROM shamir_configs WHERE id = $1`,
+        [shId],
+      );
+
+      const signatures = updatedConfig.rows[0].change_signatures;
+      expect(signatures).toHaveLength(4);
+      expect(signatures[3].holderVaultId).toBe(u.id);
+      expect(signatures[3].approved).toBe(true);
+      expect(signatures[3].signature).toBe(approvingSignaturesConfig3[0].signature);
+      expect(updatedConfig.rows[0].is_active).toBe(true);
+
+      // Should NOT send approval or rejection emails
+      expect(sendShamirConfigChangeApprovedToAdminsCCTrustedPersons).not.toHaveBeenCalled();
+      expect(sendShamirConfigChangeRejectedToAdminsCCTrustedPersons).not.toHaveBeenCalled();
+    });
+
+    it('should send a refusal email when the consensus can no longer be reached', async () => {
+      await addTestShamirConfigs([
+        config1Approved,
+        config2Approved,
+        {
+          ...config3Pending,
+          change_signatures: [refusingSignaturesConfig3[1]],
+        },
+      ]);
+      await addTestShamirHolders([...holdersConfig1, ...holdersConfig2, ...holdersConfig3]);
+
+      const u = testUsers[0];
+      const d = deviceForUser(u.id);
+      const shId = 3;
+      mockCheckBasicAuth2Success(u.id);
+
+      const mockReq = {
+        body: {
+          userEmail: u.email,
+          deviceId: d.id,
+          deviceSession: 'any-session',
+          shamirConfigId: shId,
+          signedAt: refusingSignaturesConfig3[0].signedAt,
+          approved: refusingSignaturesConfig3[0].approved,
+          signature: refusingSignaturesConfig3[0].signature,
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await signShamirConfigChange(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(200);
+      expect(resMock.end).toHaveBeenCalled();
+
+      const updatedConfig = await db.query(
+        `SELECT is_active, change_signatures FROM shamir_configs WHERE id = $1`,
+        [shId],
+      );
+
+      const signatures = updatedConfig.rows[0].change_signatures;
+      expect(signatures).toHaveLength(2);
+      expect(signatures[1].holderVaultId).toBe(u.id);
+      expect(signatures[1].approved).toBe(false);
+      expect(signatures[1].signature).toBe(refusingSignaturesConfig3[0].signature);
+      expect(updatedConfig.rows[0].is_active).toBe(false);
+
+      const previousConfig = await db.query(`SELECT is_active FROM shamir_configs WHERE id = $1`, [
+        shId - 1,
+      ]);
+      expect(previousConfig.rows[0].is_active).toBe(true);
+
+      expect(sendShamirConfigChangeApprovedToAdminsCCTrustedPersons).not.toHaveBeenCalled();
+
+      expect(sendShamirConfigChangeRejectedToAdminsCCTrustedPersons).toHaveBeenCalledWith({
+        trustedPersonEmails: [
+          'user1@testbank1.com',
+          'user2@testbank1.com',
+          'user1@testbank2.com',
+          'user2@testbank2.com',
+        ],
+        supportEmail: 'security@testbank1.com',
+        bankId: 1,
+        bankName: 'Bank 1',
+        currentShamirConfigName: 'Shamir 2',
+        acceptLanguage: 'fr',
+      });
+    });
+
+    it('should not resend rejection emails on surplus approval', async () => {
+      await addTestShamirConfigs([
+        config1Approved,
+        config2Approved,
+        {
+          ...config3Pending,
+          is_active: false,
+          change_signatures: [refusingSignaturesConfig3[1], refusingSignaturesConfig3[2]],
+        },
+      ]);
+      await addTestShamirHolders([...holdersConfig1, ...holdersConfig2, ...holdersConfig3]);
+
+      const u = testUsers[0];
+      const d = deviceForUser(u.id);
+      const shId = 3;
+      mockCheckBasicAuth2Success(u.id);
+
+      const mockReq = {
+        body: {
+          userEmail: u.email,
+          deviceId: d.id,
+          deviceSession: 'any-session',
+          shamirConfigId: shId,
+          signedAt: refusingSignaturesConfig3[0].signedAt,
+          approved: refusingSignaturesConfig3[0].approved,
+          signature: refusingSignaturesConfig3[0].signature,
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await signShamirConfigChange(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(200);
+      expect(resMock.end).toHaveBeenCalled();
+
+      const updatedConfig = await db.query(
+        `SELECT is_active, change_signatures FROM shamir_configs WHERE id = $1`,
+        [shId],
+      );
+
+      const signatures = updatedConfig.rows[0].change_signatures;
+      expect(signatures).toHaveLength(3);
+      expect(signatures[2].holderVaultId).toBe(u.id);
+      expect(signatures[2].approved).toBe(false);
+      expect(signatures[2].signature).toBe(refusingSignaturesConfig3[0].signature);
+      expect(updatedConfig.rows[0].is_active).toBe(false);
+
+      // Should NOT send approval or rejection emails
+      expect(sendShamirConfigChangeApprovedToAdminsCCTrustedPersons).not.toHaveBeenCalled();
+      expect(sendShamirConfigChangeRejectedToAdminsCCTrustedPersons).not.toHaveBeenCalled();
     });
   });
 });

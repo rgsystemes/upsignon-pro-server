@@ -77,6 +77,9 @@ describe('retrieveShamirRecoveriesToApprove', () => {
         body: {
           userEmail: testUsers[0].email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await retrieveShamirRecoveriesToApprove(mockReq, resMock);
@@ -103,6 +106,9 @@ describe('retrieveShamirRecoveriesToApprove', () => {
       const mockReq = {
         body: {
           userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -187,6 +193,9 @@ describe('retrieveShamirRecoveriesToApprove', () => {
         body: {
           userEmail: holder.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await retrieveShamirRecoveriesToApprove(mockReq, resMock);
@@ -259,6 +268,9 @@ describe('retrieveShamirRecoveriesToApprove', () => {
         body: {
           userEmail: holder.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await retrieveShamirRecoveriesToApprove(mockReq, resMock);
@@ -309,6 +321,9 @@ describe('retrieveShamirRecoveriesToApprove', () => {
         body: {
           userEmail: holder.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await retrieveShamirRecoveriesToApprove(mockReq, resMock);
@@ -326,6 +341,9 @@ describe('retrieveShamirRecoveriesToApprove', () => {
       const mockReq = {
         body: {
           userEmail: holder.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -384,6 +402,9 @@ describe('retrieveShamirRecoveriesToApprove', () => {
       const mockReq = {
         body: {
           userEmail: holder.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();

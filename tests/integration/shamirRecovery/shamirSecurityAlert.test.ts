@@ -11,13 +11,13 @@ jest.mock('../../../src/helpers/logger', () => ({
   logInfo: jest.fn(),
   logError: jest.fn(),
 }));
-jest.mock('../../../src/emails/sendShamirSecurityAlertToAdmins', () => ({
+jest.mock('../../../src/emails/shamir/sendShamirSecurityAlertToAdmins', () => ({
   sendShamirSecurityAlertToAdmins: jest.fn(),
 }));
 
 import { checkBasicAuth2 } from '../../../src/api2/helpers/authorizationChecks';
 import { db } from '../../../src/helpers/db';
-import { sendShamirSecurityAlertToAdmins } from '../../../src/emails/sendShamirSecurityAlertToAdmins';
+import { sendShamirSecurityAlertToAdmins } from '../../../src/emails/shamir/sendShamirSecurityAlertToAdmins';
 
 const mockRes = () => {
   return {
@@ -52,6 +52,9 @@ describe('shamirSecurityAlert', () => {
           bankName: 'BankName',
           bankUrl: 'https://bank.com',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await shamirSecurityAlert(mockReq, resMock);
@@ -75,6 +78,9 @@ describe('shamirSecurityAlert', () => {
           bankName: 'BankName',
           bankUrl: 'https://bank.com',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await shamirSecurityAlert(mockReq, resMock);
@@ -90,6 +96,9 @@ describe('shamirSecurityAlert', () => {
           brokenShamirChain: 'chain info',
           bankName: 'BankName',
           bankUrl: 'not-a-url',
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -117,6 +126,9 @@ describe('shamirSecurityAlert', () => {
           brokenShamirChain: 'chain info',
           bankName: 'BankName',
           bankUrl: 'https://bank.com',
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -150,6 +162,9 @@ describe('shamirSecurityAlert', () => {
           bankName: 'BankName',
           bankUrl: 'https://bank.com',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await shamirSecurityAlert(mockReq, resMock);
@@ -178,6 +193,9 @@ describe('shamirSecurityAlert', () => {
           brokenShamirChain: 'chain info',
           bankName: 'BankName',
           bankUrl: 'https://bank.com',
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();

@@ -17,9 +17,13 @@ jest.mock('../../../src/helpers/logger', () => ({
   logInfo: jest.fn(),
   logError: jest.fn(),
 }));
+jest.mock('../../../src/emails/shamir/sendShamirRecoveryRequestDenied', () => ({
+  sendShamirRecoveryRequestDeniedToUser: jest.fn(),
+}));
 
 import { checkBasicAuth2 } from '../../../src/api2/helpers/authorizationChecks';
 import { db } from '../../../src/helpers/db';
+import { sendShamirRecoveryRequestDeniedToUser } from '../../../src/emails/shamir/sendShamirRecoveryRequestDenied';
 
 const mockRes = () => {
   return {
@@ -68,12 +72,16 @@ describe('denyShamirRequestApproval', () => {
           targetVaultId: 1,
           shamirConfigId: 2,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await denyShamirRequestApproval(mockReq, resMock);
 
       expect(resMock.status).toHaveBeenCalledWith(401);
       expect(resMock.end).toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestDeniedToUser).not.toHaveBeenCalled();
     });
 
     it('should reject request with invalid body', async () => {
@@ -84,12 +92,16 @@ describe('denyShamirRequestApproval', () => {
           userEmail: testUsers[0].email,
           deviceSession: 'session1',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await denyShamirRequestApproval(mockReq, resMock);
 
       expect(resMock.status).toHaveBeenCalledWith(403);
       expect(resMock.end).toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestDeniedToUser).not.toHaveBeenCalled();
     });
   });
 
@@ -139,6 +151,9 @@ describe('denyShamirRequestApproval', () => {
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await denyShamirRequestApproval(mockReq, resMock);
@@ -154,6 +169,7 @@ describe('denyShamirRequestApproval', () => {
       expect(requests.rows).toHaveLength(1);
       expect(requests.rows[0].denied_by).toContain(holder.id);
       expect(requests.rows[0].denied_by).toHaveLength(1);
+      expect(sendShamirRecoveryRequestDeniedToUser).not.toHaveBeenCalled();
     });
 
     it('should not deny request twice from same holder', async () => {
@@ -190,6 +206,9 @@ describe('denyShamirRequestApproval', () => {
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await denyShamirRequestApproval(mockReq, resMock);
@@ -204,6 +223,7 @@ describe('denyShamirRequestApproval', () => {
 
       expect(requests.rows).toHaveLength(1);
       expect(requests.rows[0].denied_by).toHaveLength(1);
+      expect(sendShamirRecoveryRequestDeniedToUser).not.toHaveBeenCalled();
     });
 
     it('should not deny completed recovery request', async () => {
@@ -242,6 +262,9 @@ describe('denyShamirRequestApproval', () => {
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await denyShamirRequestApproval(mockReq, resMock);
@@ -256,6 +279,7 @@ describe('denyShamirRequestApproval', () => {
 
       expect(requests.rows).toHaveLength(1);
       expect(requests.rows[0].denied_by).toHaveLength(0);
+      expect(sendShamirRecoveryRequestDeniedToUser).not.toHaveBeenCalled();
     });
 
     it('should not deny expired recovery request', async () => {
@@ -292,6 +316,9 @@ describe('denyShamirRequestApproval', () => {
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await denyShamirRequestApproval(mockReq, resMock);
@@ -306,6 +333,7 @@ describe('denyShamirRequestApproval', () => {
 
       expect(requests.rows).toHaveLength(1);
       expect(requests.rows[0].denied_by).toHaveLength(0);
+      expect(sendShamirRecoveryRequestDeniedToUser).not.toHaveBeenCalled();
     });
 
     it('should not deny if user is not a holder for this vault', async () => {
@@ -342,6 +370,9 @@ describe('denyShamirRequestApproval', () => {
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await denyShamirRequestApproval(mockReq, resMock);
@@ -356,6 +387,7 @@ describe('denyShamirRequestApproval', () => {
 
       expect(requests.rows).toHaveLength(1);
       expect(requests.rows[0].denied_by).toHaveLength(0);
+      expect(sendShamirRecoveryRequestDeniedToUser).not.toHaveBeenCalled();
     });
 
     it('should allow multiple different holders to deny the same request', async () => {
@@ -393,6 +425,9 @@ describe('denyShamirRequestApproval', () => {
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock1 = mockRes();
       await denyShamirRequestApproval(mockReq1, resMock1);
@@ -407,6 +442,9 @@ describe('denyShamirRequestApproval', () => {
           deviceId: deviceForUser(holder2.id).device_unique_id,
           targetVaultId: requestingUser.id,
           shamirConfigId: 2,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock2 = mockRes();
@@ -423,6 +461,100 @@ describe('denyShamirRequestApproval', () => {
       expect(requests.rows[0].denied_by).toHaveLength(2);
       expect(requests.rows[0].denied_by).toContain(holder1.id);
       expect(requests.rows[0].denied_by).toContain(holder2.id);
+      expect(sendShamirRecoveryRequestDeniedToUser).toHaveBeenCalledWith({
+        vaultEmail: 'user1@testbank1.com',
+        supportEmail: 'security@testbank1.com',
+        acceptLanguage: 'fr',
+      });
+    });
+  });
+  describe('send deny notification email', () => {
+    beforeEach(async () => {
+      jest.clearAllMocks();
+      await cleanDatabase();
+      await addTestBanks();
+      await addTestUsers();
+      await addTestDevices();
+      await addTestShamirConfigs([config2Approved]);
+      await addTestShamirHolders(holdersConfig2);
+      await addTestShamirShares(sharesConfig2);
+    });
+    it('should send deny notification email only once', async () => {
+      const holder1 = testUsers[1];
+      const holder2 = testUsers[3];
+      const requestingUser = testUsers[0];
+      const requestingDevice = deviceForUser(requestingUser.id);
+
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 7);
+
+      await addTestShamirRecoveryRequests([
+        {
+          id: 1,
+          vault_id: requestingUser.id,
+          creator_device_id: requestingDevice.id,
+          public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+          shamir_config_id: 2,
+          created_at: new Date(),
+          completed_at: null,
+          status: 'PENDING',
+          expiry_date: futureDate,
+          denied_by: [5],
+        },
+      ]);
+
+      mockCheckBasicAuth2Success(holder1.id);
+      const mockReq1 = {
+        body: {
+          userEmail: holder1.email,
+          deviceSession: 'session2',
+          deviceId: deviceForUser(holder1.id).device_unique_id,
+          targetVaultId: requestingUser.id,
+          shamirConfigId: 2,
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock1 = mockRes();
+      await denyShamirRequestApproval(mockReq1, resMock1);
+
+      expect(resMock1.status).toHaveBeenCalledWith(200);
+      expect(sendShamirRecoveryRequestDeniedToUser).toHaveBeenCalledWith({
+        vaultEmail: 'user1@testbank1.com',
+        supportEmail: 'security@testbank1.com',
+        acceptLanguage: 'fr',
+      });
+
+      mockCheckBasicAuth2Success(holder2.id);
+      const mockReq2 = {
+        body: {
+          userEmail: holder2.email,
+          deviceSession: 'session3',
+          deviceId: deviceForUser(holder2.id).device_unique_id,
+          targetVaultId: requestingUser.id,
+          shamirConfigId: 2,
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock2 = mockRes();
+      await denyShamirRequestApproval(mockReq2, resMock2);
+
+      expect(resMock2.status).toHaveBeenCalledWith(200);
+
+      const requests = await db.query(
+        'SELECT denied_by FROM shamir_recovery_requests WHERE id = $1',
+        [1],
+      );
+
+      expect(requests.rows).toHaveLength(1);
+      expect(requests.rows[0].denied_by).toHaveLength(3);
+      expect(requests.rows[0].denied_by).toStrictEqual([5, 2, 4]);
+      expect(sendShamirRecoveryRequestDeniedToUser).toHaveBeenCalledTimes(1);
     });
   });
 });

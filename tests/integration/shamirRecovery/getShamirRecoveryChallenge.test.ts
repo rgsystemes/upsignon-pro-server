@@ -55,6 +55,9 @@ describe('getShamirRecoveryChallenge', () => {
         body: {
           userEmail: testUsers[0].email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await getShamirRecoveryChallenge(mockReq, resMock);
@@ -80,6 +83,9 @@ describe('getShamirRecoveryChallenge', () => {
       const mockReq = {
         body: {
           userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -113,6 +119,9 @@ describe('getShamirRecoveryChallenge', () => {
       const mockReq = {
         body: {
           userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -148,6 +157,9 @@ describe('getShamirRecoveryChallenge', () => {
       const mockReq = {
         body: {
           userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();

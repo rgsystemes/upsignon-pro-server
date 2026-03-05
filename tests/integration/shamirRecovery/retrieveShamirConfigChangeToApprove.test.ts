@@ -70,6 +70,9 @@ describe('retrieveShamirConfigChangeToApprove', () => {
         body: {
           userEmail: testUsers[0].email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await retrieveShamirConfigChangeToApprove(mockReq, resMock);
@@ -99,6 +102,9 @@ describe('retrieveShamirConfigChangeToApprove', () => {
         body: {
           userEmail: u.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       mockCheckBasicAuth2Success(u.id);
       const resMock = mockRes();
@@ -119,6 +125,9 @@ describe('retrieveShamirConfigChangeToApprove', () => {
       const mockReq = {
         body: {
           userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -142,6 +151,9 @@ describe('retrieveShamirConfigChangeToApprove', () => {
         body: {
           userEmail: u.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await retrieveShamirConfigChangeToApprove(mockReq, resMock);
@@ -160,6 +172,9 @@ describe('retrieveShamirConfigChangeToApprove', () => {
       const mockReq = {
         body: {
           userEmail: testUsers[1].email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -180,6 +195,9 @@ describe('retrieveShamirConfigChangeToApprove', () => {
       const mockReq = {
         body: {
           userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       mockCheckBasicAuth2Success(u.id);

@@ -18,7 +18,6 @@ jest.mock('../../../src/helpers/logger', () => ({
 import { checkDeviceAuth } from '../../../src/api2/helpers/authorizationChecks';
 import { db } from '../../../src/helpers/db';
 import { addTestShamirRecoveryRequests } from '../../fixtures/shamirRecoveryRequests';
-import { fromBase64 } from '../../../src/api2/helpers/base64Convert';
 
 const mockRes = () => {
   return {
@@ -57,6 +56,9 @@ describe('getRecoveryKeyPair', () => {
           userEmail: testUsers[0].email,
           passwordChallengeResponse: 'tpBemQ9uM50tZ4Wfi4SvxreavkSFEA2oPipE47+TtC4=',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await getRecoveryKeyPair(mockReq, resMock);
@@ -81,6 +83,9 @@ describe('getRecoveryKeyPair', () => {
       const mockReq = {
         body: {
           userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -107,6 +112,9 @@ describe('getRecoveryKeyPair', () => {
         body: {
           userEmail: u.email,
           passwordChallengeResponse: 'tpBemQ9uM50tZ4Wfi4SvxreavkSFEA2oPipE47+TtC4=',
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -142,6 +150,9 @@ describe('getRecoveryKeyPair', () => {
           // wrong response
           passwordChallengeResponse: 'im5FpMopR6L/EJ0ys7S+Fp+vLUJe/oT2T3AV0fSMxtc=',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await getRecoveryKeyPair(mockReq, resMock);
@@ -176,6 +187,9 @@ describe('getRecoveryKeyPair', () => {
           // correct response
           passwordChallengeResponse: 'tpBemQ9uM50tZ4Wfi4SvxreavkSFEA2oPipE47+TtC4=',
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await getRecoveryKeyPair(mockReq, resMock);
@@ -204,6 +218,9 @@ describe('getRecoveryKeyPair', () => {
         body: {
           userEmail: u.email,
           passwordChallengeResponse: 'tpBemQ9uM50tZ4Wfi4SvxreavkSFEA2oPipE47+TtC4=',
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();

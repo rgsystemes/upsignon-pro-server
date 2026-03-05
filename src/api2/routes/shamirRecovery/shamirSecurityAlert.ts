@@ -3,7 +3,7 @@ import { logError, logInfo } from '../../../helpers/logger';
 import { checkBasicAuth2 } from '../../helpers/authorizationChecks';
 import Joi from 'joi';
 import { db } from '../../../helpers/db';
-import { sendShamirSecurityAlertToAdmins } from '../../../emails/sendShamirSecurityAlertToAdmins';
+import { sendShamirSecurityAlertToAdmins } from '../../../emails/shamir/sendShamirSecurityAlertToAdmins';
 
 /// Sends a security alert to all bank admins and superadmins
 ///

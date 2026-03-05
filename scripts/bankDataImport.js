@@ -498,7 +498,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
           srr.status,
           srr.expiry_date,
           srr.denied_by,
-          srr.newDeviceId,
+          srr.creator_device_id == null ? null : srr.newDeviceId,
         ],
       );
     }

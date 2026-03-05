@@ -1,9 +1,9 @@
-import { getAdminEmailsForBank } from '../helpers/getAdminsEmailsForBank';
-import { getEmailConfig, getMailTransporter } from '../helpers/getMailTransporter';
-import { logError } from '../helpers/logger';
-import { inputSanitizer } from '../helpers/sanitizer';
 import { buildEmail } from 'upsignon-mail';
-import { septeoSupportEmail } from './constants';
+import { getAdminEmailsForBank } from '../../helpers/getAdminsEmailsForBank';
+import { getEmailConfig, getMailTransporter } from '../../helpers/getMailTransporter';
+import { logError } from '../../helpers/logger';
+import { inputSanitizer } from '../../helpers/sanitizer';
+import { septeoSupportEmail } from '../constants';
 
 type TShamirSecurityAlertInput = {
   bankId: number;

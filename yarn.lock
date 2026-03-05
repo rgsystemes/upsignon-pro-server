@@ -5413,9 +5413,9 @@ synckit@^0.11.7, synckit@^0.11.8:
     "@pkgr/core" "^0.2.9"
 
 tailwindcss@^4.1.18:
-  version "4.1.18"
-  resolved "https://registry.yarnpkg.com/tailwindcss/-/tailwindcss-4.1.18.tgz#f488ba47853abdb5354daf9679d3e7791fc4f4e3"
-  integrity sha512-4+Z+0yiYyEtUVCScyfHCxOYP06L5Ne+JiHhY2IjR2KWMIWhJOYZKLSGZaP5HkZ8+bY0cxfzwDE5uOmzFXyIwxw==
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/tailwindcss/-/tailwindcss-4.2.1.tgz#018c4720b58baf98a6bf56b0a12aa797c6cfef1d"
+  integrity sha512-/tBrSQ36vCleJkAOsy9kbNTgaxvGbyOamC30PRePTQe/o1MFwEKHQk4Cn7BNGaPtjp+PuUrByJehM1hgxfq4sw==
 
 test-exclude@^6.0.0:
   version "6.0.0"
@@ -5567,9 +5567,9 @@ update-browserslist-db@^1.1.4:
     escalade "^3.2.0"
     picocolors "^1.1.1"
 
-"upsignon-mail@git+https://github.com/rgsystemes/upsignon-mail.git#v1.0.1":
-  version "1.0.0"
-  resolved "git+https://github.com/rgsystemes/upsignon-mail.git#b4b0c8d2b1c00c60e6f38d54f59435ce487ced1a"
+"upsignon-mail@git+https://github.com/rgsystemes/upsignon-mail.git#v1.0.3":
+  version "1.0.3"
+  resolved "git+https://github.com/rgsystemes/upsignon-mail.git#7c22361fa9115608cdce7309012bfefc98fb8554"
   dependencies:
     "@react-email/components" "1.0.2"
     "@react-email/render" "2.0.0"

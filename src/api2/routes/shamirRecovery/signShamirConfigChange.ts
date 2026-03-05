@@ -3,9 +3,13 @@ import { db } from '../../../helpers/db';
 import { logError, logInfo } from '../../../helpers/logger';
 import { checkBasicAuth2 } from '../../helpers/authorizationChecks';
 import Joi from 'joi';
-import { ShamirChange, ShamirChangeSignature } from './types';
+import { ShamirChange, ShamirChangeSignature, ShamirShareholderFootprint } from './types';
 import libsodium from 'libsodium-wrappers';
 import { fromBase64 } from '../../helpers/base64Convert';
+import { sendShamirConfigChangeApprovedToAdminsCCTrustedPersons } from '../../../emails/shamir/sendShamirConfigChangeApproved';
+import { getShareholdersEmailsForConfig } from './_trustedPersonsEmails';
+import { getBankInfoForConfig } from './_bankInfoForConfig';
+import { sendShamirConfigChangeRejectedToAdminsCCTrustedPersons } from '../../../emails/shamir/sendShamirConfigChangeRejected';
 
 export const signShamirConfigChange = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -42,6 +46,7 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
     const shamirConfigRes = await db.query(
       `SELECT
         sc.change,
+        sc.name,
         sc.change_signatures
       FROM shamir_configs sc
       WHERE sc.id = $1
@@ -49,15 +54,15 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
       [safeBody.shamirConfigId],
     );
 
-    const config = shamirConfigRes.rows[0];
+    const configToBeSigned = shamirConfigRes.rows[0];
 
-    if (!config) {
+    if (!configToBeSigned) {
       logInfo(req.body?.userEmail, 'Config not found.');
       res.status(403).end();
       return;
     }
 
-    const changeObject: ShamirChange = JSON.parse(config.change);
+    const changeObject: ShamirChange = JSON.parse(configToBeSigned.change);
     if (changeObject.previousShamirConfig == null) {
       logInfo(req.body?.userEmail, 'First configs cannot be signed');
       res.status(403).end();
@@ -77,7 +82,7 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
     }
 
     // 2 - Check the user has not already signed
-    const signatures = config.change_signatures;
+    const signatures = configToBeSigned.change_signatures;
     if (
       signatures &&
       signatures.find((s: ShamirChangeSignature) => s.holderVaultId === basicAuth.userId)
@@ -96,7 +101,7 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
 
     const expectedSignedMessage = libsodium.from_string(
       JSON.stringify({
-        configChange: config.change,
+        configChange: configToBeSigned.change,
         shamirConfigId: safeBody.shamirConfigId,
         signedAt: safeBody.signedAt,
         approved: safeBody.approved,
@@ -113,6 +118,13 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
       res.status(403).end();
       return;
     }
+
+    const authorityShareHolders = authorityConfig.shareholders;
+    const initialTotalRefusingShares = totalSigningShares({
+      authorityShareHolders,
+      changeSignatures: signatures,
+      approvedValue: false,
+    });
 
     // Store the signature
     const changeSignature: ShamirChangeSignature = {
@@ -138,26 +150,19 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
     }
 
     if (!updatedConfig.is_active) {
-      const authorityShareHolders = authorityConfig.shareholders;
-
       const changeSignatures: ShamirChangeSignature[] = updatedConfig.change_signatures;
       // Count the number of approving shares.
       // BEWARE not to count the same shareholder twice !
       // (if someone manually edited the signatures array in db to duplicate a signature several times for instance)
-      const totalApprovingShares: number = authorityShareHolders.reduce(
-        (sum: number, nextShareholder) => {
-          const signature = changeSignatures.find(
-            (s) => s.holderVaultId === nextShareholder.vaultId,
-          );
-          if (signature && signature.approved) {
-            return sum + nextShareholder.nbShares;
-          } else {
-            return sum;
-          }
-        },
-        0,
-      );
+      const totalApprovingShares: number = totalSigningShares({
+        authorityShareHolders,
+        changeSignatures,
+        approvedValue: true,
+      });
 
+      const acceptLanguage = req.headers['accept-language'];
+      const trustedPersonEmails = await getShareholdersEmailsForConfig(authorityConfig.configId);
+      const bankInfo = await getBankInfoForConfig(authorityConfig.configId);
       if (authorityConfig.minShares <= totalApprovingShares) {
         // Deactivate old config.
         await db.query('UPDATE shamir_configs SET is_active=false WHERE id=$1', [
@@ -167,6 +172,43 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
         await db.query('UPDATE shamir_configs SET is_active=true WHERE id=$1', [
           safeBody.shamirConfigId,
         ]);
+
+        // send success notification email to admins and shareholders of both configs
+        await sendShamirConfigChangeApprovedToAdminsCCTrustedPersons({
+          trustedPersonEmails,
+          supportEmail: authorityConfig.supportEmail,
+          bankId: bankInfo.id,
+          bankName: bankInfo.name,
+          currentShamirConfigName: authorityConfig.configName,
+          nextShamirConfigName: configToBeSigned.name,
+          nbApprovers: totalApprovingShares,
+          acceptLanguage,
+        });
+      }
+
+      // in case that signature makes it impossible to ever have the new config approved, notify admins and shareholders
+      const totalRefusingShares: number = totalSigningShares({
+        authorityShareHolders,
+        changeSignatures,
+        approvedValue: false,
+      });
+      const totalAvailableShares = authorityShareHolders.reduce((sum: number, nextShareholder) => {
+        return sum + nextShareholder.nbShares;
+      }, 0);
+      if (
+        // now irremediably refused
+        authorityConfig.minShares > totalAvailableShares - totalRefusingShares &&
+        // previously still approvable
+        authorityConfig.minShares <= totalAvailableShares - initialTotalRefusingShares
+      ) {
+        await sendShamirConfigChangeRejectedToAdminsCCTrustedPersons({
+          trustedPersonEmails,
+          supportEmail: authorityConfig.supportEmail,
+          bankId: bankInfo.id,
+          bankName: bankInfo.name,
+          currentShamirConfigName: authorityConfig.configName,
+          acceptLanguage,
+        });
       }
     }
 
@@ -177,4 +219,24 @@ export const signShamirConfigChange = async (req: Request, res: Response): Promi
     res.status(400).end();
     return;
   }
+};
+
+const totalSigningShares = ({
+  authorityShareHolders,
+  changeSignatures,
+  approvedValue,
+}: {
+  authorityShareHolders: ShamirShareholderFootprint[];
+  changeSignatures: ShamirChangeSignature[] | null;
+  approvedValue: boolean;
+}): number => {
+  if (!changeSignatures) return 0;
+  return authorityShareHolders.reduce((sum: number, nextShareholder) => {
+    const signature = changeSignatures.find((s) => s.holderVaultId === nextShareholder.vaultId);
+    if (signature && signature.approved == approvedValue) {
+      return sum + nextShareholder.nbShares;
+    } else {
+      return sum;
+    }
+  }, 0);
 };

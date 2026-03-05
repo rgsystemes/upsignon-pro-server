@@ -51,7 +51,8 @@ exports.up = async function (db) {
         completed_at TIMESTAMP WITH TIME ZONE,
         status shamir_status,
         expiry_date TIMESTAMP WITH TIME ZONE,
-        denied_by INTEGER[] DEFAULT '{}'
+        denied_by INTEGER[] DEFAULT '{}',
+        has_expiry_mail_been_sent BOOL DEFAULT false
     )`,
   );
   await db.query(

@@ -15,14 +15,18 @@ jest.mock('../../../src/helpers/logger', () => ({
   logInfo: jest.fn(),
   logError: jest.fn(),
 }));
+jest.mock('../../../src/emails/shamir/sendShamirRecoveryRequestCancelled', () => ({
+  sendShamirRecoveryRequestCancelledToTrustedPersons: jest.fn(),
+}));
 
 import { checkDeviceAuth } from '../../../src/api2/helpers/authorizationChecks';
 import { db } from '../../../src/helpers/db';
 import {
   addTestShamirRecoveryRequests,
-  pendingRecoveryRequest1,
+  pendingRecoveryRequest2,
 } from '../../fixtures/shamirRecoveryRequests';
 import { addTestShamirShares } from '../../fixtures/shamirShares';
+import { sendShamirRecoveryRequestCancelledToTrustedPersons } from '../../../src/emails/shamir/sendShamirRecoveryRequestCancelled';
 
 const mockRes = () => {
   return {
@@ -38,6 +42,7 @@ const mockCheckDeviceAuthSuccess = (userId: number) => {
     granted: true,
     vaultId: userId,
     deviceId: d.id,
+    vaultEmail: 'mocked@testbank.com',
   });
 };
 
@@ -60,12 +65,16 @@ describe('abortShamirRecovery', () => {
         body: {
           userEmail: testUsers[0].email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await abortShamirRecovery(mockReq, resMock);
 
       expect(resMock.status).toHaveBeenCalledWith(401);
       expect(resMock.json).toHaveBeenCalledWith({ error: 'badDeviceSession' });
+      expect(sendShamirRecoveryRequestCancelledToTrustedPersons).not.toHaveBeenCalled();
     });
   });
 
@@ -81,14 +90,17 @@ describe('abortShamirRecovery', () => {
     });
 
     it('should successfully abort pending recovery request', async () => {
-      const u = testUsers[0];
+      const u = testUsers[1];
       mockCheckDeviceAuthSuccess(u.id);
 
-      await addTestShamirRecoveryRequests([{ ...pendingRecoveryRequest1, shamir_config_id: 1 }]);
+      await addTestShamirRecoveryRequests([{ ...pendingRecoveryRequest2, shamir_config_id: 1 }]);
 
       const mockReq = {
         body: {
           userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
         },
       } as unknown as Request;
       const resMock = mockRes();
@@ -104,6 +116,12 @@ describe('abortShamirRecovery', () => {
 
       expect(requests.rows).toHaveLength(1);
       expect(requests.rows[0].status).toBe('ABORTED');
+      expect(sendShamirRecoveryRequestCancelledToTrustedPersons).toHaveBeenCalledWith({
+        vaultEmail: 'mocked@testbank.com',
+        trustedPersonEmails: ['user1@testbank1.com'],
+        supportEmail: 'support@testbank1.com',
+        acceptLanguage: 'fr',
+      });
     });
 
     it('should clear open shares when aborting recovery', async () => {
@@ -143,6 +161,9 @@ describe('abortShamirRecovery', () => {
         body: {
           userEmail: u.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await abortShamirRecovery(mockReq, resMock);
@@ -154,6 +175,7 @@ describe('abortShamirRecovery', () => {
 
       expect(shares.rows).toHaveLength(1);
       expect(shares.rows[0].open_shares).toBeNull();
+      expect(shares.rows[0].open_at).toBeNull();
     });
 
     it('should only abort pending requests, not completed ones', async () => {
@@ -194,6 +216,9 @@ describe('abortShamirRecovery', () => {
         body: {
           userEmail: u.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await abortShamirRecovery(mockReq, resMock);
@@ -209,6 +234,7 @@ describe('abortShamirRecovery', () => {
       expect(requests.rows).toHaveLength(2);
       expect(requests.rows[0].status).toBe('ABORTED');
       expect(requests.rows[1].status).toBe('COMPLETED');
+      expect(sendShamirRecoveryRequestCancelledToTrustedPersons).toHaveBeenCalledTimes(1);
     });
 
     it('should handle aborting when no pending requests exist', async () => {
@@ -219,12 +245,16 @@ describe('abortShamirRecovery', () => {
         body: {
           userEmail: u.email,
         },
+        headers: {
+          'accept-language': 'fr',
+        },
       } as unknown as Request;
       const resMock = mockRes();
       await abortShamirRecovery(mockReq, resMock);
 
       expect(resMock.status).toHaveBeenCalledWith(200);
       expect(resMock.end).toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestCancelledToTrustedPersons).not.toHaveBeenCalled();
     });
   });
 });
