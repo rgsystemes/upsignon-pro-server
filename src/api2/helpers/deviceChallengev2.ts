@@ -1,7 +1,7 @@
 import { db } from '../../helpers/db';
 import libsodium from 'libsodium-wrappers';
 import { fromBase64, toBase64 } from './base64Convert';
-import { logError } from '../../helpers/logger';
+import { logError, logInfo } from '../../helpers/logger';
 
 export const createDeviceChallengeV2 = async (deviceId: Number): Promise<string> => {
   const deviceChallenge = toBase64(libsodium.randombytes_buf(16));
@@ -24,11 +24,20 @@ export const checkDeviceChallengeV2 = async (
     const publicKey = fromBase64(devicePublicKey);
     const deviceChallenge = fromBase64(challenge);
     const deviceChallengeResponseBytes = fromBase64(challengeResponse);
-    const unsignedChallengeResponse = libsodium.crypto_sign_open(
-      deviceChallengeResponseBytes,
-      publicKey,
-    );
-    return libsodium.memcmp(deviceChallenge, unsignedChallengeResponse);
+
+    let signedChallenge: Uint8Array;
+    try {
+      signedChallenge = libsodium.crypto_sign_open(deviceChallengeResponseBytes, publicKey);
+    } catch (e) {
+      logInfo('Invalid signature.');
+      return false;
+    }
+
+    if (!libsodium.memcmp(deviceChallenge, signedChallenge)) {
+      logInfo('Signature valid but challenge mismatch.');
+      return false;
+    }
+    return true;
   } catch (e) {
     logError('checkDeviceChallengeV2', e);
     return false;

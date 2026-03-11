@@ -1,0 +1,452 @@
+import { beforeEach, describe, it, jest, expect } from '@jest/globals';
+import { requestShamirRecovery } from '../../../src/api2/routes/shamirRecovery/requestShamirRecovery';
+import { cleanDatabase } from '../../setup/testHelpers';
+import { Request, Response } from 'express';
+import { addTestUsers, testUsers } from '../../fixtures/users';
+import { addTestBanks } from '../../fixtures/banks';
+import { addTestDevices, deviceForUser } from '../../fixtures/userDevices';
+import { addTestShamirConfigs, config1Approved } from '../../fixtures/shamirConfigs';
+
+jest.mock('../../../src/api2/helpers/authorizationChecks', () => ({
+  checkDeviceAuth: jest.fn(),
+}));
+jest.mock('../../../src/helpers/logger', () => ({
+  logInfo: jest.fn(),
+  logError: jest.fn(),
+}));
+jest.mock('../../../src/emails/shamir/sendShamirRecoveryRequestAwaitingApproval', () => ({
+  sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons: jest.fn(),
+}));
+jest.mock('../../../src/emails/shamir/sendShamirRecoveryRequestInitiated', () => ({
+  sendShamirRecoveryRequestInitiatedToUser: jest.fn(),
+}));
+
+import { checkDeviceAuth } from '../../../src/api2/helpers/authorizationChecks';
+import { db } from '../../../src/helpers/db';
+import { addTestShamirHolders, holdersConfig1 } from '../../fixtures/shamirHolders';
+import { addTestShamirShares, sharesConfig1 } from '../../fixtures/shamirShares';
+import { addTestShamirRecoveryRequests } from '../../fixtures/shamirRecoveryRequests';
+import { sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons } from '../../../src/emails/shamir/sendShamirRecoveryRequestAwaitingApproval';
+import { sendShamirRecoveryRequestInitiatedToUser } from '../../../src/emails/shamir/sendShamirRecoveryRequestInitiated';
+
+const mockRes = () => {
+  return {
+    status: jest.fn().mockReturnThis(),
+    end: jest.fn(),
+    json: jest.fn(),
+  } as unknown as Response;
+};
+
+const mockCheckDeviceAuthSuccess = (userId: number) => {
+  const d = deviceForUser(userId);
+  (checkDeviceAuth as jest.Mock<any>).mockResolvedValue({
+    granted: true,
+    vaultId: userId,
+    deviceId: d.id,
+    vaultEmail: 'mocked@testbank1.com',
+  });
+};
+
+describe('requestShamirRecovery', () => {
+  describe('authorization validations', () => {
+    beforeEach(async () => {
+      jest.clearAllMocks();
+      await cleanDatabase();
+      await addTestBanks();
+      await addTestUsers();
+      await addTestDevices();
+    });
+
+    it('should reject request with invalid device auth', async () => {
+      (checkDeviceAuth as jest.Mock<any>).mockResolvedValue({
+        granted: false,
+      });
+
+      const mockReq = {
+        body: {
+          userEmail: testUsers[0].email,
+          publicKey: 'test-public-key',
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await requestShamirRecovery(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(401);
+      expect(resMock.json).toHaveBeenCalledWith({ error: 'badDeviceSession' });
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).not.toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestInitiatedToUser).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('body validations', () => {
+    beforeEach(async () => {
+      jest.clearAllMocks();
+      await cleanDatabase();
+      await addTestBanks();
+      await addTestUsers();
+      await addTestDevices();
+    });
+
+    it('should reject request with missing publicKey', async () => {
+      const u = testUsers[0];
+      mockCheckDeviceAuthSuccess(u.id);
+      const mockReq = {
+        body: {
+          userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await requestShamirRecovery(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(403);
+      expect(resMock.end).toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).not.toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestInitiatedToUser).not.toHaveBeenCalled();
+    });
+
+    it('should reject request with invalid publicKey type', async () => {
+      const u = testUsers[0];
+      mockCheckDeviceAuthSuccess(u.id);
+      const mockReq = {
+        body: {
+          userEmail: u.email,
+          publicKey: 123,
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await requestShamirRecovery(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(403);
+      expect(resMock.end).toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).not.toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestInitiatedToUser).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('security validations', () => {
+    beforeEach(async () => {
+      jest.clearAllMocks();
+      await cleanDatabase();
+      await addTestBanks();
+      await addTestUsers();
+      await addTestDevices();
+    });
+
+    it('should reject if a pending not expired recovery request already exists', async () => {
+      const u = testUsers[0];
+      const d = deviceForUser(u.id);
+      mockCheckDeviceAuthSuccess(u.id);
+      await addTestShamirConfigs([config1Approved]);
+      await addTestShamirHolders(holdersConfig1);
+      await addTestShamirShares(sharesConfig1);
+      let threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      let threeDaysAgoPlusSevenDays = new Date(threeDaysAgo);
+      threeDaysAgoPlusSevenDays.setDate(threeDaysAgoPlusSevenDays.getDate() + 7);
+      await addTestShamirRecoveryRequests([
+        {
+          id: 1,
+          vault_id: u.id,
+          creator_device_id: d.id,
+          public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+          shamir_config_id: 1,
+          created_at: threeDaysAgo,
+          completed_at: null,
+          status: 'PENDING',
+          expiry_date: threeDaysAgoPlusSevenDays,
+          denied_by: [],
+        },
+      ]);
+
+      const mockReq = {
+        body: {
+          userEmail: u.email,
+          publicKey: 'new-public-key',
+          protectedKeyPair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await requestShamirRecovery(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(403);
+      expect(resMock.json).toHaveBeenCalledWith({ error: 'shamir_recovery_already_pending' });
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).not.toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestInitiatedToUser).not.toHaveBeenCalled();
+    });
+
+    it('should reject if shamir config is not found', async () => {
+      const u = testUsers[0];
+      mockCheckDeviceAuthSuccess(u.id);
+
+      const mockReq = {
+        body: {
+          userEmail: u.email,
+          publicKey: 'test-public-key',
+          protectedKeyPair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await requestShamirRecovery(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(403);
+      expect(resMock.json).toHaveBeenCalledWith({ error: 'shamir_config_not_found' });
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).not.toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestInitiatedToUser).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('recovery request creation', () => {
+    beforeEach(async () => {
+      jest.clearAllMocks();
+      await cleanDatabase();
+      await addTestBanks();
+      await addTestUsers();
+      await addTestDevices();
+      await addTestShamirConfigs([config1Approved]);
+      await addTestShamirHolders(holdersConfig1);
+    });
+
+    it('should successfully create a recovery request', async () => {
+      const u = testUsers[0];
+      mockCheckDeviceAuthSuccess(u.id);
+      await addTestShamirShares(sharesConfig1);
+
+      const mockReq = {
+        body: {
+          userEmail: u.email,
+          publicKey: 'test-public-key',
+          protectedKeyPair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await requestShamirRecovery(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(200);
+      expect(resMock.end).toHaveBeenCalled();
+
+      const requests = await db.query(
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
+      );
+
+      expect(requests.rows).toHaveLength(1);
+      expect(requests.rows[0].status).toBe('PENDING');
+      expect(requests.rows[0].public_key).toBe('test-public-key');
+      expect(requests.rows[0].shamir_config_id).toBe(1);
+
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).toHaveBeenCalledWith({
+        trustedPersonEmails: ['user1@testbank1.com'],
+        vaultEmail: 'mocked@testbank1.com',
+        expiryDate: requests.rows[0].expiry_date,
+        requestDate: requests.rows[0].created_at,
+        deviceName: 'iPhone 15',
+        deviceType: 'PHONE',
+        supportEmail: 'support@testbank1.com',
+        acceptLanguage: 'fr',
+      });
+      expect(sendShamirRecoveryRequestInitiatedToUser).toHaveBeenCalledWith({
+        vaultEmail: 'mocked@testbank1.com',
+        supportEmail: 'support@testbank1.com',
+        acceptLanguage: 'fr',
+      });
+    });
+
+    it('should hash the passwordChallengeResponse part to add security', async () => {
+      const u = testUsers[0];
+      mockCheckDeviceAuthSuccess(u.id);
+      await addTestShamirShares(sharesConfig1);
+
+      const mockReq = {
+        body: {
+          userEmail: u.email,
+          publicKey: 'test-public-key',
+          protectedKeyPair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await requestShamirRecovery(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(200);
+      expect(resMock.end).toHaveBeenCalled();
+
+      const requests = await db.query(
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
+      );
+
+      expect(requests.rows).toHaveLength(1);
+      expect(requests.rows[0].protected_recovery_key_pair).toBe(
+        'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-WnsgG/wqKY5ifR5zP5NbXYBAoP9kOqKunSl3GAzy7Mc=-encryptedKeyPair',
+      );
+
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestInitiatedToUser).toHaveBeenCalled();
+    });
+
+    it('should clear open shares when requesting recovery', async () => {
+      const u = testUsers[0];
+      mockCheckDeviceAuthSuccess(u.id);
+      await addTestShamirShares([
+        {
+          vault_id: 1,
+          holder_vault_id: 1,
+          shamir_config_id: 1,
+          closed_shares: ['encryptedShare1ForHolder1'],
+          open_shares: ['openShare1ForHolder1'],
+          created_at: new Date('2023-02-10T10:30:00Z'),
+          open_at: null,
+        },
+      ]);
+
+      const mockReq = {
+        body: {
+          userEmail: u.email,
+          publicKey: 'test-public-key',
+          protectedKeyPair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await requestShamirRecovery(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(200);
+      expect(resMock.end).toHaveBeenCalled();
+
+      const shares = await db.query('SELECT * FROM shamir_shares WHERE vault_id = $1', [u.id]);
+
+      expect(shares.rows).toHaveLength(1);
+      expect(shares.rows[0].open_shares).toBeNull();
+    });
+
+    it('should set expiry date to 7 days from now', async () => {
+      const u = testUsers[0];
+      mockCheckDeviceAuthSuccess(u.id);
+      await addTestShamirShares(sharesConfig1);
+      const beforeRequest = new Date();
+
+      const mockReq = {
+        body: {
+          userEmail: u.email,
+          publicKey: 'test-public-key',
+          protectedKeyPair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await requestShamirRecovery(mockReq, resMock);
+
+      const afterRequest = new Date();
+
+      expect(resMock.status).toHaveBeenCalledWith(200);
+      expect(resMock.end).toHaveBeenCalled();
+
+      const requests = await db.query(
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
+      );
+
+      expect(requests.rows).toHaveLength(1);
+      const expiryDate = new Date(requests.rows[0].expiry_date);
+      const expectedMinExpiry = new Date(beforeRequest.getTime() + 6.9 * 24 * 60 * 60 * 1000);
+      const expectedMaxExpiry = new Date(afterRequest.getTime() + 7.1 * 24 * 60 * 60 * 1000);
+
+      expect(expiryDate.getTime()).toBeGreaterThan(expectedMinExpiry.getTime());
+      expect(expiryDate.getTime()).toBeLessThan(expectedMaxExpiry.getTime());
+    });
+
+    it('should allow new request if previous request expired', async () => {
+      const u = testUsers[0];
+      const d = deviceForUser(u.id);
+      mockCheckDeviceAuthSuccess(u.id);
+      await addTestShamirShares(sharesConfig1);
+      let oneMonthBack = new Date();
+      oneMonthBack.setMonth(oneMonthBack.getMonth() - 1);
+      let oneMonthBackPlus7Days = new Date(oneMonthBack);
+      oneMonthBackPlus7Days.setDate(oneMonthBackPlus7Days.getDate() + 7);
+
+      await addTestShamirRecoveryRequests([
+        {
+          id: 1,
+          vault_id: u.id,
+          creator_device_id: d.id,
+          public_key: 'tempPublicKey1ForRecovery',
+          protected_recovery_key_pair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+          shamir_config_id: 1,
+          created_at: oneMonthBack,
+          completed_at: null,
+          status: 'PENDING',
+          expiry_date: oneMonthBackPlus7Days,
+          denied_by: [],
+        },
+      ]);
+
+      const mockReq = {
+        body: {
+          userEmail: u.email,
+          publicKey: 'new-public-key',
+          protectedKeyPair:
+            'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-mhuPOE2IwAZNeVu8nQqrQjiq8g26k094nV1TeESDiFA=-encryptedKeyPair',
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await requestShamirRecovery(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(200);
+      expect(resMock.end).toHaveBeenCalled();
+
+      const requests = await db.query(
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1 ORDER BY expiry_date',
+        [u.id],
+      );
+
+      expect(requests.rows).toHaveLength(2);
+      expect(requests.rows[0].public_key).toBe('tempPublicKey1ForRecovery');
+      expect(requests.rows[0].status).toBe('PENDING');
+      expect(requests.rows[1].public_key).toBe('new-public-key');
+      expect(requests.rows[1].protected_recovery_key_pair).toContain(
+        'formatP003-argon2id13-2-67108864-zEKFVGhj2yE9QZ2LvtyrBw==-6KmHqbc57XTfXta4l2dJmQ==-',
+      );
+      expect(requests.rows[1].status).toBe('PENDING');
+
+      expect(sendShamirRecoveryRequestAwaitingApprovalToTrustedPersons).toHaveBeenCalled();
+      expect(sendShamirRecoveryRequestInitiatedToUser).toHaveBeenCalled();
+    });
+  });
+});

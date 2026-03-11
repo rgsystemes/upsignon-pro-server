@@ -11,6 +11,7 @@ import { getBankIds } from '../../helpers/bankUUID';
 export const addNewData2 = async (req: any, res: any): Promise<void> => {
   try {
     const sharingPublicKey = inputSanitizer.getString(req.body?.sharingPublicKey);
+    const signingPublicKey = inputSanitizer.getString(req.body?.signingPublicKey);
     const deviceChallengeResponse = inputSanitizer.getString(req.body?.deviceChallengeResponse);
     const newEncryptedData = inputSanitizer.getString(req.body?.newEncryptedData);
     const deviceUId = inputSanitizer.getString(req.body?.deviceId);
@@ -85,10 +86,11 @@ export const addNewData2 = async (req: any, res: any): Promise<void> => {
       hashPasswordChallengeResultForSecureStorageV2(newEncryptedData);
     // 4 - Do the update
     const updateRes = await db.query(
-      'UPDATE users SET (encrypted_data_2, updated_at, sharing_public_key_2)=($1, CURRENT_TIMESTAMP(0), $2) WHERE users.email=$3 AND users.bank_id=$4 RETURNING updated_at',
+      'UPDATE users SET (encrypted_data_2, updated_at, sharing_public_key_2, signing_public_key)=($1, CURRENT_TIMESTAMP(0), $2, $3) WHERE users.email=$4 AND users.bank_id=$5 RETURNING updated_at',
       [
         newEncryptedDataWithPasswordChallengeSecured,
         sharingPublicKey,
+        signingPublicKey,
         userEmail,
         bankIds.internalId,
       ],

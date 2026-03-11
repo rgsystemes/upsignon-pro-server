@@ -22,8 +22,8 @@
     "libsodium-wrappers": "^0.7.11",
     "nodemailer": "^7.0.5",
     "pg": "^8.16.3",
+    "upsignon-mail": "git+https://github.com/rgsystemes/upsignon-mail.git#v1.0.3",
     "upsignon-ms-entra": "git+https://github.com/rgsystemes/upsignon-ms-entra",
-    "upsignon-mail": "git+https://github.com/rgsystemes/upsignon-mail.git#v1.0.1",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
@@ -34,6 +34,7 @@
     "@types/libsodium-wrappers": "^0.7.14",
     "@types/nodemailer": "^7.0.4",
     "@types/pg": "^8.15.5",
+    "@types/supertest": "^6.0.2",
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.39.0",
     "@typescript-eslint/parser": "^8.39.0",
@@ -42,7 +43,8 @@
     "eslint-plugin-prettier": "^5.5.4",
     "jest": "^30.0.5",
     "prettier": "^3.6.2",
-    "ts-jest": "^29.4.1",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.4.6",
     "typescript": "^5.9.2"
   }
 }
