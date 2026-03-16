@@ -124,6 +124,7 @@ const doSendTrialEmailReminder = async (): Promise<void> => {
     await sendTrialEndingEmailToSalesRep(
       Object.keys(trialsBySalesRep)
         .filter((e) => e !== 'undefined')
+        .filter((e) => e !== 'undefined' && e.endsWith('@septeo.com'))
         .sort((s1, s2) => (s1 < s2 ? -1 : 1)),
       Object.values(trialsBySalesRep),
     );
