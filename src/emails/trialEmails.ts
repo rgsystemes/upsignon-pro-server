@@ -21,14 +21,11 @@ type SalesTrials = {
   next14Days: TrialLine[];
 };
 
-const salesDirector = env.IS_PRODUCTION
-  ? 'laurent.casse@septeo.com'
-  : 'gireg.dekerdanet@septeo.com';
+const septeoItSolutionsSalesGroupEmail = 'gpRG-Sales@septegroup.onmicrosoft.com';
 
 export const sendTrialEmailReminders = (): void => {
   // this feature is for SAAS tests only
-  if (!env.API_PUBLIC_HOSTNAME.endsWith('.upsignon.eu')) {
-    // this matches pro.upsignon.eu and pro-staging.upsignon.eu
+  if (env.API_PUBLIC_HOSTNAME != 'pro.upsignon.eu') {
     return;
   }
   // call function every day at 8am
@@ -122,9 +119,7 @@ const doSendTrialEmailReminder = async (): Promise<void> => {
       }
     });
     await sendTrialEndingEmailToSalesRep(
-      Object.keys(trialsBySalesRep)
-        .filter((e) => e !== 'undefined' && e.endsWith('@septeo.com'))
-        .sort((s1, s2) => (s1 < s2 ? -1 : 1)),
+      septeoItSolutionsSalesGroupEmail,
       Object.values(trialsBySalesRep),
     );
   } catch (e) {
@@ -133,13 +128,13 @@ const doSendTrialEmailReminder = async (): Promise<void> => {
 };
 
 const sendTrialEndingEmailToSalesRep = async (
-  sales: string[],
+  salesEmail: string,
   contentbySales: SalesTrials[],
 ): Promise<void> => {
   try {
     const emailConfig = await getEmailConfig();
     const transporter = getMailTransporter(emailConfig, { debug: false });
-    Joi.assert(sales, Joi.array().items(Joi.string().email()));
+    Joi.assert(salesEmail, Joi.string().email());
     const htmlMessage = `<body>
     <p>Bonjour,</p>
     <img alt="UpSignon logo" loading="lazy" width="200" decoding="async" data-nimg="1" style="color:transparent;" src="https://upsignon.eu/_next/static/media/logo-upsignon-website.a0d265f5.svg">
@@ -182,10 +177,7 @@ const sendTrialEndingEmailToSalesRep = async (
 
     await transporter.sendMail({
       from: emailConfig.EMAIL_SENDING_ADDRESS,
-      to:
-        env.IS_PROD_STATUS_SERVER_URL && sales.indexOf(salesDirector) === -1
-          ? [...sales, salesDirector]
-          : sales,
+      to: salesEmail,
       subject: `[SALES] Expiration Trial UpSignon`,
       html: htmlMessage,
     });
