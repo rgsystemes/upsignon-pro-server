@@ -21,7 +21,7 @@ type SalesTrials = {
   next14Days: TrialLine[];
 };
 
-const septeoItSolutionsSalesGroupEmail = 'gpRG-Sales@septegroup.onmicrosoft.com';
+const septeoItSolutionsSalesGroupEmail = 'gpRG-Sales@septeogroup.onmicrosoft.com';
 
 export const sendTrialEmailReminders = (): void => {
   // this feature is for SAAS tests only
