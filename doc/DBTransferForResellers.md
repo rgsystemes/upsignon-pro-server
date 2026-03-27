@@ -1,5 +1,7 @@
 # Migrating to SaaS
 
+BEWARE NOT TO RUN `exportAllBanks.js` script to "test" the procedure. It does set the redirection URL, hence shutting service down.
+
 1. SaaS server side
 
 - Connect to the SaaS pro dashboard
