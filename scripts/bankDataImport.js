@@ -11,7 +11,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
     if (row.admin_role === 'superadmin') {
       await dbConnection.query(
         'INSERT INTO admins (id, email, password_hash, created_at, reseller_id) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING',
-        [row.id, row.email, row.password_hash, row.created_at, reseller_id],
+        [row.id, row.email, row.password_hash, row.created_at, resellerId],
       );
     } else {
       await dbConnection.query(

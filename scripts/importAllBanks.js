@@ -19,7 +19,7 @@ async function importAllBanks(dbConnection, inputDirectory, resellerId) {
           bank.settings,
           bank.created_at,
           bank.ms_entra_config,
-          bank.redirect_url,
+          '',
           bank.stop_this_instance,
           bank.public_id,
           resellerId,
