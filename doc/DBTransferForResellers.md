@@ -1,6 +1,6 @@
 # Migrating to SaaS
 
-BEWARE NOT TO RUN `exportAllBanks.js` script to "test" the procedure. It does set the redirection URL, hence shutting service down.
+BEWARE NOT TO RUN `exportAllBanksAndSetRedirection.js` script to "test" the procedure. It does set the redirection URL, hence shutting service down.
 
 1. SaaS server side
 
@@ -12,7 +12,7 @@ BEWARE NOT TO RUN `exportAllBanks.js` script to "test" the procedure. It does se
 
 - Connect to the on-premise server
 - Stop all processes `pm2 stop all`
-- Run `node upsignon-pro-server/scripts/exportAllBanks.js`
+- Run `node upsignon-pro-server/scripts/exportAllBanksAndSetRedirection.js`
 
 3. Move the upsignon-pro-server/scripts/tmp_exports folder to the SaaS server. For example
 
