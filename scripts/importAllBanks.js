@@ -11,12 +11,7 @@ async function importAllBanks(dbConnection, inputDirectory, resellerId) {
     try {
       const dataString = fs.readFileSync(path.join(inputDirectory, file));
       const data = JSON.parse(dataString);
-
-      if (insertedBank.rowCount > 0) {
-        await importBank(data, dbConnection, resellerId);
-      } else {
-        throw new Error('Bank not found');
-      }
+      await importBank(data, dbConnection, resellerId);
     } catch (error) {
       console.error(`Error importing bank ${file}:`, error);
     }

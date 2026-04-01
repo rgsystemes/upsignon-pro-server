@@ -1,6 +1,6 @@
 // See doc/DBTransferForResellers.md
 
-const { exportDbAndSetRedirection } = require('./bankDataExport');
+const { exportDbAndSetRedirection } = require('./bankDataExportAndSetRedirection');
 const path = require('path');
 const db = require(path.join(__dirname, './dbMigrationConnect'));
 const fs = require('fs');
