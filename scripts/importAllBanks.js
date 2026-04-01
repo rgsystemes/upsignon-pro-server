@@ -1,6 +1,6 @@
 // See doc/DBTransferForResellers.md
 
-const { importFunction } = require('./bankDataImport');
+const { importBank } = require('./bankDataImport');
 const path = require('path');
 const db = require(path.join(__dirname, './dbMigrationConnect'));
 const fs = require('fs');
@@ -11,24 +11,9 @@ async function importAllBanks(dbConnection, inputDirectory, resellerId) {
     try {
       const dataString = fs.readFileSync(path.join(inputDirectory, file));
       const data = JSON.parse(dataString);
-      const bank = data.bank;
-      const insertedBank = await dbConnection.query(
-        'INSERT INTO banks (name, settings, created_at, ms_entra_config, redirect_url, stop_this_instance, public_id, reseller_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id',
-        [
-          bank.name,
-          bank.settings,
-          bank.created_at,
-          bank.ms_entra_config,
-          '',
-          bank.stop_this_instance,
-          bank.public_id,
-          resellerId,
-        ],
-      );
+
       if (insertedBank.rowCount > 0) {
-        const newBankId = insertedBank.rows[0].id;
-        console.log(`Import bank ${bank.name} with id ${newBankId}`);
-        await importFunction(data, newBankId, dbConnection, resellerId);
+        await importBank(data, dbConnection, resellerId);
       } else {
         throw new Error('Bank not found');
       }
