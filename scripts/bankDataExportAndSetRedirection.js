@@ -4,8 +4,11 @@ const path = require('path');
 const db = require(path.join(__dirname, './dbMigrationConnect'));
 const fs = require('fs');
 
-async function exportDb(bankId, dbConnection) {
+async function exportDbAndSetRedirection(bankId, dbConnection) {
   try {
+    console.log(`Exporting bank ${bankId}...`);
+    const bankRes = await dbConnection.query('SELECT * FROM banks WHERE id=$1', [bankId]);
+    const bank = bankRes.rows[0];
     const admins = await dbConnection.query('SELECT * FROM admins');
     const admin_banks = await dbConnection.query('SELECT * FROM admin_banks WHERE bank_id=$1', [
       bankId,
@@ -40,7 +43,8 @@ async function exportDb(bankId, dbConnection) {
       bankId,
     ]);
 
-    return {
+    const data = {
+      bank,
       admins: admins.rows,
       admin_banks: admin_banks.rows,
       allowed_emails: allowed_emails.rows,
@@ -54,8 +58,13 @@ async function exportDb(bankId, dbConnection) {
       bank_sso_config: bank_sso_config.rows,
       changed_emails: changed_emails.rows,
     };
+    await dbConnection.query(
+      'UPDATE banks SET redirect_url = $1, stop_this_instance=true WHERE id = $2',
+      ['https://pro.upsignon.eu/' + bank.public_id, bank.id],
+    );
+    return data;
   } catch (e) {
-    console.log(e);
+    console.error(`Error exporting bank ${bankId}:`, e);
   }
 }
 
@@ -66,17 +75,17 @@ async function main() {
 
   if (typeof bankId !== 'number') {
     console.log('BankId parameter missing.');
-    console.log('Usage: node ./scripts/bankDataExport.js 2 path/to/data/file');
+    console.log('Usage: node ./scripts/bankDataExportAndSetRedirection.js 2 path/to/data/file');
     process.exit(1);
   }
   if (!filePath) {
     console.log('File path parameter missing.');
-    console.log('Usage: node ./scripts/bankDataExport.js 2 path/to/data/file');
+    console.log('Usage: node ./scripts/bankDataExportAndSetRedirection.js 2 path/to/data/file');
     process.exit(1);
   }
 
   await db.connect();
-  const data = await exportDb(bankId, db);
+  const data = await exportDbAndSetRedirection(bankId, db);
   fs.writeFileSync(filePath, JSON.stringify(data));
   await db.release();
 }
@@ -85,4 +94,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { exportDb };
+module.exports = { exportDbAndSetRedirection };
