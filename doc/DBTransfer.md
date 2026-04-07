@@ -50,3 +50,5 @@ to uncrypt it.
   ```
   rm <path_to_exported_data_file.json>
   ```
+
+**YOU ALSO NEED TO TRANSFERT THE LICENCES AFTER THIS OPERATION !!**

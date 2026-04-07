@@ -33,6 +33,9 @@ async function main() {
   }
   await db.connect();
   await importAllBanks(db, inputDirectory, resellerId);
+  console.log(
+    'Import completed\n=========================\nDO NOT FORGET TO TRANSFER THE LICENCES TOO!\n=========================',
+  );
   await db.release();
 }
 
