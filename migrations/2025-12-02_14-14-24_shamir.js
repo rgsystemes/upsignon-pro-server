@@ -7,8 +7,8 @@ exports.up = async function (db) {
     `CREATE TABLE IF NOT EXISTS shamir_configs (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
-        min_shares SMALLINT NOT NULL DEFAULT 1,
-        is_active BOOLEAN NOT NULL DEFAULT false,
+        min_shares SMALLINT NOT NULL,
+        is_active BOOLEAN NOT NULL,
         support_email VARCHAR(100),
         creator_email VARCHAR(100),
         bank_id INTEGER REFERENCES banks(id) ON DELETE CASCADE,
