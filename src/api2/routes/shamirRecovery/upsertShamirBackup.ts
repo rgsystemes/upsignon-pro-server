@@ -3,6 +3,9 @@ import { db } from '../../../helpers/db';
 import { logError, logInfo } from '../../../helpers/logger';
 import { checkBasicAuth2 } from '../../helpers/authorizationChecks';
 import { Request, Response } from 'express';
+import { getSupportEmail } from './_supportEmail';
+import { getShareholdersEmailsForVault } from './_trustedPersonsEmails';
+import { sendShamirRecoveryRequestCancelledToTrustedPersons } from '../../../emails/shamir/sendShamirRecoveryRequestCancelled';
 
 export const upsertShamirBackup = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -78,15 +81,32 @@ export const upsertShamirBackup = async (req: Request, res: Response): Promise<v
         );
       }
       // abort all recovery requests that were pending for this user and config
-      await transactionalClient.query(
+      const updatedRecoveryRequests = await transactionalClient.query(
         `UPDATE shamir_recovery_requests
         SET status='ABORTED'
         WHERE
           vault_id=$1
           AND status='PENDING'
-          AND shamir_config_id=$2`,
+          AND shamir_config_id=$2
+        RETURNING id`,
         [basicAuth.userId, validatedBody.shamirConfigId],
       );
+      if (updatedRecoveryRequests.rows.length > 0) {
+        const acceptLanguage = req.headers['accept-language'];
+        const supportEmail = await getSupportEmail(basicAuth.userId);
+        for (let i = 0; i < updatedRecoveryRequests.rows.length; i++) {
+          const holdersEmails = await getShareholdersEmailsForVault(
+            basicAuth.userId,
+            updatedRecoveryRequests.rows[i].id,
+          );
+          await sendShamirRecoveryRequestCancelledToTrustedPersons({
+            vaultEmail: basicAuth.userEmail,
+            trustedPersonEmails: holdersEmails,
+            supportEmail,
+            acceptLanguage,
+          });
+        }
+      }
       await transactionalClient.commit();
     } catch (e) {
       logError(req.body?.userEmail, e);
