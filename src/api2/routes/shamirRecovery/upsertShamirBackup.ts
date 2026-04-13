@@ -43,14 +43,17 @@ export const upsertShamirBackup = async (req: Request, res: Response): Promise<v
       return;
     }
 
+    const transactionalClient = await db.getTransactionClient();
     try {
-      await db.query('BEGIN');
+      await transactionalClient.begin();
       // remove previous shamir backup
-      await db.query('DELETE FROM shamir_shares WHERE vault_id=$1', [basicAuth.userId]);
+      await transactionalClient.query('DELETE FROM shamir_shares WHERE vault_id=$1', [
+        basicAuth.userId,
+      ]);
       for (let i = 0; i < validatedBody.holderShares.length; i++) {
         // EXTRA SECURITY: before storing shamir shares, make sure we are complying with
         // the expected number of shares per holder.
-        const checkNbShares = await db.query(
+        const checkNbShares = await transactionalClient.query(
           'SELECT nb_shares FROM shamir_holders WHERE vault_id=$1 AND shamir_config_id=$2',
           [validatedBody.holderShares[i].holderId, validatedBody.shamirConfigId],
         );
@@ -61,7 +64,7 @@ export const upsertShamirBackup = async (req: Request, res: Response): Promise<v
           throw new Error('upsertShamirBackup: Incorrect closedShares length.');
         }
 
-        await db.query(
+        await transactionalClient.query(
           `INSERT INTO shamir_shares
           (vault_id, shamir_config_id, holder_vault_id, closed_shares)
           VALUES ($1, $2, $3, $4)
@@ -75,7 +78,7 @@ export const upsertShamirBackup = async (req: Request, res: Response): Promise<v
         );
       }
       // abort all recovery requests that were pending for this user and config
-      await db.query(
+      await transactionalClient.query(
         `UPDATE shamir_recovery_requests
         SET status='ABORTED'
         WHERE
@@ -84,12 +87,14 @@ export const upsertShamirBackup = async (req: Request, res: Response): Promise<v
           AND shamir_config_id=$2`,
         [basicAuth.userId, validatedBody.shamirConfigId],
       );
-      await db.query('COMMIT');
+      await transactionalClient.commit();
     } catch (e) {
       logError(req.body?.userEmail, e);
-      await db.query('ROLLBACK');
+      await transactionalClient.rollback();
       res.status(403).json({ error: 'backup_creation_failed' });
       return;
+    } finally {
+      transactionalClient.release();
     }
 
     res.status(200).end();
