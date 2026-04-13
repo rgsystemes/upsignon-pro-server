@@ -3,6 +3,8 @@ import { db } from '../../../helpers/db';
 import { logError, logInfo } from '../../../helpers/logger';
 import { inputSanitizer } from '../../../helpers/sanitizer';
 import { checkBasicAuth2 } from '../../helpers/authorizationChecks';
+import { sendPublicKeySecurityAlert } from '../../../emails/sendPublicKeySecurityAlert';
+import { getBankNameForVaultId } from '../../helpers/getBankNameForVaultId';
 
 export const checkPublicKeys2 = async (req: Request, res: Response) => {
   try {
@@ -44,7 +46,14 @@ export const checkPublicKeys2 = async (req: Request, res: Response) => {
         basicAuth.userEmail,
         basicAuth.bankIds.internalId,
       ]);
-      // TODO send warning email to admin
+      const bankName = await getBankNameForVaultId(basicAuth.userId);
+      await sendPublicKeySecurityAlert({
+        email: basicAuth.userEmail,
+        bankName: bankName!,
+        bankUrl: req.originalUrl,
+        badKey: sharingPublicKey,
+        keyType: 'sharing',
+      });
     }
 
     let matchesSigningPublicKey = true;
@@ -55,7 +64,14 @@ export const checkPublicKeys2 = async (req: Request, res: Response) => {
         const message = `---------------\nWARNING! POTENTIAL HACK DETECTED!\nThe signing public key for user ${basicAuth.userEmail} that was found in the database did not match the public key registered in the user's private space. The database public signing key was\n\n${userPublicKeysRes.rows[0].signing_public_key}\n\nwhile the user's expected public key was\n\n${signingPublicKey}\n\nA database request to update the signing key for this user with his expected signing key will be made right after this message.\n---------------`;
         logInfo(message);
         logError(req.body?.userEmail, message);
-        // TODO send warning email to admin
+        const bankName = await getBankNameForVaultId(basicAuth.userId);
+        await sendPublicKeySecurityAlert({
+          email: basicAuth.userEmail,
+          bankName: bankName!,
+          bankUrl: req.originalUrl,
+          badKey: signingPublicKey,
+          keyType: 'signing',
+        });
       } // else the signing key has never been set before
       await db.query('UPDATE users SET signing_public_key = $1 WHERE email=$2 AND bank_id=$3', [
         signingPublicKey,
