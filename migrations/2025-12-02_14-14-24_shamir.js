@@ -22,7 +22,7 @@ exports.up = async function (db) {
         id SERIAL PRIMARY KEY,
         vault_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         shamir_config_id INTEGER REFERENCES shamir_configs(id) ON DELETE CASCADE,
-        nb_shares SMALLINT NOT NULL DEFAULT 1,
+        nb_shares SMALLINT NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp(0)
     )`,
   );
