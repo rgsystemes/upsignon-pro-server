@@ -55,7 +55,7 @@ export const upsertShamirBackup = async (req: Request, res: Response): Promise<v
           [validatedBody.holderShares[i].holderId, validatedBody.shamirConfigId],
         );
         if (
-          checkNbShares.rows[0] &&
+          !checkNbShares.rows[0] ||
           checkNbShares.rows[0].nb_shares !== validatedBody.holderShares[i].closedShares.length
         ) {
           throw new Error('upsertShamirBackup: Incorrect closedShares length.');
