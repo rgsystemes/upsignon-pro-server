@@ -39,7 +39,7 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
             'nbShares', sh.nb_shares
           )
         ) as holders,
-        (COUNT(ss.*) = 0 OR COUNT(ss.*) FILTER(WHERE closed_shares IS NULL) > 0 OR SUM(ARRAY_LENGTH(ss.closed_shares, 1)) < SUM(sh.nb_shares)) AS needs_update
+        (COUNT(ss.*) = 0 OR COUNT(ss.*) FILTER(WHERE closed_shares IS NULL) > 0) AS needs_update
       FROM shamir_configs AS sc
       INNER JOIN banks AS b ON sc.bank_id=b.id
       INNER JOIN users AS u ON u.bank_id=sc.bank_id
