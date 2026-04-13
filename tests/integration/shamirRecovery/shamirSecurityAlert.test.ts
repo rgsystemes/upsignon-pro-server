@@ -117,7 +117,7 @@ describe('shamirSecurityAlert', () => {
 
     it('should send alert and update flag if not already broken', async () => {
       mockCheckBasicAuthSuccess(testBanks[0].id);
-      await db.query('UPDATE banks SET has_broken_shamir_chain = false WHERE id = $1', [
+      await db.query('UPDATE banks SET last_shamir_security_alert_send_date = null WHERE id = $1', [
         testBanks[0].id,
       ]);
       const mockReq = {
@@ -139,10 +139,11 @@ describe('shamirSecurityAlert', () => {
         bankName: 'BankName',
         bankUrl: 'https://bank.com',
       });
-      const bankState = await db.query('SELECT has_broken_shamir_chain FROM banks WHERE id = $1', [
-        testBanks[0].id,
-      ]);
-      expect(bankState.rows[0].has_broken_shamir_chain).toBe(true);
+      const bankState = await db.query(
+        'SELECT last_shamir_security_alert_send_date FROM banks WHERE id = $1',
+        [testBanks[0].id],
+      );
+      expect(bankState.rows[0].last_shamir_security_alert_send_date).not.toBeNull();
       expect(resMock.status).toHaveBeenCalledWith(200);
       expect(resMock.end).toHaveBeenCalled();
       // Check logInfo was called for alert
@@ -152,9 +153,10 @@ describe('shamirSecurityAlert', () => {
 
     it('should not send alert if already broken', async () => {
       mockCheckBasicAuthSuccess(testBanks[0].id);
-      await db.query('UPDATE banks SET has_broken_shamir_chain = true WHERE id = $1', [
-        testBanks[0].id,
-      ]);
+      await db.query(
+        "UPDATE banks SET last_shamir_security_alert_send_date = current_timestamp - interval '1 hour' WHERE id = $1",
+        [testBanks[0].id],
+      );
       const mockReq = {
         body: {
           userEmail: 'user@example.com',

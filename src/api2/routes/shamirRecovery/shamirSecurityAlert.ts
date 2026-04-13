@@ -10,7 +10,7 @@ import { sendShamirSecurityAlertToAdmins } from '../../../emails/shamir/sendSham
 /// - requires an authenticated user
 /// - sends an email alert only once
 /// - always logs a warning
-/// - sets the flag has_broken_shamir_chain to true on the bank
+/// - sets the flag has_sent_shamir_security_alert to true on the bank
 export const shamirSecurityAlert = async (req: Request, res: Response): Promise<void> => {
   try {
     // 0 - basic auth
@@ -42,21 +42,22 @@ export const shamirSecurityAlert = async (req: Request, res: Response): Promise<
     logInfo(`SHAMIR SECURITY ALERT FOR BANK ${basicAuth.bankIds.internalId}`);
 
     const currentBankState = await db.query(
-      'SELECT has_broken_shamir_chain FROM banks WHERE id=$1',
+      "SELECT (last_shamir_security_alert_send_date IS NOT NULL AND last_shamir_security_alert_send_date >= current_timestamp(0) - interval '1 day') AS mail_sent_today FROM banks WHERE id=$1",
       [basicAuth.bankIds.internalId],
     );
 
-    const hasBrokenShamirChainSaved = currentBankState.rows[0].has_broken_shamir_chain;
-    if (!hasBrokenShamirChainSaved) {
+    const hasAlreadySentSecurityAlertToday = currentBankState.rows[0].mail_sent_today;
+    if (!hasAlreadySentSecurityAlertToday) {
       await sendShamirSecurityAlertToAdmins({
         bankId: basicAuth.bankIds.internalId,
         brokenShamirChain: safeBody.brokenShamirChain,
         bankName: safeBody.bankName,
         bankUrl: safeBody.bankUrl,
       });
-      await db.query('UPDATE banks SET has_broken_shamir_chain = true WHERE id=$1', [
-        basicAuth.bankIds.internalId,
-      ]);
+      await db.query(
+        'UPDATE banks SET last_shamir_security_alert_send_date = current_timestamp(0) WHERE id=$1',
+        [basicAuth.bankIds.internalId],
+      );
     }
 
     res.status(200).end();
