@@ -25,7 +25,6 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
         sc.min_shares,
         sc.is_active,
         sc.support_email,
-        sc.creator_email,
         b.public_id,
         sc.created_at,
         sc.change,
@@ -33,7 +32,6 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
         ARRAY_AGG(
           json_build_object(
             'id', sh.vault_id,
-            'email', hu.email,
             'sharingPublicKey', hu.sharing_public_key_2,
             'signingPublicKey', hu.signing_public_key,
             'nbShares', sh.nb_shares
@@ -59,7 +57,6 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
         minShares: sc.min_shares,
         isActive: sc.is_active,
         supportEmail: sc.support_email,
-        creatorEmail: sc.creator_email,
         bankPublicId: sc.public_id,
         createdAt: sc.created_at,
         change: sc.change,

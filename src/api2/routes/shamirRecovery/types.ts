@@ -7,7 +7,6 @@ export type ShamirChangeSignature = {
 
 export type ShamirShareholderFootprint = {
   vaultId: number;
-  vaultEmail: string;
   vaultBankPublicId: string;
   vaultSigningPubKey: string;
   nbShares: number;
@@ -35,6 +34,20 @@ export type ShamirHolder = {
   publicSigningKey: string;
 };
 
+export type ShamirConfigWithHoldersFromDb = {
+  id: number;
+  name: string;
+  minShares: number;
+  isActive: boolean;
+  supportEmail: string;
+  creatorEmail: string;
+  createdAt: string;
+  change: string;
+  changeSignatures: ShamirChangeSignature[];
+  activeHolders: ShamirHolder[];
+  shareholderEmails: string;
+};
+
 export type ShamirConfigWithHolders = {
   id: number;
   name: string;
@@ -46,11 +59,12 @@ export type ShamirConfigWithHolders = {
   change: string;
   changeSignatures: ShamirChangeSignature[];
   activeHolders: ShamirHolder[];
+  shareholderEmails: { [vaultId: number]: string };
 };
 
-export type ShamirConfigHistoryForBank = {
+export type ShamirConfigHistoryForBankFromDb = {
   bank_id: number;
   public_id: string;
   bank_name: string;
-  all_configs: ShamirConfigWithHolders[];
+  all_configs: ShamirConfigWithHoldersFromDb[];
 };
