@@ -36,7 +36,7 @@ const cleanUpExpiredShamirRecoveryRequests = async () => {
         [req.vault_id],
       );
       await db.query(
-        `UPDATE shamir_recovery_requests SET has_expiry_mail_been_sent = true WHERE id = $1`,
+        `UPDATE shamir_recovery_requests SET has_expiry_mail_been_sent = true, protected_recovery_key_pair=null WHERE id = $1`,
         [req.id],
       );
       // Get support email
