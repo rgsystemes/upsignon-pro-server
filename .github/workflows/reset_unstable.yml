@@ -1,0 +1,23 @@
+---
+name: Call Reset Unstable
+on:
+  workflow_dispatch: ~
+  push:
+    branches:
+      - production
+      - fix-*
+      - feat-*
+
+jobs:
+  call-reset-unstable:
+    if: ${{ github.event_name != 'push' || github.event.before != '0000000000000000000000000000000000000000' }}
+    runs-on: ubuntu-latest
+    name: Call Reset Unstable Workflow
+    steps:
+      - name: Trigger reset unstable workflow
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.RGSUPVDEV_TOKEN }}" \
+            https://api.github.com/repos/rgsystemes/kb/actions/workflows/reset-unstable-github-helper.yml/dispatches \
+            -d '{"ref":"master","inputs":{"repository":"${{ github.event.repository.name }}"}}'

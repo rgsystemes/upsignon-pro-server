@@ -4,14 +4,36 @@ const path = require('path');
 const fs = require('fs');
 const db = require(path.join(__dirname, './dbMigrationConnect'));
 
-async function importFunction(data, bankId, dbConnection, resellerId = null) {
+async function importBank(data, dbConnection, resellerId = null) {
+  // BANK
+  const bank = data.bank;
+  const insertedBank = await dbConnection.query(
+    'INSERT INTO banks (name, settings, created_at, ms_entra_config, redirect_url, stop_this_instance, public_id, reseller_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id',
+    [
+      bank.name,
+      bank.settings,
+      bank.created_at,
+      bank.ms_entra_config,
+      '',
+      bank.stop_this_instance,
+      bank.public_id,
+      resellerId,
+    ],
+  );
+
+  if (insertedBank.rowCount === 0) {
+    throw new Error('Bank not created');
+  }
+  const bankId = insertedBank.rows[0].id;
+  console.log(`Import bank ${bank.name} with id ${bankId}`);
+
   // ADMINS
   for (var i = 0; i < data.admins.length; i++) {
     const row = data.admins[i];
     if (row.admin_role === 'superadmin') {
       await dbConnection.query(
         'INSERT INTO admins (id, email, password_hash, created_at, reseller_id) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING',
-        [row.id, row.email, row.password_hash, row.created_at, reseller_id],
+        [row.id, row.email, row.password_hash, row.created_at, resellerId],
       );
     } else {
       await dbConnection.query(
@@ -506,13 +528,7 @@ async function importFunction(data, bankId, dbConnection, resellerId = null) {
 }
 
 async function main() {
-  const bankId = parseInt(process.argv[2]);
-  const filePath = process.argv[3];
-  if (typeof bankId !== 'number') {
-    console.log('BankId parameter missing.');
-    console.log('Usage: node ./scripts/bankDataImport.js 2 path/to/data/file');
-    process.exit(1);
-  }
+  const filePath = process.argv[2];
   if (!filePath) {
     console.log('File path parameter missing.');
     console.log('Usage: node ./scripts/bankDataImport.js 2 path/to/data/file');
@@ -523,7 +539,10 @@ async function main() {
   const data = JSON.parse(dataString);
 
   await db.connect();
-  await importFunction(data, bankId, db);
+  await importBank(data, db);
+  console.log(
+    'Import completed\n=========================\nDO NOT FORGET TO TRANSFER THE LICENCES TOO!\n=========================',
+  );
   await db.release();
 }
 
@@ -531,4 +550,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { importFunction };
+module.exports = { importBank };
