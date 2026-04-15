@@ -44,7 +44,6 @@ export type EnhancedShamirConfig = {
   id: number;
   name: string;
   minShares: number;
-  isActive: boolean;
   supportEmail: string | null;
   creatorEmail: string | null;
   bankPublicId: string;

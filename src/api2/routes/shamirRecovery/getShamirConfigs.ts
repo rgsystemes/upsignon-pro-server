@@ -55,7 +55,6 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
         id: sc.id,
         name: sc.name,
         minShares: sc.min_shares,
-        isActive: sc.is_active,
         supportEmail: sc.support_email,
         bankPublicId: sc.public_id,
         createdAt: sc.created_at,

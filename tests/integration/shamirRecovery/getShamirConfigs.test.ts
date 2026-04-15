@@ -145,7 +145,6 @@ describe('getShamirConfigs', () => {
         id: 1,
         name: 'Shamir 1',
         minShares: 1,
-        isActive: false,
         supportEmail: 'support@testbank1.com',
       });
     });
@@ -174,7 +173,6 @@ describe('getShamirConfigs', () => {
         id: 3,
         name: 'Shamir 3',
         minShares: 1,
-        isActive: false,
         supportEmail: 'test@testbank1.com',
         bankPublicId: '6333b2b6-2598-4a31-a263-e1897b29d5f5',
         createdAt: new Date('2023-03-15T09:00:00Z'),
@@ -274,7 +272,6 @@ describe('getShamirConfigs', () => {
       await getShamirConfigs(mockReq, resMock);
       expect(resMock.status).toHaveBeenCalledWith(200);
       const jsonCall = (resMock.json as jest.Mock).mock.calls[0][0] as EnhancedShamirConfig[];
-      expect(jsonCall[0].isActive).toBe(false);
       expect(jsonCall[0].needsUpdate).toBe(false);
     });
     it('should handle multiple users with different share status', async () => {
