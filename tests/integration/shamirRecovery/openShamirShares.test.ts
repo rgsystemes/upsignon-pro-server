@@ -142,6 +142,7 @@ describe('openShamirShares', () => {
           status: 'PENDING',
           expiry_date: futureDate,
           denied_by: [],
+          approved_by: [],
         },
       ]);
 
@@ -179,6 +180,12 @@ describe('openShamirShares', () => {
         supportEmail: 'security@testbank1.com',
         acceptLanguage: 'fr',
       });
+
+      const approvedByRes = await db.query(
+        'SELECT approved_by FROM shamir_recovery_requests WHERE id=1',
+      );
+      expect(approvedByRes.rows).toHaveLength(1);
+      expect(approvedByRes.rows[0].approved_by).toStrictEqual([2]);
     });
 
     it('should reject if no pending recovery request exists', async () => {

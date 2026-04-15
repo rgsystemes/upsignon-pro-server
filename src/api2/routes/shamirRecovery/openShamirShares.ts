@@ -43,7 +43,7 @@ export const openShamirShares = async (req: Request, res: Response): Promise<voi
     }
 
     const verifyRecoveryRequests = await db.query(
-      `SELECT 1
+      `SELECT id
       FROM shamir_recovery_requests
       WHERE
         shamir_config_id=$1
@@ -69,6 +69,13 @@ export const openShamirShares = async (req: Request, res: Response): Promise<voi
         basicAuth.userId,
         validatedBody.shamirConfigId,
       ],
+    );
+    await db.query(
+      `UPDATE shamir_recovery_requests
+          SET approved_by = array_append(approved_by, $1)
+        WHERE id = $2
+        `,
+      [basicAuth.userId, verifyRecoveryRequests.rows[0].id],
     );
 
     // If the request is now approved, send an email to the user
