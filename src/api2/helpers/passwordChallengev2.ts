@@ -81,6 +81,8 @@ export const checkPasswordChallengeV2 = async (
   const hashedPwdChallengeResponse = libsodium.crypto_generichash(
     libsodium.crypto_generichash_BYTES,
     fromBase64(passwordChallengeResponse),
+    null,
+    null,
   );
 
   let hasPassedPasswordChallenge = libsodium.memcmp(
@@ -106,7 +108,12 @@ export const hashPasswordChallengeResultForSecureStorageV2 = (
 
   const parts = encryptedDataString.split('-');
   parts[6] = toBase64(
-    libsodium.crypto_generichash(libsodium.crypto_generichash_BYTES, fromBase64(parts[6])),
+    libsodium.crypto_generichash(
+      libsodium.crypto_generichash_BYTES,
+      fromBase64(parts[6]),
+      null,
+      null,
+    ),
   );
   return parts.join('-');
 };

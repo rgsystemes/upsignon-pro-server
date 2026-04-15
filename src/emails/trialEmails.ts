@@ -5,6 +5,7 @@ import env from '../helpers/env';
 import { getEmailConfig, getMailTransporter } from '../helpers/getMailTransporter';
 import { logError, logInfo } from '../helpers/logger';
 import { inputSanitizer } from '../helpers/sanitizer';
+import { buildEmail } from 'upsignon-mail';
 
 type TrialLine = {
   id: string;
@@ -21,14 +22,11 @@ type SalesTrials = {
   next14Days: TrialLine[];
 };
 
-const salesDirector = env.IS_PRODUCTION
-  ? 'laurent.casse@septeo.com'
-  : 'gireg.dekerdanet@septeo.com';
+const septeoItSolutionsSalesGroupEmail = 'gpRG-Sales@septeogroup.onmicrosoft.com';
 
 export const sendTrialEmailReminders = (): void => {
   // this feature is for SAAS tests only
-  if (!env.API_PUBLIC_HOSTNAME.endsWith('.upsignon.eu')) {
-    // this matches pro.upsignon.eu and pro-staging.upsignon.eu
+  if (env.API_PUBLIC_HOSTNAME != 'pro.upsignon.eu') {
     return;
   }
   // call function every day at 8am
@@ -122,10 +120,7 @@ const doSendTrialEmailReminder = async (): Promise<void> => {
       }
     });
     await sendTrialEndingEmailToSalesRep(
-      Object.keys(trialsBySalesRep)
-        .filter((e) => e !== 'undefined')
-        .filter((e) => e !== 'undefined' && e.endsWith('@septeo.com'))
-        .sort((s1, s2) => (s1 < s2 ? -1 : 1)),
+      septeoItSolutionsSalesGroupEmail,
       Object.values(trialsBySalesRep),
     );
   } catch (e) {
@@ -134,104 +129,30 @@ const doSendTrialEmailReminder = async (): Promise<void> => {
 };
 
 const sendTrialEndingEmailToSalesRep = async (
-  sales: string[],
+  salesEmail: string,
   contentbySales: SalesTrials[],
 ): Promise<void> => {
   try {
     const emailConfig = await getEmailConfig();
     const transporter = getMailTransporter(emailConfig, { debug: false });
-    Joi.assert(sales, Joi.array().items(Joi.string().email()));
-    const htmlMessage = `<body>
-    <p>Bonjour,</p>
-    <img alt="UpSignon logo" loading="lazy" width="200" decoding="async" data-nimg="1" style="color:transparent;" src="https://upsignon.eu/_next/static/media/logo-upsignon-website.a0d265f5.svg">
-    <p style="background-color:#1E3758;color:white;padding: 0 5px;">Liste des comptes trial arrivant à expiration</p>
+    Joi.assert(salesEmail, Joi.string().email());
 
-    ${contentbySales
-      .sort((s1, s2) => (s1.sales < s2.sales ? -1 : 1))
-      .map((c) => {
-        return `<h3>${c.sales ? c.sales.replaceAll('@septeo.com', '') : 'Non attribués'}</h3>
-        ${
-          c.expired.length > 0
-            ? `<span>Expirés</span>
-          ${getTrialsTable(c.expired, true)}
-          <br/>
-          <br/>`
-            : ''
-        }
-        ${
-          c.next7Days.length > 0
-            ? `<span>Dans les 7 prochains jours</span>
-          ${getTrialsTable(c.next7Days)}
-          <br/>
-          <br/>`
-            : ''
-        }
-        ${
-          c.next14Days.length > 0
-            ? `<span>Dans les 14 prochains jours</span>
-          ${getTrialsTable(c.next14Days)}
-          <br/>
-          <br/>`
-            : ''
-        }
-      `;
-      })
-      .join('')}
-
-    <p>Bonne journée,<br/>UpSignOn</p>
-    </body>`;
+    const { html, text, subject } = await buildEmail({
+      templateName: 'trialExpiration',
+      locales: 'fr',
+      args: {
+        salesTrials: contentbySales,
+      },
+    });
 
     await transporter.sendMail({
       from: emailConfig.EMAIL_SENDING_ADDRESS,
-      to:
-        env.IS_PROD_STATUS_SERVER_URL && sales.indexOf(salesDirector) === -1
-          ? [...sales, salesDirector]
-          : sales,
-      subject: `[SALES] Expiration Trial UpSignon`,
-      html: htmlMessage,
+      to: salesEmail,
+      subject: subject,
+      html: html,
+      text: text,
     });
   } catch (e) {
     logError('sendTrialEndingEmailToSalesRep', e);
   }
-};
-
-const getTrialsTable = (
-  trials: {
-    id: string;
-    name: string;
-    reseller: string;
-    nbUsers: number;
-    createdAt: string;
-    remainingDays: number;
-  }[],
-  expiredCase?: boolean,
-): string => {
-  return `<table style="border-collapse:collapse;width:100%;border-bottom: 2px solid black;">
-    <thead>
-      <tr>
-        <th style="padding:8px;">ID</th>
-        <th style="padding:8px;">Nom de la banque</th>
-        <th style="padding:8px;">Nom MSP</th>
-        <th style="padding:8px;">Nombre de coffres</th>
-        <th style="padding:8px;">Date de création</th>
-        <th style="padding:8px;">${expiredCase ? "Jours d'expiration" : 'Jour des tests restants'}</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${trials
-        .sort((t1, t2) => (t1.name < t2.name ? -1 : 1))
-        .map((t, i) => {
-          const rowStyle = i % 2 === 0 ? 'background:#E7E7E7;' : 'background:#fff;';
-          return `<tr style="${rowStyle}">
-          <td style="padding:8px;text-align:center;">${t.id}</td>
-          <td style="padding:8px;text-align:center;">${t.name || ''}</td>
-          <td style="padding:8px;text-align:center;">${t.reseller || ''}</td>
-          <td style="padding:8px;text-align:center;">${t.nbUsers}</td>
-          <td style="padding:8px;text-align:center;">${new Date(t.createdAt).toLocaleDateString('fr')}</td>
-          <td style="padding:8px;text-align:center;${expiredCase ? 'color:red;' : ''}">${t.remainingDays}</td>
-        </tr>`;
-        })
-        .join('')}
-    </tbody>
-  </table>`;
 };

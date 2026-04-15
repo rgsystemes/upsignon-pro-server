@@ -33,6 +33,7 @@ export const sendStatusUpdate = async (): Promise<void> => {
     );
     const stats: { def: string[]; data: number[] } = await getStats();
     const hasDailyBackup = getHasDailyBackup();
+    const ssoStats = await getSSOStats();
     const serverStatus = {
       serverUrl: env.API_PUBLIC_HOSTNAME,
       serverVersion,
@@ -44,6 +45,7 @@ export const sendStatusUpdate = async (): Promise<void> => {
       hasDailyBackup,
       nodeVersion,
       deviceStats: deviceStats.rows,
+      ssoStats,
     };
 
     await sendToUpSignOn(serverStatus);
@@ -284,4 +286,21 @@ export const getActivationStatus = async () => {
       1000 * 60 * 5,
     );
   }
+};
+
+const getSSOStats = async () => {
+  const banksUsingSsoRes = await db.query(
+    `SELECT
+      b.name as bank_name,
+      b.public_id as bank_public_id,
+      bsc.openid_configuration_url,
+      bsc.client_id,
+      ARRAY_AGG(DISTINCT LOWER(SPLIT_PART(u.email, '@', 2))) FILTER (WHERE u.email IS NOT NULL AND POSITION('@' IN u.email) > 0) AS email_domains,
+      COUNT(u.id) as nb_vaults
+    FROM bank_sso_config bsc
+    LEFT JOIN banks b ON b.id = bsc.bank_id
+    LEFT JOIN users u ON u.bank_id = b.id
+    GROUP BY bsc.id, b.id`,
+  );
+  return banksUsingSsoRes.rows;
 };
