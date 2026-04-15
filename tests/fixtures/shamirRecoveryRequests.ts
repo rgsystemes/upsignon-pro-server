@@ -13,6 +13,7 @@
  status                      | shamir_status            |                 |           |
  expiry_date                 | timestamp with time zone |                 |           |
  denied_by                   | integer[]                |                 |           | '{}'::integer[]
+ approved_by                 | integer[]                |                 |           | '{}'::integer[]
 Index :
     "shamir_recovery_requests_pkey" PRIMARY KEY, btree (id)
 Contraintes de clés étrangères :
@@ -38,6 +39,7 @@ export type ShamirRecoveryRequest = {
   status: ShamirStatus;
   expiry_date?: Date | null;
   denied_by?: number[];
+  approved_by?: number[];
 };
 
 export const pendingRecoveryRequest1: ShamirRecoveryRequest = {
@@ -52,6 +54,7 @@ export const pendingRecoveryRequest1: ShamirRecoveryRequest = {
   status: 'PENDING',
   expiry_date: new Date('2024-01-17T10:00:00Z'),
   denied_by: [],
+  approved_by: [],
 };
 
 export const pendingRecoveryRequest2: ShamirRecoveryRequest = {
@@ -66,6 +69,7 @@ export const pendingRecoveryRequest2: ShamirRecoveryRequest = {
   status: 'PENDING',
   expiry_date: new Date('2024-01-19T14:30:00Z'),
   denied_by: [],
+  approved_by: [],
 };
 
 export const completedRecoveryRequest: ShamirRecoveryRequest = {
@@ -80,6 +84,7 @@ export const completedRecoveryRequest: ShamirRecoveryRequest = {
   status: 'COMPLETED',
   expiry_date: new Date('2023-12-27T09:00:00Z'),
   denied_by: [],
+  approved_by: [1, 2, 4],
 };
 
 export const abortedRecoveryRequest: ShamirRecoveryRequest = {
@@ -94,6 +99,7 @@ export const abortedRecoveryRequest: ShamirRecoveryRequest = {
   status: 'ABORTED',
   expiry_date: new Date('2023-12-22T10:00:00Z'),
   denied_by: [],
+  approved_by: [],
 };
 
 export const deniedRecoveryRequest: ShamirRecoveryRequest = {
@@ -108,6 +114,7 @@ export const deniedRecoveryRequest: ShamirRecoveryRequest = {
   status: 'PENDING',
   expiry_date: new Date('2024-01-12T16:00:00Z'),
   denied_by: [2, 5],
+  approved_by: [],
 };
 
 export const expiredRecoveryRequest: ShamirRecoveryRequest = {
@@ -122,6 +129,7 @@ export const expiredRecoveryRequest: ShamirRecoveryRequest = {
   status: 'PENDING',
   expiry_date: new Date('2023-11-08T08:00:00Z'),
   denied_by: [],
+  approved_by: [],
 };
 
 export const allRecoveryRequests: ShamirRecoveryRequest[] = [
@@ -137,8 +145,8 @@ export const addTestShamirRecoveryRequests = async (requests: ShamirRecoveryRequ
   for (const request of requests) {
     await db.query(
       `INSERT INTO shamir_recovery_requests
-       (id, vault_id, public_key, protected_recovery_key_pair, shamir_config_id, created_at, completed_at, status, expiry_date, denied_by, creator_device_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+       (id, vault_id, public_key, protected_recovery_key_pair, shamir_config_id, created_at, completed_at, status, expiry_date, denied_by, approved_by, creator_device_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
       [
         request.id,
         request.vault_id,
@@ -150,6 +158,7 @@ export const addTestShamirRecoveryRequests = async (requests: ShamirRecoveryRequ
         request.status,
         request.expiry_date,
         request.denied_by,
+        request.approved_by,
         request.creator_device_id,
       ],
     );

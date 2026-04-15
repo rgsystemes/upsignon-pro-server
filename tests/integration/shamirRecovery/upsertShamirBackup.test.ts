@@ -22,7 +22,7 @@ jest.mock('../../../src/helpers/logger', () => ({
 
 import { checkBasicAuth2 } from '../../../src/api2/helpers/authorizationChecks';
 import { db } from '../../../src/helpers/db';
-import { addTestShamirShares, sharesConfig1, sharesConfig2 } from '../../fixtures/shamirShares';
+import { addTestShamirShares, sharesConfig1 } from '../../fixtures/shamirShares';
 import {
   addTestShamirHolders,
   holdersConfig1,
@@ -32,7 +32,6 @@ import {
 import {
   addTestShamirRecoveryRequests,
   pendingRecoveryRequest1,
-  pendingRecoveryRequest2,
 } from '../../fixtures/shamirRecoveryRequests';
 
 const mockRes = () => {
@@ -270,17 +269,19 @@ describe('upsertShamirBackup', () => {
       const d = deviceForUser(u.id);
       mockCheckBasicAuth2Success(u.id);
 
-      await addTestShamirHolders(holdersConfig1);
+      await addTestShamirHolders(holdersConfig2);
 
       const mockReq = {
         body: {
           userEmail: u.email,
           deviceId: d.device_unique_id,
           deviceSession: 'any-session',
-          shamirConfigId: 1,
+          shamirConfigId: 2,
           holderShares: [
             { holderId: testUsers[0].id, closedShares: ['share1'] },
-            { holderId: testUsers[1].id, closedShares: ['share2', 'share3'] },
+            { holderId: testUsers[1].id, closedShares: ['share2'] },
+            { holderId: testUsers[3].id, closedShares: ['share3'] },
+            { holderId: testUsers[4].id, closedShares: ['share4'] },
           ],
         },
         headers: {
@@ -295,16 +296,19 @@ describe('upsertShamirBackup', () => {
 
       const shares = await db.query(
         'SELECT * FROM shamir_shares WHERE vault_id = $1 AND shamir_config_id = $2 ORDER BY holder_vault_id',
-        [u.id, 1],
+        [u.id, 2],
       );
 
-      expect(shares.rows).toHaveLength(2);
+      expect(shares.rows).toHaveLength(4);
       expect(shares.rows[0].holder_vault_id).toBe(testUsers[0].id);
       expect(shares.rows[0].closed_shares).toEqual(['share1']);
       expect(shares.rows[1].holder_vault_id).toBe(testUsers[1].id);
-      expect(shares.rows[1].closed_shares).toEqual(['share2', 'share3']);
+      expect(shares.rows[1].closed_shares).toEqual(['share2']);
+      expect(shares.rows[2].holder_vault_id).toBe(testUsers[3].id);
+      expect(shares.rows[2].closed_shares).toEqual(['share3']);
+      expect(shares.rows[3].holder_vault_id).toBe(testUsers[4].id);
+      expect(shares.rows[3].closed_shares).toEqual(['share4']);
     });
-
     it('should replace existing backup when upserting', async () => {
       const u = testUsers[0];
       const d = deviceForUser(u.id);

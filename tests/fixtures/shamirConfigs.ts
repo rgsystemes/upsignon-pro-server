@@ -1,17 +1,18 @@
 /**
                                               Table « public.shamir_configs »
-      Colonne      |           Type           | Collationnement | NULL-able |                 Par défaut
--------------------+--------------------------+-----------------+-----------+--------------------------------------------
- id                | integer                  |                 | not null  | nextval('shamir_configs_id_seq'::regclass)
- name              | character varying(100)   |                 | not null  |
- min_shares        | smallint                 |                 | not null  | 1
- is_active         | boolean                  |                 | not null  | false
- support_email     | character varying(100)   |                 |           |
- creator_email     | character varying(100)   |                 |           |
- bank_id           | integer                  |                 |           |
- created_at        | timestamp with time zone |                 |           | CURRENT_TIMESTAMP(0)
- change            | text                     |                 |           |
- change_signatures | jsonb                    |                 |           |
+      Colonne       |           Type           | Collationnement | NULL-able |                 Par défaut
+--------------------+--------------------------+-----------------+-----------+--------------------------------------------
+ id                 | integer                  |                 | not null  | nextval('shamir_configs_id_seq'::regclass)
+ name               | character varying(100)   |                 | not null  |
+ min_shares         | smallint                 |                 | not null  | 1
+ is_active          | boolean                  |                 | not null  | false
+ support_email      | character varying(100)   |                 |           |
+ creator_email      | character varying(100)   |                 |           |
+ bank_id            | integer                  |                 |           |
+ created_at         | timestamp with time zone |                 |           | CURRENT_TIMESTAMP(0)
+ change             | text                     |                 |           |
+ change_signatures  | jsonb                    |                 |           |
+ shareholder_emails | jsonb                    |                 |           |
 Index :
     "shamir_configs_pkey" PRIMARY KEY, btree (id)
 Contraintes de clés étrangères :
@@ -36,6 +37,7 @@ export type ShamirConfig = {
   created_at: Date;
   change: string | null;
   change_signatures: Record<string, any> | null;
+  shareholder_emails: string;
 };
 
 export type EnhancedShamirConfig = {
@@ -56,7 +58,6 @@ export type EnhancedShamirConfig = {
   }>;
   holders: Array<{
     id: number;
-    email: string | null;
     sharingPublicKey: string | null;
     signingPublicKey: string | null;
     nbShares: number;
@@ -75,6 +76,7 @@ const configFootprint1 = {
   shareholders: [
     {
       vaultId: 1,
+      // removed in later code, but kept here to avoid rewriting all tests
       vaultEmail: 'user1@testbank1.com',
       vaultBankPublicId: '6333b2b6-2598-4a31-a263-e1897b29d5f5',
       vaultSigningPubKey: 'Oo9Do/g8Wak201deG8C902+a7VIEDzgZu6YFyuxqMCs=',
@@ -94,6 +96,7 @@ const configFootprint2 = {
   shareholders: [
     {
       vaultId: 1,
+      // removed in later code, but kept here to avoid rewriting all tests
       vaultEmail: 'user1@testbank1.com',
       vaultBankPublicId: '6333b2b6-2598-4a31-a263-e1897b29d5f5',
       vaultSigningPubKey: 'Oo9Do/g8Wak201deG8C902+a7VIEDzgZu6YFyuxqMCs=',
@@ -101,6 +104,7 @@ const configFootprint2 = {
     },
     {
       vaultId: 2,
+      // removed in later code, but kept here to avoid rewriting all tests
       vaultEmail: 'user2@testbank1.com',
       vaultBankPublicId: '6333b2b6-2598-4a31-a263-e1897b29d5f5',
       vaultSigningPubKey: 'Arf/cbVfjXekFHgrJnpFf07xN8UFSjOjNDaZ/seWS1k=',
@@ -108,6 +112,7 @@ const configFootprint2 = {
     },
     {
       vaultId: 4,
+      // removed in later code, but kept here to avoid rewriting all tests
       vaultEmail: 'user1@testbank2.com',
       vaultBankPublicId: '98073dee-c66b-4bce-b385-1b66bc76e7fc',
       vaultSigningPubKey: 'iFB2t1w6HfzUawFQDvvT6QvfDZm/gdVMhu7zLEi4kLs=',
@@ -115,6 +120,7 @@ const configFootprint2 = {
     },
     {
       vaultId: 5,
+      // removed in later code, but kept here to avoid rewriting all tests
       vaultEmail: 'user2@testbank2.com',
       vaultBankPublicId: '98073dee-c66b-4bce-b385-1b66bc76e7fc',
       vaultSigningPubKey: 'Z1fm5BxZSXb6oW9zPVHbIgVQnHfWMKS6gf4I6kx4HAE=',
@@ -134,6 +140,7 @@ const configFootprint3 = {
   shareholders: [
     {
       vaultId: 1,
+      // removed in later code, but kept here to avoid rewriting all tests
       vaultEmail: 'user1@testbank1.com',
       vaultBankPublicId: '6333b2b6-2598-4a31-a263-e1897b29d5f5',
       vaultSigningPubKey: 'Oo9Do/g8Wak201deG8C902+a7VIEDzgZu6YFyuxqMCs=',
@@ -141,6 +148,7 @@ const configFootprint3 = {
     },
     {
       vaultId: 2,
+      // removed in later code, but kept here to avoid rewriting all tests
       vaultEmail: 'user2@testbank1.com',
       vaultBankPublicId: '6333b2b6-2598-4a31-a263-e1897b29d5f5',
       vaultSigningPubKey: 'Arf/cbVfjXekFHgrJnpFf07xN8UFSjOjNDaZ/seWS1k=',
@@ -148,6 +156,7 @@ const configFootprint3 = {
     },
     {
       vaultId: 4,
+      // removed in later code, but kept here to avoid rewriting all tests
       vaultEmail: 'user1@testbank2.com',
       vaultBankPublicId: '98073dee-c66b-4bce-b385-1b66bc76e7fc',
       vaultSigningPubKey: 'iFB2t1w6HfzUawFQDvvT6QvfDZm/gdVMhu7zLEi4kLs=',
@@ -155,6 +164,7 @@ const configFootprint3 = {
     },
     {
       vaultId: 5,
+      // removed in later code, but kept here to avoid rewriting all tests
       vaultEmail: 'user2@testbank2.com',
       vaultBankPublicId: '98073dee-c66b-4bce-b385-1b66bc76e7fc',
       vaultSigningPubKey: 'Z1fm5BxZSXb6oW9zPVHbIgVQnHfWMKS6gf4I6kx4HAE=',
@@ -283,6 +293,7 @@ export const config1Approved: ShamirConfig = {
     thisShamirConfig: configFootprint1,
   }),
   change_signatures: null,
+  shareholder_emails: '{"1":"user1@testbank1.com"}',
 };
 
 export const config2Approved: ShamirConfig = {
@@ -299,6 +310,8 @@ export const config2Approved: ShamirConfig = {
     thisShamirConfig: configFootprint2,
   }),
   change_signatures: approvingSignaturesConfig2,
+  shareholder_emails:
+    '{"1":"user1@testbank1.com","2":"user2@testbank1.com","4":"user1@testbank2.com","5":"user2@testbank2.com"}',
 };
 
 export const rawConfig3Change = JSON.stringify({
@@ -317,6 +330,8 @@ export const config3Pending: ShamirConfig = {
   created_at: new Date('2023-03-15T09:00:00Z'),
   change: rawConfig3Change,
   change_signatures: [approvingSignaturesConfig3[1], approvingSignaturesConfig3[3]],
+  shareholder_emails:
+    '{"1":"user1@testbank1.com","2":"user2@testbank1.com","4":"user1@testbank2.com","5":"user2@testbank2.com"}',
 };
 
 export const validShamirConfigChain: ShamirConfig[] = [
@@ -328,8 +343,8 @@ export const validShamirConfigChain: ShamirConfig[] = [
 export const addTestShamirConfigs = async (shamirChain: ShamirConfig[]) => {
   for (let sc of shamirChain) {
     await db.query(
-      `INSERT INTO shamir_configs (id, name, min_shares, is_active, support_email, creator_email, bank_id, created_at, change, change_signatures)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      `INSERT INTO shamir_configs (id, name, min_shares, is_active, support_email, creator_email, bank_id, created_at, change, change_signatures, shareholder_emails)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
       [
         sc.id,
         sc.name,
@@ -341,6 +356,7 @@ export const addTestShamirConfigs = async (shamirChain: ShamirConfig[]) => {
         sc.created_at,
         sc.change,
         sc.change_signatures !== null ? JSON.stringify(sc.change_signatures) : null,
+        sc.shareholder_emails,
       ],
     );
   }

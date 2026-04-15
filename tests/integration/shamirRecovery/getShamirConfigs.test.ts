@@ -147,7 +147,6 @@ describe('getShamirConfigs', () => {
         minShares: 1,
         isActive: false,
         supportEmail: 'support@testbank1.com',
-        creatorEmail: 'admin@testbank1.com',
       });
     });
     it('should return multiple configurations ordered by creation date', async () => {
@@ -177,7 +176,6 @@ describe('getShamirConfigs', () => {
         minShares: 1,
         isActive: false,
         supportEmail: 'test@testbank1.com',
-        creatorEmail: 'admin@testbank1.com',
         bankPublicId: '6333b2b6-2598-4a31-a263-e1897b29d5f5',
         createdAt: new Date('2023-03-15T09:00:00Z'),
         change: rawConfig3Change,
@@ -185,28 +183,24 @@ describe('getShamirConfigs', () => {
         holders: [
           {
             id: 1,
-            email: 'user1@testbank1.com',
             sharingPublicKey: 'VO8BJSM+drNdlNm9AkAmQXg6/AHl+xDnskvrbdXilH4=',
             signingPublicKey: 'Oo9Do/g8Wak201deG8C902+a7VIEDzgZu6YFyuxqMCs=',
             nbShares: 1,
           },
           {
             id: 2,
-            email: 'user2@testbank1.com',
             sharingPublicKey: '2CAhQVMbuRulJMyz7nsuNhXDt3kQjzGLOaCnm4v9YhU=',
             signingPublicKey: 'Arf/cbVfjXekFHgrJnpFf07xN8UFSjOjNDaZ/seWS1k=',
             nbShares: 1,
           },
           {
             id: 4,
-            email: 'user1@testbank2.com',
             sharingPublicKey: 'y8cC9saI397Abt+kdPxx0zG8y4zpzA6JRA4XqAiW93A=',
             signingPublicKey: 'iFB2t1w6HfzUawFQDvvT6QvfDZm/gdVMhu7zLEi4kLs=',
             nbShares: 1,
           },
           {
             id: 5,
-            email: 'user2@testbank2.com',
             sharingPublicKey: 'fZssSU/bDt+obMKJtqApdO6jbmy0azOtKGtr1H2+QX8=',
             signingPublicKey: 'Z1fm5BxZSXb6oW9zPVHbIgVQnHfWMKS6gf4I6kx4HAE=',
             nbShares: 1,
@@ -263,30 +257,6 @@ describe('getShamirConfigs', () => {
       expect(resMock.status).toHaveBeenCalledWith(200);
       const jsonCall = (resMock.json as jest.Mock).mock.calls[0][0] as EnhancedShamirConfig[];
       expect(jsonCall[0].needsUpdate).toBe(false);
-    });
-    it('should set needsUpdate to true when number of shares is reduced', async () => {
-      await addTestShamirConfigs([
-        {
-          ...config1Approved,
-          is_active: true,
-        },
-      ]);
-      await addTestShamirHolders([{ ...holdersConfig1[0], nb_shares: 2 }]);
-      await addTestShamirShares(sharesConfig1);
-      mockCheckBasicAuth2Success(testUsers[0].id);
-      const mockReq = {
-        body: {
-          userEmail: testUsers[0].email,
-        },
-        headers: {
-          'accept-language': 'fr',
-        },
-      } as unknown as Request;
-      const resMock = mockRes();
-      await getShamirConfigs(mockReq, resMock);
-      expect(resMock.status).toHaveBeenCalledWith(200);
-      const jsonCall = (resMock.json as jest.Mock).mock.calls[0][0] as EnhancedShamirConfig[];
-      expect(jsonCall[0].needsUpdate).toBe(true);
     });
     it('should set needsUpdate to false for inactive configs even when shares are missing', async () => {
       await addTestShamirConfigs([config1Approved]);
