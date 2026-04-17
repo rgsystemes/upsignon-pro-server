@@ -16,8 +16,6 @@ export const sendDeviceRequestEmail = async (
   try {
     const emailConfig = await getEmailConfig();
     const transporter = getMailTransporter(emailConfig, { debug: false });
-    const expDate = expirationDate.toLocaleDateString('fr');
-    const expTime = expirationDate.toLocaleTimeString().split(':').slice(0, 2).join(':');
 
     // prevent HTML injections
     const safeEmailAddress = inputSanitizer.cleanForHTMLInjections(emailAddress);
@@ -31,7 +29,7 @@ export const sendDeviceRequestEmail = async (
       locales: getBestLanguage(acceptLanguage),
       args: {
         deviceName: safeDeviceName,
-        availableCodeDate: `${expDate} ${expTime}`,
+        expirationDate,
         code: safeRequestToken,
         deviceType: safeDeviceType,
         deviceOSAndVersion: safeOSNameAndVersion,
