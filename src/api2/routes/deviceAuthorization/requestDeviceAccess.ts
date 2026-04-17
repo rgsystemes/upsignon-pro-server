@@ -210,7 +210,7 @@ export const requestDeviceAccess2 = async (req: Request, res: Response) => {
             safeBody.devicePublicKey,
             nextDeviceStatus,
             randomAuthorizationCode,
-            expirationDate,
+            expirationDate.toISOString(),
             bankIds.internalId,
           ],
         );
@@ -237,7 +237,7 @@ export const requestDeviceAccess2 = async (req: Request, res: Response) => {
         safeBody.deviceType,
         safeBody.osNameAndVersion,
         randomAuthorizationCode,
-        new Date(expirationDate),
+        expirationDate,
         acceptLanguage,
       );
 
