@@ -17,7 +17,6 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
     //   In particular, it is true when
     //     - the shamir backup has not been created for this particular config (COUNT(ss.*) = 0)
     //     - a new shareholder is added to a configuration (normally forbidden) (COUNT(ss.*) FILTER(WHERE closed_shares IS NULL) > 0)
-    //     - the number of shares of a shareholder has been reduced (normally forbidden) (SUM(ARRAY_LENGTH(ss.closed_shares, 1)) < SUM(sh.nb_shares))
     const shamirConfigsRes = await db.query(
       `SELECT
         sc.id,

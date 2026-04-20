@@ -1,4 +1,4 @@
-import { Pool, QueryResult, Client } from 'pg';
+import { Pool, QueryResult } from 'pg';
 import env from './env';
 // @ts-ignore
 const pool = new Pool({

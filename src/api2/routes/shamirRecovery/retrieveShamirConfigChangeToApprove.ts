@@ -118,8 +118,8 @@ export const retrieveShamirConfigChangeToApprove = async (
         allShareholderIds.push(s.vaultId);
       }
     };
-    changesToBeSigned.forEach(async (c) => {
-      c.shamirConfigHistory.forEach(async (h) => {
+    changesToBeSigned.forEach((c) => {
+      c.shamirConfigHistory.forEach((h) => {
         const change = JSON.parse(h.change) as ShamirChange;
         change.previousShamirConfig?.shareholders.forEach(extractBankIdAndShareholderId);
         change.thisShamirConfig.shareholders.forEach(extractBankIdAndShareholderId);

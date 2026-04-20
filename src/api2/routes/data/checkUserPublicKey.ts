@@ -51,7 +51,7 @@ export const checkPublicKeys2 = async (req: Request, res: Response) => {
         email: basicAuth.userEmail,
         bankName: bankName!,
         bankUrl: req.originalUrl,
-        badKey: sharingPublicKey,
+        badKey: userPublicKeysRes.rows[0].sharing_public_key_2,
         keyType: 'sharing',
       });
     }
@@ -69,7 +69,7 @@ export const checkPublicKeys2 = async (req: Request, res: Response) => {
           email: basicAuth.userEmail,
           bankName: bankName!,
           bankUrl: req.originalUrl,
-          badKey: signingPublicKey,
+          badKey: userPublicKeysRes.rows[0].signing_public_key,
           keyType: 'signing',
         });
       } // else the signing key has never been set before

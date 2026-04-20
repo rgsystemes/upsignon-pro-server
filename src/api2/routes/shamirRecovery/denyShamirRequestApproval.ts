@@ -67,7 +67,11 @@ export const denyShamirRequestApproval = async (req: Request, res: Response): Pr
     const wasAlreadyRefused = await isShamirRecoveryRequestRefused(recReq.id);
     await db.query(
       `UPDATE shamir_recovery_requests
-          SET denied_by = array_append(denied_by, $1)
+          SET denied_by = CASE
+            WHEN denied_by IS NULL THEN ARRAY[$1]
+            WHEN NOT ($1 = ANY(denied_by)) THEN array_append(denied_by, $1)
+            ELSE denied_by
+          END
         WHERE id = $2
         `,
       [basicAuth.userId, recReq.id],

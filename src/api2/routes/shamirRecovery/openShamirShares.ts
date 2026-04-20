@@ -72,7 +72,11 @@ export const openShamirShares = async (req: Request, res: Response): Promise<voi
     );
     await db.query(
       `UPDATE shamir_recovery_requests
-          SET approved_by = array_append(approved_by, $1)
+          SET approved_by = CASE
+            WHEN approved_by IS NULL THEN ARRAY[$1]
+            WHEN NOT ($1 = ANY(approved_by)) THEN array_append(approved_by, $1)
+            ELSE approved_by
+          END
         WHERE id = $2
         `,
       [basicAuth.userId, verifyRecoveryRequests.rows[0].id],

@@ -8,9 +8,9 @@ import { sendShamirSecurityAlertToAdmins } from '../../../emails/shamir/sendSham
 /// Sends a security alert to all bank admins and superadmins
 ///
 /// - requires an authenticated user
-/// - sends an email alert only once
+/// - sends an email alert only once per day
 /// - always logs a warning
-/// - sets the flag has_sent_shamir_security_alert to true on the bank
+/// - sets the last_sent_shamir_security_alert_send_date on the bank
 export const shamirSecurityAlert = async (req: Request, res: Response): Promise<void> => {
   try {
     // 0 - basic auth

@@ -91,6 +91,8 @@ export const upsertShamirBackup = async (req: Request, res: Response): Promise<v
         RETURNING id`,
         [basicAuth.userId, validatedBody.shamirConfigId],
       );
+      await transactionalClient.commit();
+
       if (updatedRecoveryRequests.rows.length > 0) {
         const acceptLanguage = req.headers['accept-language'];
         const supportEmail = await getSupportEmail(basicAuth.userId);
@@ -107,7 +109,6 @@ export const upsertShamirBackup = async (req: Request, res: Response): Promise<v
           });
         }
       }
-      await transactionalClient.commit();
     } catch (e) {
       logError(req.body?.userEmail, e);
       await transactionalClient.rollback();

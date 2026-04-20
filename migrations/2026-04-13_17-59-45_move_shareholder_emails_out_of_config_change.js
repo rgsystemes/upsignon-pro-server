@@ -2,7 +2,7 @@
 
 exports.up = function (db) {
   return db.query(
-    'ALTER TABLE shamir_configs ADD COLUMN IF NOT EXISTS shareholder_emails TEXT NOT NULL',
+    "ALTER TABLE shamir_configs ADD COLUMN IF NOT EXISTS shareholder_emails TEXT NOT NULL DEFAULT '{}'",
   );
 };
 
