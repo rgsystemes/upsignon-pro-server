@@ -21,7 +21,7 @@ You can transfer data for one bank only.
 - First, export these data to a file:
 
   ```
-  node ./scripts/bankDataExport.js <bankIdToExport> <path_to_exported_data_file.json>
+  node ./scripts/bankDataExportAndSetRedirection.js <bankIdToExport> <path_to_exported_data_file.json>
   ```
 
 - You may want to encrypt the file if you need to send it over the internet. For instance you could use a zip format with a password
@@ -42,7 +42,7 @@ to uncrypt it.
   Then import this file to another database / another bank:
 
   ```
-  node ./scripts/bankDataImport.js <bankIdToImportTo> <path_to_exported_data_file.json>
+  node ./scripts/bankDataImport.js <path_to_exported_data_file.json>
   ```
 
 - Don't forget to delete the data file after you're done.
@@ -50,3 +50,5 @@ to uncrypt it.
   ```
   rm <path_to_exported_data_file.json>
   ```
+
+**YOU ALSO NEED TO TRANSFERT THE LICENCES AFTER THIS OPERATION !!**

@@ -9,9 +9,6 @@ import { BadBankIdException, getBankIds } from '../../helpers/bankUUID';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
 export const getAuthenticationChallenges2 = async (req: any, res: any) => {
   try {
-    if (!IS_ACTIVE) {
-      return res.status(403).json({ error: 'test_expired' });
-    }
     const deviceId = inputSanitizer.getString(req.body?.deviceId);
     const userEmail = inputSanitizer.getLowerCaseString(req.body?.userEmail);
 
@@ -70,6 +67,11 @@ export const getAuthenticationChallenges2 = async (req: any, res: any) => {
     if (dbRes.rows[0].stop_this_instance) {
       logInfo('instance stopped');
       return res.status(400).end();
+    }
+    // Check IS_ACTIVE AFTER stop_this_instance so we can deactivate migrated servers
+    // without breaking the redirection system
+    if (!IS_ACTIVE) {
+      return res.status(403).json({ error: 'test_expired' });
     }
     if (dbRes.rows[0].authorization_status === 'REVOKED_BY_USER') {
       logInfo(userEmail, 'getAuthenticationChallenges2 fail: device revoked by user');
