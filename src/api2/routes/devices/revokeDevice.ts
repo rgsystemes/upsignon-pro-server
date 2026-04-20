@@ -59,11 +59,15 @@ export const revokeDevice = async (req: any, res: any) => {
       // you can revoke a device by having an authenticated deviceSession or by providing device authentication
       let isSessionAuthenticated = false;
       if (deviceSession) {
-        isSessionAuthenticated = await SessionStore.checkSession(deviceSession, {
-          userEmail,
-          deviceUniqueId: deviceId,
-          bankId: bankIds.internalId,
-        });
+        isSessionAuthenticated = await SessionStore.checkSession(
+          deviceSession,
+          {
+            userEmail,
+            deviceUniqueId: deviceId,
+            bankId: bankIds.internalId,
+          },
+          { deviceOnlyAuthAllowed: false },
+        );
       }
       if (!deviceSession || !isSessionAuthenticated) {
         if (!deviceChallengeResponse) {

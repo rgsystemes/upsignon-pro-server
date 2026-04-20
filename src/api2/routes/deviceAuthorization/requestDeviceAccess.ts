@@ -1,6 +1,6 @@
 import { db } from '../../../helpers/db';
 import { getExpirationDate, isExpired } from '../../../helpers/dateHelper';
-import { sendDeviceRequestEmail } from '../../../helpers/sendDeviceRequestEmail';
+import { sendDeviceRequestEmail } from '../../../emails/sendDeviceRequestEmail';
 import { logError, logInfo } from '../../../helpers/logger';
 import { getRandomString } from '../../../helpers/randomString';
 import {

@@ -1,9 +1,9 @@
-import { isStrictlyLowerVersion } from './appVersionChecker';
-import { getNext8am } from './dateHelper';
-import { db } from './db';
-import { getEmailConfig, getMailTransporter } from './getMailTransporter';
-import { logError } from './logger';
-import { inputSanitizer } from './sanitizer';
+import { isStrictlyLowerVersion } from '../helpers/appVersionChecker';
+import { getNext8am, isMondayWednesdayFriday } from '../helpers/dateHelper';
+import { db } from '../helpers/db';
+import { getEmailConfig, getMailTransporter } from '../helpers/getMailTransporter';
+import { logError } from '../helpers/logger';
+import { inputSanitizer } from '../helpers/sanitizer';
 
 const minVersionForNotification = '7.11.0';
 const endOfSupportDate = '11 mars 2025';
@@ -15,11 +15,15 @@ export const sendMailForDeviceUpdate = async (): Promise<void> => {
   // call perform sync every two days at 8am
   setTimeout(() => {
     sendMailForDeviceUpdateTask();
+    setInterval(sendMailForDeviceUpdateTask, 24 * 3600 * 1000);
   }, getNext8am().getTime() - Date.now());
 };
 
 const sendMailForDeviceUpdateTask = async (): Promise<void> => {
   try {
+    if (!isMondayWednesdayFriday()) {
+      return;
+    }
     const emailsRes = await db.query(
       "SELECT u.email, d.device_name, d.os_family, d.install_type, d.app_version FROM users AS u RIGHT JOIN user_devices AS d ON d.user_id=u.id WHERE d.authorization_status = 'AUTHORIZED'",
     );

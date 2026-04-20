@@ -48,11 +48,15 @@ export const getVaultData = async (req: any, res: any): Promise<void> => {
       return res.status(401).end();
     }
 
-    const isSessionOK = await SessionStore.checkSession(deviceSession, {
-      userEmail,
-      deviceUniqueId: deviceId,
-      bankId: bankIds.internalId,
-    });
+    const isSessionOK = await SessionStore.checkSession(
+      deviceSession,
+      {
+        userEmail,
+        deviceUniqueId: deviceId,
+        bankId: bankIds.internalId,
+      },
+      { deviceOnlyAuthAllowed: false },
+    );
     if (!isSessionOK) {
       logInfo(req.body?.userEmail, 'getVaultData fail: session not valid');
       return res.status(401).end();

@@ -1,13 +1,13 @@
 import { db } from '../../../helpers/db';
 import { getExpirationDate, isExpired } from '../../../helpers/dateHelper';
-import { sendPasswordResetRequestEmail } from '../../../helpers/sendPasswordResetRequestEmail';
+import { sendPasswordResetRequestEmail } from '../../../emails/sendPasswordResetRequestEmail';
 import { logError, logInfo } from '../../../helpers/logger';
 import {
   checkDeviceRequestAuthorizationV2,
   createDeviceChallengeV2,
 } from '../../helpers/deviceChallengev2';
 import { getRandomString } from '../../../helpers/randomString';
-import { sendPasswordResetRequestNotificationToAdmins } from '../../../helpers/sendPasswordResetRequestNotificationToAdmins';
+import { sendPasswordResetRequestNotificationToAdmins } from '../../../emails/sendPasswordResetRequestNotificationToAdmins';
 import { getBankIds } from '../../helpers/bankUUID';
 import Joi from 'joi';
 
