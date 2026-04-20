@@ -4473,9 +4473,9 @@ update-browserslist-db@^1.2.3:
     escalade "^3.2.0"
     picocolors "^1.1.1"
 
-"upsignon-mail@git+https://github.com/rgsystemes/upsignon-mail.git#v1.0.5":
-  version "1.0.5"
-  resolved "git+https://github.com/rgsystemes/upsignon-mail.git#82b7802720b19e46ddf3b2e47b4989d98096e377"
+"upsignon-mail@git+https://github.com/rgsystemes/upsignon-mail.git#v1.0.7":
+  version "1.0.7"
+  resolved "git+https://github.com/rgsystemes/upsignon-mail.git#5f960ff3b9a3cc7a75bcaefb336a4e7cdc7d6412"
   dependencies:
     "@react-email/components" "1.0.11"
     "@react-email/render" "2.0.5"

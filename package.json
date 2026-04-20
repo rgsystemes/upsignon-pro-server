@@ -22,7 +22,7 @@
     "libsodium-wrappers": "^0.8.2",
     "nodemailer": "^8.0.5",
     "pg": "^8.20.0",
-    "upsignon-mail": "git+https://github.com/rgsystemes/upsignon-mail.git#v1.0.5",
+    "upsignon-mail": "git+https://github.com/rgsystemes/upsignon-mail.git#v1.0.7",
     "upsignon-ms-entra": "git+https://github.com/rgsystemes/upsignon-ms-entra.git#v1.0.4",
     "uuid": "^13.0.0"
   },
