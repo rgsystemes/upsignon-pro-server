@@ -12,7 +12,7 @@ type TrialLine = {
   name: string;
   reseller: string;
   nbUsers: number;
-  createdAt: string;
+  createdAt: Date;
   remainingDays: number;
 };
 type SalesTrials = {
