@@ -10,7 +10,6 @@ import {
   config1Approved,
   config2Approved,
   config3Pending,
-  rawConfig3Change,
 } from '../../fixtures/shamirConfigs';
 import {
   addTestShamirHolders,

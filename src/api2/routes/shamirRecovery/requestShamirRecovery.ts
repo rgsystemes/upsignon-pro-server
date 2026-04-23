@@ -38,7 +38,7 @@ export const requestShamirRecovery = async (req: Request, res: Response): Promis
       return;
     }
 
-    // abort if a previous procedure exists
+    // Reuse previous recovery request if exists
     const previousRequestsRes = await db.query(
       `SELECT COUNT(srr.id) as count
       FROM shamir_recovery_requests as srr

@@ -509,7 +509,7 @@ async function importBank(data, dbConnection, resellerId = null) {
     for (var i = 0; i < data.shamir_recovery_requests.length; i++) {
       const srr = data.shamir_recovery_requests[i];
       await dbConnection.query(
-        'INSERT INTO shamir_recovery_requests (vault_id, public_key, protected_recovery_key_pair, shamir_config_id, created_at, completed_at, status, expiry_date, denied_by, creator_device_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
+        'INSERT INTO shamir_recovery_requests (vault_id, public_key, protected_recovery_key_pair, shamir_config_id, created_at, completed_at, status, expiry_date, denied_by, approved_by, creator_device_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',
         [
           srr.newVaultId,
           srr.public_key,
@@ -520,6 +520,7 @@ async function importBank(data, dbConnection, resellerId = null) {
           srr.status,
           srr.expiry_date,
           srr.denied_by,
+          srr.approved_by,
           srr.creator_device_id == null ? null : srr.newDeviceId,
         ],
       );

@@ -104,7 +104,12 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
               (device_id, status, reset_token, reset_token_expiration_date, bank_id, granted_by)
             VALUES ($1,'ADMIN_AUTHORIZED',$2,$3, $4, 'configuration')
           `,
-          [authDbRes.rows[0].did, randomAuthorizationCode, expirationDate, bankIds.internalId],
+          [
+            authDbRes.rows[0].did,
+            randomAuthorizationCode,
+            expirationDate.toISOString(),
+            bankIds.internalId,
+          ],
         );
         await sendPasswordResetRequestEmail(
           safeBody.userEmail,

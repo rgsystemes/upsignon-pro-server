@@ -52,7 +52,7 @@ export const denyShamirRequestApproval = async (req: Request, res: Response): Pr
           AND srr.shamir_config_id = $3
           AND srr.status = 'PENDING'
           AND srr.expiry_date > current_timestamp(0)
-          AND NOT($1 = ANY(srr.denied_by))
+          AND NOT($1::integer = ANY(srr.denied_by))
         ORDER BY srr.created_at DESC LIMIT 1`,
       [basicAuth.userId, validatedBody.targetVaultId, validatedBody.shamirConfigId],
     );
@@ -67,7 +67,11 @@ export const denyShamirRequestApproval = async (req: Request, res: Response): Pr
     const wasAlreadyRefused = await isShamirRecoveryRequestRefused(recReq.id);
     await db.query(
       `UPDATE shamir_recovery_requests
-          SET denied_by = array_append(denied_by, $1)
+          SET denied_by = CASE
+            WHEN denied_by IS NULL THEN ARRAY[$1::integer]
+            WHEN NOT ($1::integer = ANY(denied_by)) THEN array_append(denied_by, $1::integer)
+            ELSE denied_by
+          END
         WHERE id = $2
         `,
       [basicAuth.userId, recReq.id],

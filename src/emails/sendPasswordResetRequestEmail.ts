@@ -7,7 +7,7 @@ export const sendPasswordResetRequestEmail = async (
   emailAddress: string,
   deviceName: string,
   requestToken: string,
-  expirationDate: string,
+  expirationDate: Date,
   acceptLanguage: string,
 ): Promise<void> => {
   try {

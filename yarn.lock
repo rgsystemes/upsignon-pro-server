@@ -3597,10 +3597,10 @@ node-releases@^2.0.36:
   resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-2.0.36.tgz#99fd6552aaeda9e17c4713b57a63964a2e325e9d"
   integrity sha512-TdC8FSgHz8Mwtw9g5L4gR/Sh9XhSP/0DEkQxfEFXOpiul5IiHgHan2VhYYb6agDSfp4KuvltmGApc8HMgUrIkA==
 
-nodemailer@^8.0.4:
-  version "8.0.4"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-8.0.4.tgz#b63626585693f37a390ddaecde273da991c76010"
-  integrity sha512-k+jf6N8PfQJ0Fe8ZhJlgqU5qJU44Lpvp2yvidH3vp1lPnVQMgi4yEEMPXg5eJS1gFIJTVq1NHBk7Ia9ARdSBdQ==
+nodemailer@^8.0.5:
+  version "8.0.5"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-8.0.5.tgz#2076fb2b5c1ccfe1c88f6e1aa47c0229ea642e0c"
+  integrity sha512-0PF8Yb1yZuQfQbq+5/pZJrtF6WQcjTd5/S4JOHs9PGFxuTqoB/icwuB44pOdURHJbRKX1PPoJZtY7R4VUoCC8w==
 
 normalize-path@^3.0.0:
   version "3.0.0"
@@ -4473,9 +4473,9 @@ update-browserslist-db@^1.2.3:
     escalade "^3.2.0"
     picocolors "^1.1.1"
 
-"upsignon-mail@git+https://github.com/rgsystemes/upsignon-mail.git#v1.0.5":
-  version "1.0.5"
-  resolved "git+https://github.com/rgsystemes/upsignon-mail.git#82b7802720b19e46ddf3b2e47b4989d98096e377"
+"upsignon-mail@git+https://github.com/rgsystemes/upsignon-mail.git#v1.0.7":
+  version "1.0.7"
+  resolved "git+https://github.com/rgsystemes/upsignon-mail.git#5f960ff3b9a3cc7a75bcaefb336a4e7cdc7d6412"
   dependencies:
     "@react-email/components" "1.0.11"
     "@react-email/render" "2.0.5"

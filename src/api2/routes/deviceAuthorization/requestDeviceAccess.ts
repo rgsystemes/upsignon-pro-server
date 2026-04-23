@@ -13,6 +13,7 @@ import { getBankIds } from '../../helpers/bankUUID';
 import Joi from 'joi';
 import { SessionStore } from '../../../helpers/sessionStore';
 import { hasAvailableLicence } from '../../../helpers/licenceCheck';
+import { Request, Response } from 'express';
 
 // TESTS
 // - if I request access for a user that does not exist, it creates the user and the device request
@@ -29,10 +30,10 @@ import { hasAvailableLicence } from '../../../helpers/licenceCheck';
 // - 204
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export const requestDeviceAccess2 = async (req: any, res: any) => {
+export const requestDeviceAccess2 = async (req: Request, res: Response) => {
   try {
     const bankIds = await getBankIds(req);
-    const acceptLanguage = req.headers['accept-language'];
+    const acceptLanguage = req.headers['accept-language'] as string;
 
     const joiRes = Joi.object({
       userEmail: Joi.string().email().lowercase().required(),
@@ -209,7 +210,7 @@ export const requestDeviceAccess2 = async (req: any, res: any) => {
             safeBody.devicePublicKey,
             nextDeviceStatus,
             randomAuthorizationCode,
-            expirationDate,
+            expirationDate.toISOString(),
             bankIds.internalId,
           ],
         );
@@ -236,7 +237,7 @@ export const requestDeviceAccess2 = async (req: any, res: any) => {
         safeBody.deviceType,
         safeBody.osNameAndVersion,
         randomAuthorizationCode,
-        new Date(expirationDate),
+        expirationDate,
         acceptLanguage,
       );
 

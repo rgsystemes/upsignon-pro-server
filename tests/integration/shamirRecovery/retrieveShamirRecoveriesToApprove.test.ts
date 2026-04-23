@@ -147,6 +147,7 @@ describe('retrieveShamirRecoveriesToApprove', () => {
           status: 'COMPLETED',
           expiry_date: threeDaysAgoPlusSevenDays,
           denied_by: [],
+          approved_by: [],
         },
         {
           id: 2,
@@ -160,6 +161,7 @@ describe('retrieveShamirRecoveriesToApprove', () => {
           status: 'PENDING',
           expiry_date: tenDaysAgoPlusSevenDays,
           denied_by: [],
+          approved_by: [],
         },
         {
           id: 3,
@@ -173,6 +175,7 @@ describe('retrieveShamirRecoveriesToApprove', () => {
           status: 'PENDING',
           expiry_date: threeDaysAgoPlusSevenDays,
           denied_by: [],
+          approved_by: [],
         },
         {
           id: 4,
@@ -186,6 +189,7 @@ describe('retrieveShamirRecoveriesToApprove', () => {
           status: 'PENDING',
           expiry_date: threeDaysAgoPlusSevenDays,
           denied_by: [],
+          approved_by: [],
         },
       ]);
 

@@ -5,8 +5,10 @@ import { checkBasicAuth2 } from '../../helpers/authorizationChecks';
 import {
   ShamirChange,
   ShamirChangeSignature,
-  ShamirConfigHistoryForBank,
+  ShamirConfigHistoryForBankFromDb,
   ShamirConfigWithHolders,
+  ShamirConfigWithHoldersFromDb,
+  ShamirShareholderFootprint,
 } from './types';
 
 export const retrieveShamirConfigChangeToApprove = async (
@@ -33,7 +35,6 @@ export const retrieveShamirConfigChangeToApprove = async (
               'id', sc1.id,
               'name', sc1.name,
               'minShares', sc1.min_shares,
-              'isActive', sc1.is_active,
               'supportEmail', sc1.support_email,
               'creatorEmail', sc1.creator_email,
               'createdAt', sc1.created_at,
@@ -48,7 +49,8 @@ export const retrieveShamirConfigChangeToApprove = async (
                 FROM shamir_holders sh1
                 INNER JOIN users u ON u.id = sh1.vault_id
                 WHERE sh1.shamir_config_id = sc1.id
-              )
+              ),
+              'shareholderEmails', sc1.shareholder_emails
             ) ORDER BY sc1.created_at ASC
           ), '[]')
           FROM shamir_configs sc1
@@ -72,10 +74,10 @@ export const retrieveShamirConfigChangeToApprove = async (
     let changesToBeSigned: {
       bankPublicId: string;
       bankName: string;
-      shamirConfigHistory: ShamirConfigWithHolders[];
+      shamirConfigHistory: ShamirConfigWithHoldersFromDb[];
     }[] = [];
 
-    allShamirConfigsForHolder.rows.forEach((scfh: ShamirConfigHistoryForBank) => {
+    allShamirConfigsForHolder.rows.forEach((scfh: ShamirConfigHistoryForBankFromDb) => {
       if (scfh.all_configs.length <= 1) {
         // 0 should not happen
         // 1 means it's the first config, no need to approve it
@@ -105,24 +107,26 @@ export const retrieveShamirConfigChangeToApprove = async (
       }
     });
 
-    // 3 - Get the bank names for all shareholder's banks
+    // 3 - Get the bank names and emails for all shareholder's banks
     const allBankIds: string[] = [];
-    changesToBeSigned.forEach(async (c) => {
-      c.shamirConfigHistory.forEach(async (h) => {
+    const allShareholderIds: number[] = [];
+    const extractBankIdAndShareholderId = (s: ShamirShareholderFootprint) => {
+      if (!allBankIds.includes(s.vaultBankPublicId)) {
+        allBankIds.push(s.vaultBankPublicId);
+      }
+      if (!allShareholderIds.includes(s.vaultId)) {
+        allShareholderIds.push(s.vaultId);
+      }
+    };
+    changesToBeSigned.forEach((c) => {
+      c.shamirConfigHistory.forEach((h) => {
         const change = JSON.parse(h.change) as ShamirChange;
-        change.previousShamirConfig?.shareholders.forEach((s) => {
-          if (!allBankIds.includes(s.vaultBankPublicId)) {
-            allBankIds.push(s.vaultBankPublicId);
-          }
-        });
-        change.thisShamirConfig.shareholders.forEach((s) => {
-          if (!allBankIds.includes(s.vaultBankPublicId)) {
-            allBankIds.push(s.vaultBankPublicId);
-          }
-        });
+        change.previousShamirConfig?.shareholders.forEach(extractBankIdAndShareholderId);
+        change.thisShamirConfig.shareholders.forEach(extractBankIdAndShareholderId);
       });
     });
 
+    // Get the map of bankId/bankName
     const bankNamesRes = await db.query(
       'SELECT name, public_id FROM banks WHERE public_id = ANY($1)',
       [allBankIds],
@@ -133,7 +137,57 @@ export const retrieveShamirConfigChangeToApprove = async (
       allBanksMap[b.public_id] = b.name;
     }
 
-    res.status(200).json({ changesToBeSigned, allBanksMap });
+    // Get the map of vaultId/email
+    // To account for potential email address changes and vault deletions,
+    // do use current vault emails with a fallback to emails stored immutably in the config.
+    const currentShareholderEmailsRes = await db.query(
+      'SELECT id, email FROM users WHERE id = ANY($1)',
+      [allShareholderIds],
+    );
+    const currentShareHolderEmails: { [vaultId: number]: string } = {};
+    for (let i = 0; i < currentShareholderEmailsRes.rows.length; i++) {
+      const v = currentShareholderEmailsRes.rows[i];
+      currentShareHolderEmails[v.id] = v.email;
+    }
+
+    const enhancedChangesToBeSigned = changesToBeSigned.map((ctbs) => {
+      let previousConfigPastShareholderEmails: {
+        [vaultId: number]: string;
+      } = {};
+      return {
+        bankPublicId: ctbs.bankPublicId,
+        bankName: ctbs.bankName,
+        shamirConfigHistory: ctbs.shamirConfigHistory.map((sc: ShamirConfigWithHoldersFromDb) => {
+          const pastShareholderEmails: {
+            [vaultId: number]: string;
+          } = JSON.parse(sc.shareholderEmails);
+          const mergedShareholderEmails: { [vaultId: number]: string } = {};
+          for (let vId in previousConfigPastShareholderEmails) {
+            mergedShareholderEmails[vId] =
+              currentShareHolderEmails[vId] || previousConfigPastShareholderEmails[vId] || '--';
+          }
+          for (let vId in pastShareholderEmails) {
+            mergedShareholderEmails[vId] =
+              currentShareHolderEmails[vId] || pastShareholderEmails[vId];
+          }
+          previousConfigPastShareholderEmails = pastShareholderEmails;
+
+          return {
+            id: sc.id,
+            name: sc.name,
+            minShares: sc.minShares,
+            supportEmail: sc.supportEmail,
+            creatorEmail: sc.creatorEmail,
+            createdAt: sc.createdAt,
+            change: sc.change,
+            changeSignatures: sc.changeSignatures,
+            shareholderEmails: mergedShareholderEmails,
+          } as ShamirConfigWithHolders;
+        }),
+      };
+    });
+
+    res.status(200).json({ changesToBeSigned: enhancedChangesToBeSigned, allBanksMap });
     return;
   } catch (e) {
     logError(req.body?.userEmail, 'retrieveShamirConfigChangeToApprove', e);

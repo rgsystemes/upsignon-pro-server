@@ -17,7 +17,6 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
     //   In particular, it is true when
     //     - the shamir backup has not been created for this particular config (COUNT(ss.*) = 0)
     //     - a new shareholder is added to a configuration (normally forbidden) (COUNT(ss.*) FILTER(WHERE closed_shares IS NULL) > 0)
-    //     - the number of shares of a shareholder has been reduced (normally forbidden) (SUM(ARRAY_LENGTH(ss.closed_shares, 1)) < SUM(sh.nb_shares))
     const shamirConfigsRes = await db.query(
       `SELECT
         sc.id,
@@ -25,7 +24,6 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
         sc.min_shares,
         sc.is_active,
         sc.support_email,
-        sc.creator_email,
         b.public_id,
         sc.created_at,
         sc.change,
@@ -33,13 +31,12 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
         ARRAY_AGG(
           json_build_object(
             'id', sh.vault_id,
-            'email', hu.email,
             'sharingPublicKey', hu.sharing_public_key_2,
             'signingPublicKey', hu.signing_public_key,
             'nbShares', sh.nb_shares
           )
         ) as holders,
-        (COUNT(ss.*) = 0 OR COUNT(ss.*) FILTER(WHERE closed_shares IS NULL) > 0 OR SUM(ARRAY_LENGTH(ss.closed_shares, 1)) < SUM(sh.nb_shares)) AS needs_update
+        (COUNT(ss.*) = 0 OR COUNT(ss.*) FILTER(WHERE closed_shares IS NULL) > 0) AS needs_update
       FROM shamir_configs AS sc
       INNER JOIN banks AS b ON sc.bank_id=b.id
       INNER JOIN users AS u ON u.bank_id=sc.bank_id
@@ -47,7 +44,6 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
       LEFT JOIN users AS hu ON hu.id=sh.vault_id
       LEFT JOIN shamir_shares AS ss ON ss.shamir_config_id=sc.id AND ss.vault_id=u.id AND ss.holder_vault_id=sh.vault_id
       WHERE u.id=$1
-      AND NOT b.has_broken_shamir_chain
       GROUP BY sc.id, b.id
       ORDER BY sc.created_at ASC
       `,
@@ -58,9 +54,7 @@ export const getShamirConfigs = async (req: Request, res: Response): Promise<voi
         id: sc.id,
         name: sc.name,
         minShares: sc.min_shares,
-        isActive: sc.is_active,
         supportEmail: sc.support_email,
-        creatorEmail: sc.creator_email,
         bankPublicId: sc.public_id,
         createdAt: sc.created_at,
         change: sc.change,

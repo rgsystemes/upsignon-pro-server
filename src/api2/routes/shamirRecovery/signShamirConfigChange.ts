@@ -231,6 +231,8 @@ const totalSigningShares = ({
   approvedValue: boolean;
 }): number => {
   if (!changeSignatures) return 0;
+  // SECURITY WARNING: make sure the algorithm cannot count the same signature twice
+  // or several signatures of the same shareholder.
   return authorityShareHolders.reduce((sum: number, nextShareholder) => {
     const signature = changeSignatures.find((s) => s.holderVaultId === nextShareholder.vaultId);
     if (signature && signature.approved == approvedValue) {
