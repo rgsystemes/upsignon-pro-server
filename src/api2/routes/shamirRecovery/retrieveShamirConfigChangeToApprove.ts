@@ -138,37 +138,54 @@ export const retrieveShamirConfigChangeToApprove = async (
     }
 
     // Get the map of vaultId/email
-    const shareholderEmailsRes = await db.query('SELECT id, email FROM users WHERE id = ANY($1)', [
-      allShareholderIds,
-    ]);
-    const allActiveShareHolderEmails: { [vaultId: number]: string } = {};
-    for (let i = 0; i < shareholderEmailsRes.rows.length; i++) {
-      const v = shareholderEmailsRes.rows[i];
-      allActiveShareHolderEmails[v.id] = v.email;
+    // To account for potential email address changes and vault deletions,
+    // do use current vault emails with a fallback to emails stored immutably in the config.
+    const currentShareholderEmailsRes = await db.query(
+      'SELECT id, email FROM users WHERE id = ANY($1)',
+      [allShareholderIds],
+    );
+    const currentShareHolderEmails: { [vaultId: number]: string } = {};
+    for (let i = 0; i < currentShareholderEmailsRes.rows.length; i++) {
+      const v = currentShareholderEmailsRes.rows[i];
+      currentShareHolderEmails[v.id] = v.email;
     }
 
-    const enhancedChangesToBeSigned = changesToBeSigned.map((ctbs) => ({
-      bankPublicId: ctbs.bankPublicId,
-      bankName: ctbs.bankName,
-      shamirConfigHistory: ctbs.shamirConfigHistory.map((sc: ShamirConfigWithHoldersFromDb) => {
-        const shareholderEmailsMap = {
-          ...JSON.parse(sc.shareholderEmails),
-          ...allActiveShareHolderEmails,
-        } as { [vaultId: number]: string };
+    const enhancedChangesToBeSigned = changesToBeSigned.map((ctbs) => {
+      let previousConfigPastShareholderEmails: {
+        [vaultId: number]: string;
+      } = {};
+      return {
+        bankPublicId: ctbs.bankPublicId,
+        bankName: ctbs.bankName,
+        shamirConfigHistory: ctbs.shamirConfigHistory.map((sc: ShamirConfigWithHoldersFromDb) => {
+          const pastShareholderEmails: {
+            [vaultId: number]: string;
+          } = JSON.parse(sc.shareholderEmails);
+          const mergedShareholderEmails: { [vaultId: number]: string } = {};
+          for (let vId in previousConfigPastShareholderEmails) {
+            mergedShareholderEmails[vId] =
+              currentShareHolderEmails[vId] || previousConfigPastShareholderEmails[vId] || '--';
+          }
+          for (let vId in pastShareholderEmails) {
+            mergedShareholderEmails[vId] =
+              currentShareHolderEmails[vId] || pastShareholderEmails[vId];
+          }
+          previousConfigPastShareholderEmails = pastShareholderEmails;
 
-        return {
-          id: sc.id,
-          name: sc.name,
-          minShares: sc.minShares,
-          supportEmail: sc.supportEmail,
-          creatorEmail: sc.creatorEmail,
-          createdAt: sc.createdAt,
-          change: sc.change,
-          changeSignatures: sc.changeSignatures,
-          shareholderEmails: shareholderEmailsMap,
-        } as ShamirConfigWithHolders;
-      }),
-    }));
+          return {
+            id: sc.id,
+            name: sc.name,
+            minShares: sc.minShares,
+            supportEmail: sc.supportEmail,
+            creatorEmail: sc.creatorEmail,
+            createdAt: sc.createdAt,
+            change: sc.change,
+            changeSignatures: sc.changeSignatures,
+            shareholderEmails: mergedShareholderEmails,
+          } as ShamirConfigWithHolders;
+        }),
+      };
+    });
 
     res.status(200).json({ changesToBeSigned: enhancedChangesToBeSigned, allBanksMap });
     return;
