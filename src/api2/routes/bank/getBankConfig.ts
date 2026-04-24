@@ -16,7 +16,8 @@ export const getBankConfig = async (req: any, res: any): Promise<void> => {
           json_agg(
             json_build_object(
               'openid_configuration_url', sso.openid_configuration_url,
-              'client_id', sso.client_id
+              'client_id', sso.client_id,
+              'is_sso_v2', sso.is_sso_v2
             )
           ) FILTER (WHERE sso.id IS NOT NULL),
           '[]'
