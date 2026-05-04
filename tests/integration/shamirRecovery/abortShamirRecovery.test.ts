@@ -93,7 +93,13 @@ describe('abortShamirRecovery', () => {
       const u = testUsers[1];
       mockCheckDeviceAuthSuccess(u.id);
 
-      await addTestShamirRecoveryRequests([{ ...pendingRecoveryRequest2, shamir_config_id: 1 }]);
+      await addTestShamirRecoveryRequests([
+        {
+          ...pendingRecoveryRequest2,
+          shamir_config_id: 1,
+          expiry_date: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        },
+      ]);
 
       const mockReq = {
         body: {
@@ -207,7 +213,7 @@ describe('abortShamirRecovery', () => {
           created_at: new Date('2024-02-10T10:00:00Z'),
           completed_at: null,
           status: 'PENDING',
-          expiry_date: new Date('2024-02-17T10:00:00Z'),
+          expiry_date: new Date(Date.now() + 24 * 60 * 60 * 1000),
           denied_by: [],
         },
       ]);
@@ -234,6 +240,51 @@ describe('abortShamirRecovery', () => {
       expect(requests.rows).toHaveLength(2);
       expect(requests.rows[0].status).toBe('ABORTED');
       expect(requests.rows[1].status).toBe('COMPLETED');
+      expect(sendShamirRecoveryRequestCancelledToTrustedPersons).toHaveBeenCalledTimes(1);
+    });
+
+    it('should keep pending status when recovery request is expired', async () => {
+      const u = testUsers[0];
+      const d = deviceForUser(u.id);
+      mockCheckDeviceAuthSuccess(u.id);
+
+      await addTestShamirRecoveryRequests([
+        {
+          id: 1,
+          vault_id: u.id,
+          creator_device_id: d.id,
+          public_key: 'expiredRecoveryPublicKey',
+          protected_recovery_key_pair: '',
+          shamir_config_id: 1,
+          created_at: new Date('2024-01-10T10:00:00Z'),
+          completed_at: null,
+          status: 'PENDING',
+          expiry_date: new Date(Date.now() - 24 * 60 * 60 * 1000),
+          denied_by: [],
+        },
+      ]);
+
+      const mockReq = {
+        body: {
+          userEmail: u.email,
+        },
+        headers: {
+          'accept-language': 'fr',
+        },
+      } as unknown as Request;
+      const resMock = mockRes();
+      await abortShamirRecovery(mockReq, resMock);
+
+      expect(resMock.status).toHaveBeenCalledWith(200);
+      expect(resMock.end).toHaveBeenCalled();
+
+      const requests = await db.query(
+        'SELECT * FROM shamir_recovery_requests WHERE vault_id = $1',
+        [u.id],
+      );
+
+      expect(requests.rows).toHaveLength(1);
+      expect(requests.rows[0].status).toBe('PENDING');
       expect(sendShamirRecoveryRequestCancelledToTrustedPersons).toHaveBeenCalledTimes(1);
     });
 
