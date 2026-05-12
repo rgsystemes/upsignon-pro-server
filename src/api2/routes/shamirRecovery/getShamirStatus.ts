@@ -4,6 +4,18 @@ import { logError, logInfo } from '../../../helpers/logger';
 import { checkDeviceAuth } from '../../helpers/authorizationChecks';
 import { isShamirRecoveryRequestRefused } from './_isShamirRecoveryRequestRefused';
 
+/**
+ * Returns the status of the shamir recovery request for the authenticated user
+ * Possible status values are:
+ * - not_setup: the user has not set up shamir recovery
+ * - no_pending_recovery_request: the user has set up shamir recovery but has no pending recovery request
+ * - pending: the user has a pending recovery request that is waiting for more shares to be opened
+ * - refused: the user had a pending recovery request that was refused by at least one trusted person
+ * - ready: the user has a pending recovery request that has enough shares opened and is ready for recovery
+ * @param req 
+ * @param res 
+ * @returns 
+ */
 export const getShamirStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const deviceAuth = await checkDeviceAuth(req);
@@ -16,13 +28,14 @@ export const getShamirStatus = async (req: Request, res: Response): Promise<void
 
     const setupResult = await db.query(
       `SELECT
-      support_email
-      FROM shamir_shares
-      INNER JOIN shamir_configs as sc
-        ON sc.id=shamir_shares.shamir_config_id
+      sc.support_email
+      FROM shamir_configs as sc
+      INNER JOIN shamir_shares as ss
+        ON ss.shamir_config_id = sc.id
       WHERE
-        vault_id=$1
+        ss.vault_id=$1
       GROUP BY sc.id
+      LIMIT 1
       `,
       [vaultId],
     );
