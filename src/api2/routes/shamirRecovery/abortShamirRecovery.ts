@@ -17,7 +17,7 @@ export const abortShamirRecovery = async (req: Request, res: Response): Promise<
     const { vaultId, vaultEmail } = deviceAuth;
 
     const updatedRequestsRes = await db.query(
-      `UPDATE shamir_recovery_requests SET status = CASE WHEN expiry_date IS NULL OR expiry_date > NOW() THEN 'ABORTED' ELSE status END WHERE vault_id=$1 AND status='PENDING' RETURNING id`,
+      `UPDATE shamir_recovery_requests SET status = CASE WHEN expiry_date IS NULL OR expiry_date > NOW() THEN 'ABORTED' ELSE 'CLOSED' END WHERE vault_id=$1 AND status='PENDING' RETURNING id`,
       [vaultId],
     );
     await db.query(
