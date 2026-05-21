@@ -1,1 +1,1 @@
-export const septeoSupportEmail = 'help-itsolutions@septeo.com';
+export const septeoSupportEmail = 'BS-SEPTEOITSOLUTIONS-Support@septeo.com';
