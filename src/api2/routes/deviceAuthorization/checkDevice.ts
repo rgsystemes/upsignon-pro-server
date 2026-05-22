@@ -7,7 +7,7 @@ import {
 } from '../../helpers/deviceChallengev2';
 import { inputSanitizer } from '../../../helpers/sanitizer';
 import libsodium from 'libsodium-wrappers';
-import { sendDeviceRequestAdminEmail } from '../../../helpers/sendDeviceRequestEmail';
+import { sendDeviceRequestAdminEmail } from '../../../emails/sendDeviceRequestEmail';
 import { getBankIds } from '../../helpers/bankUUID';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
