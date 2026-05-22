@@ -284,7 +284,7 @@ describe('abortShamirRecovery', () => {
       );
 
       expect(requests.rows).toHaveLength(1);
-      expect(requests.rows[0].status).toBe('PENDING');
+      expect(requests.rows[0].status).toBe('CLOSED');
       expect(sendShamirRecoveryRequestCancelledToTrustedPersons).toHaveBeenCalledTimes(1);
     });
 
