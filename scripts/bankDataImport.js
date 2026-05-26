@@ -28,26 +28,50 @@ async function importBank(data, dbConnection, resellerId = null) {
   console.log(`Import bank ${bank.name} with id ${bankId}`);
 
   // ADMINS
+  const adminIdMap = new Map();
   for (var i = 0; i < data.admins.length; i++) {
     const row = data.admins[i];
+    let adminId;
     if (row.admin_role === 'superadmin') {
-      await dbConnection.query(
-        'INSERT INTO admins (id, email, password_hash, created_at, reseller_id) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING',
-        [row.id, row.email, row.password_hash, row.created_at, resellerId],
+      const insertedAdmin = await dbConnection.query(
+        'INSERT INTO admins (email, password_hash, created_at, reseller_id) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING RETURNING id',
+        [row.email, row.password_hash, row.created_at, resellerId],
       );
+      if (insertedAdmin.rowCount > 0) {
+        adminId = insertedAdmin.rows[0].id;
+      }
     } else {
-      await dbConnection.query(
-        'INSERT INTO admins (id, email, password_hash, created_at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING',
-        [row.id, row.email, row.password_hash, row.created_at],
+      const insertedAdmin = await dbConnection.query(
+        'INSERT INTO admins (email, password_hash, created_at) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING RETURNING id',
+        [row.email, row.password_hash, row.created_at],
       );
+      if (insertedAdmin.rowCount > 0) {
+        adminId = insertedAdmin.rows[0].id;
+      }
     }
+
+    if (!adminId) {
+      const existingAdmin = await dbConnection.query('SELECT id FROM admins WHERE email = $1', [
+        row.email,
+      ]);
+      if (existingAdmin.rowCount === 0) {
+        throw new Error(`Admin not found after insert for email ${row.email}`);
+      }
+      adminId = existingAdmin.rows[0].id;
+    }
+
+    adminIdMap.set(row.id, adminId);
   }
 
   // ADMIN BANKS
   for (var i = 0; i < data.admin_banks.length; i++) {
     const row = data.admin_banks[i];
+    const mappedAdminId = adminIdMap.get(row.admin_id);
+    if (!mappedAdminId) {
+      throw new Error(`Admin mapping not found for imported admin id ${row.admin_id}`);
+    }
     await dbConnection.query('INSERT INTO admin_banks (admin_id, bank_id) VALUES ($1,$2)', [
-      row.admin_id,
+      mappedAdminId,
       bankId,
     ]);
   }
