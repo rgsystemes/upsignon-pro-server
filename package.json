@@ -5,7 +5,9 @@
   "license": "Unlicense",
   "scripts": {
     "build": "rm -rf compiled && tsc -p .",
+    "wbuild": "tsc -p .",
     "start": "yarn build && node ./compiled/server.js",
+    "wstart": "yarn wbuild && node ./compiled/server.js",
     "get-updates": "./update.sh",
     "lint": "eslint '*/**/*.{js,ts,tsx}' --quiet --fix",
     "test": "jest",
