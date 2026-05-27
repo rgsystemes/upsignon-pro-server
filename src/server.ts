@@ -3,8 +3,6 @@ import path from 'path';
 const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
 require('dotenv').config({ path: path.join(__dirname, '..', envFile) });
 
-// ...existing code...
-
 import express from 'express';
 import { SessionStore } from './helpers/sessionStore';
 
@@ -73,13 +71,14 @@ import { signShamirConfigChange } from './api2/routes/shamirRecovery/signShamirC
 import { shamirSecurityAlert } from './api2/routes/shamirRecovery/shamirSecurityAlert';
 import { getShamirRecoveryChallenge } from './api2/routes/shamirRecovery/getShamirRecoveryChallenge';
 import { getRecoveryKeyPair } from './api2/routes/shamirRecovery/getRecoveryKeyPair';
+import helmet from 'helmet';
 
 export const app = express();
 
 // Set express trust-proxy so that secure sessions cookies can work
 app.set('trust proxy', 1);
 
-app.disable('x-powered-by');
+app.use(helmet());
 app.use(express.json({ limit: '5Mb' }));
 app.use(express.urlencoded({ extended: true }));
 
