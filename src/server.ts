@@ -116,33 +116,11 @@ app.get('/', (req, res) => {
 
 /// Called by SEPTEO IT SOLUTIONS servers to push licence updates
 /// This call is signed by SEPTEO IT SOLUTIONS
-app.post(
-  '/licences',
-  (req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    next();
-  },
-  verifySignatureMiddleware,
-  updateLicences,
-);
+app.post('/licences', verifySignatureMiddleware, updateLicences);
 
 /// Called by the upsignon-pro-dashboard to pull licences from SEPTEO IT SOLUTIONS in order to avoid code duplication.
-app.post(
-  '/start-licence-pulling',
-  (req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    next();
-  },
-  startLicencePulling,
-);
-app.post(
-  '/force-pro-status-update',
-  (req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    next();
-  },
-  forceStatusUpdate,
-);
+app.post('/start-licence-pulling', startLicencePulling);
+app.post('/force-pro-status-update', forceStatusUpdate);
 
 // BANK ROUTING with or without bankUUID (default bankUUID used to be 1)
 // TODO(giregk): remove default bank id routes in 2026
