@@ -11,7 +11,7 @@ import { SessionStore } from './helpers/sessionStore';
 import { startServer } from './helpers/serverProcess';
 
 import env from './helpers/env';
-import { logInfo } from './helpers/logger';
+import { logInfo, sanitizeUrlForLogs } from './helpers/logger';
 import { runMigrations } from './helpers/runMigrations';
 
 import { getBankConfig } from './api2/routes/bank/getBankConfig';
@@ -85,7 +85,9 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use((err: any, req: any, res: any, next: any) => {
   if (err.type === 'entity.too.large') {
-    logInfo(`Request body too large (${err.length ?? 'unknown'} bytes) when calling ${req.url}.`);
+    logInfo(
+      `Request body too large (${err.length ?? 'unknown'} bytes) when calling ${sanitizeUrlForLogs(req)}.`,
+    );
     return res.sendStatus(413).end();
   }
   next(err);
@@ -100,7 +102,7 @@ SessionStore.init();
 
 app.use((req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  logInfo(req.body?.userEmail, ip, req.url);
+  logInfo(req.body?.userEmail, ip, sanitizeUrlForLogs(req));
   if (!env.IS_PRODUCTION) {
     res.setHeader('Access-Control-Allow-Origin', '*');
   }
