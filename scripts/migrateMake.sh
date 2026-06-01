@@ -1,1 +1,0 @@
-echo "//$(date +%Y-%m-%d_%H-%M-%S)_$1\n\nexports.up = function(db) {\n  return db.query();\n}\n\nexports.down = function(db) {\n  return db.query();\n}" > "migrations/$(date +%Y-%m-%d_%H-%M-%S)_$1.js"
