@@ -125,7 +125,6 @@ app.use((req, res, next) => {
 
 app.get('/', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   res.type('text/plain').status(200).send('UpSignOn PRO server is running');
 });
 
