@@ -1,12 +1,12 @@
 export const isExpired = (expirationDate: Date): boolean =>
   expirationDate.getTime() < new Date().getTime();
 
-export const getExpirationDate = (): string => {
+export const getExpirationDate = (): Date => {
   const expDuration = 10 * 60 * 1000; // 10 minutes
   const expDate: number = Date.now() + expDuration;
   const res = new Date();
   res.setTime(expDate);
-  return res.toISOString();
+  return res;
 };
 
 export const getNext1pmOr1am = (): Date => {
@@ -42,17 +42,6 @@ export const getNext8am = (): Date => {
     notificationDate.setMilliseconds(0);
   }
 
-  // then allow only mondays, wednesdays and fridays
-  const d = notificationDate.getDay();
-  if (d == 0 || d == 2 || d == 4) {
-    // sunday -> monday
-    // tuesday -> wednesday
-    // thursday -> friday
-    notificationDate.setTime(notificationDate.getTime() + 24 * 3600 * 1000);
-  } else if (d == 6) {
-    // saturday -> monday
-    notificationDate.setTime(notificationDate.getTime() + 48 * 3600 * 1000);
-  }
   return notificationDate;
 };
 
@@ -68,6 +57,11 @@ export const getNextMidnight = (): Date => {
 
 export const isMonday = (): boolean => {
   return new Date().getDay() === 1;
+};
+
+export const isMondayWednesdayFriday = (): boolean => {
+  const d = new Date().getDay();
+  return d === 1 || d === 3 || d === 4;
 };
 
 export const getRemainingDays = (expirationDate: string): number => {

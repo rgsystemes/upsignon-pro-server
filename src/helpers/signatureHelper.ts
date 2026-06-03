@@ -5,7 +5,7 @@ import { logError } from './logger';
 
 const wellKnownUpSignOnPublicKey = env.IS_PROD_STATUS_SERVER_URL
   ? '-----BEGIN PUBLIC KEY-----\nMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEB/4zGfZRH715/kObqaWDL2nZR+ybUh/y\nx/wCHiLXX9VDzSh/qB+NC0KJ/rMPKXKhCCKgWCo/OBxieXarHJS6lg==\n-----END PUBLIC KEY-----\n'
-  : '-----BEGIN PUBLIC KEY-----\nMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEyQqX6RbASOpD9VqF7a/Z16yTA8Qssrfs\nH7ttDE4TAgaN+HXiTOrZ9y0Cba0i106lcfOTdignGYu2qRZEFKcMuQ==\n-----END PUBLIC KEY-----\n';
+  : '-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEvRaxjmE+MjL7PdOSxLYR7YwAOBJ7\nfIVqIF32JpObhpYxTBXswmNu6H3v2uLTIUOhRjPU2HT7snBRKxvu6D2asg==\n-----END PUBLIC KEY-----\n';
 
 /**
  * Verifies an ECDSA signature

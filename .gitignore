@@ -10,3 +10,10 @@ logs
 *.cer
 !ecosystem.example.config.js
 .DS_STORE
+
+# Test coverage
+coverage
+*.lcov
+
+# Test environment overrides
+.env.test.local
