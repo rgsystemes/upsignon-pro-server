@@ -15,19 +15,19 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "dotenv": "^17.3.1",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "global-agent": "^4.1.3",
     "helmet": "^8.2.0",
-    "joi": "^18.1.2",
+    "joi": "^18.2.1",
     "jsonwebtoken": "^9.0.3",
     "jwks-rsa": "^4.0.1",
-    "libsodium-wrappers": "^0.8.2",
-    "nodemailer": "^8.0.5",
-    "pg": "^8.20.0",
+    "libsodium-wrappers": "^0.8.4",
+    "nodemailer": "^8.0.9",
+    "pg": "^8.21.0",
     "upsignon-mail": "git+https://github.com/rgsystemes/upsignon-mail.git#v1.0.9",
     "upsignon-ms-entra": "git+https://github.com/rgsystemes/upsignon-ms-entra.git#v1.0.4",
-    "uuid": "^13.0.0"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
@@ -35,19 +35,19 @@
     "@types/joi": "^17.2.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/libsodium-wrappers": "^0.8.2",
-    "@types/nodemailer": "^7.0.11",
+    "@types/nodemailer": "^8.0.0",
     "@types/pg": "^8.20.0",
-    "@types/supertest": "^6.0.2",
+    "@types/supertest": "^7.2.0",
     "@types/uuid": "^11.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.58.0",
-    "@typescript-eslint/parser": "^8.58.0",
-    "eslint": "^10.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.60.0",
+    "@typescript-eslint/parser": "^8.60.0",
+    "eslint": "^10.4.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
-    "jest": "30.3.0",
-    "prettier": "^3.8.1",
+    "jest": "30.4.2",
+    "prettier": "^3.8.3",
     "supertest": "^7.0.0",
-    "ts-jest": "29.4.6",
-    "typescript": "6.0.2"
+    "ts-jest": "29.4.11",
+    "typescript": "6.0.3"
   }
 }
