@@ -3,8 +3,6 @@ import path from 'path';
 const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
 require('dotenv').config({ path: path.join(__dirname, '..', envFile) });
 
-// ...existing code...
-
 import express from 'express';
 import { SessionStore } from './helpers/sessionStore';
 
@@ -73,13 +71,31 @@ import { signShamirConfigChange } from './api2/routes/shamirRecovery/signShamirC
 import { shamirSecurityAlert } from './api2/routes/shamirRecovery/shamirSecurityAlert';
 import { getShamirRecoveryChallenge } from './api2/routes/shamirRecovery/getShamirRecoveryChallenge';
 import { getRecoveryKeyPair } from './api2/routes/shamirRecovery/getRecoveryKeyPair';
+import helmet from 'helmet';
 
 export const app = express();
 
-// Set express trust-proxy so that secure sessions cookies can work
-app.set('trust proxy', 1);
+const appSecurityHeaders = helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'none'"],
+      baseUri: ["'none'"],
+      formAction: ["'none'"],
+      frameAncestors: ["'none'"],
+      imgSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      scriptSrc: ["'none'"],
+      styleSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+  frameguard: { action: 'deny' },
+});
 
 app.disable('x-powered-by');
+app.use(appSecurityHeaders);
+// Set express trust-proxy so that secure sessions cookies can work
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '5Mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -109,7 +125,7 @@ app.use((req, res, next) => {
 
 app.get('/', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.status(200).send('UpSignOn PRO server is running');
+  res.type('text/plain').status(200).send('UpSignOn PRO server is running');
 });
 
 /// Called by SEPTEO IT SOLUTIONS servers to push licence updates
