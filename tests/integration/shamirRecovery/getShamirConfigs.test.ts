@@ -50,7 +50,6 @@ const mockCheckBasicAuth2Success = (userId: number) => {
     bankIds: {
       publicId: b.public_id,
       internalId: b.id,
-      usesDeprecatedIntId: false,
     },
   });
 };
