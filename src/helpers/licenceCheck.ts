@@ -1,7 +1,7 @@
 import { db } from './db';
 
 const licenceValidityCondition =
-  '((el.is_monthly=true AND el.to_be_renewed != false) OR (el.valid_from <= current_timestamp(0) AND current_timestamp(0) < el.valid_until))';
+  '(el.valid_from <= current_timestamp(0) AND ((el.is_monthly=true AND el.to_be_renewed != false) OR current_timestamp(0) < el.valid_until))';
 
 export const hasAvailableLicence = async (bankId: number): Promise<boolean> => {
   // ### TRY FIRST WITH BANK LICENCES
