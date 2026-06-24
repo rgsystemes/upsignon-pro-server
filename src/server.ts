@@ -3,15 +3,13 @@ import path from 'path';
 const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
 require('dotenv').config({ path: path.join(__dirname, '..', envFile) });
 
-// ...existing code...
-
 import express from 'express';
 import { SessionStore } from './helpers/sessionStore';
 
 import { startServer } from './helpers/serverProcess';
 
 import env from './helpers/env';
-import { logInfo } from './helpers/logger';
+import { logInfo, sanitizeUrlForLogs } from './helpers/logger';
 import { runMigrations } from './helpers/runMigrations';
 
 import { getBankConfig } from './api2/routes/bank/getBankConfig';
@@ -73,19 +71,39 @@ import { signShamirConfigChange } from './api2/routes/shamirRecovery/signShamirC
 import { shamirSecurityAlert } from './api2/routes/shamirRecovery/shamirSecurityAlert';
 import { getShamirRecoveryChallenge } from './api2/routes/shamirRecovery/getShamirRecoveryChallenge';
 import { getRecoveryKeyPair } from './api2/routes/shamirRecovery/getRecoveryKeyPair';
+import helmet from 'helmet';
 
 export const app = express();
 
-// Set express trust-proxy so that secure sessions cookies can work
-app.set('trust proxy', 1);
+const appSecurityHeaders = helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'none'"],
+      baseUri: ["'none'"],
+      formAction: ["'none'"],
+      frameAncestors: ["'none'"],
+      imgSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      scriptSrc: ["'none'"],
+      styleSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+  frameguard: { action: 'deny' },
+});
 
 app.disable('x-powered-by');
+app.use(appSecurityHeaders);
+// Set express trust-proxy so that secure sessions cookies can work
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '5Mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use((err: any, req: any, res: any, next: any) => {
   if (err.type === 'entity.too.large') {
-    logInfo(`Request body too large (${err.length ?? 'unknown'} bytes) when calling ${req.url}.`);
+    logInfo(
+      `Request body too large (${err.length ?? 'unknown'} bytes) when calling ${sanitizeUrlForLogs(req)}.`,
+    );
     return res.sendStatus(413).end();
   }
   next(err);
@@ -100,7 +118,7 @@ SessionStore.init();
 
 app.use((req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  logInfo(req.body?.userEmail, ip, req.url);
+  logInfo(req.body?.userEmail, ip, sanitizeUrlForLogs(req));
   if (!env.IS_PRODUCTION) {
     res.setHeader('Access-Control-Allow-Origin', '*');
   }
@@ -109,38 +127,16 @@ app.use((req, res, next) => {
 
 app.get('/', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.status(200).send('UpSignOn PRO server is running');
+  res.type('text/plain').status(200).send('UpSignOn PRO server is running');
 });
 
 /// Called by SEPTEO IT SOLUTIONS servers to push licence updates
 /// This call is signed by SEPTEO IT SOLUTIONS
-app.post(
-  '/licences',
-  (req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    next();
-  },
-  verifySignatureMiddleware,
-  updateLicences,
-);
+app.post('/licences', verifySignatureMiddleware, updateLicences);
 
 /// Called by the upsignon-pro-dashboard to pull licences from SEPTEO IT SOLUTIONS in order to avoid code duplication.
-app.post(
-  '/start-licence-pulling',
-  (req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    next();
-  },
-  startLicencePulling,
-);
-app.post(
-  '/force-pro-status-update',
-  (req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    next();
-  },
-  forceStatusUpdate,
-);
+app.post('/start-licence-pulling', startLicencePulling);
+app.post('/force-pro-status-update', forceStatusUpdate);
 
 // BANK ROUTING with or without bankUUID (default bankUUID used to be 1)
 // TODO(giregk): remove default bank id routes in 2026
