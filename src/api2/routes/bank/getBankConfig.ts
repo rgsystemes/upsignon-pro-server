@@ -33,11 +33,7 @@ export const getBankConfig = async (req: any, res: any): Promise<void> => {
     }
     logInfo(req.body?.userEmail, 'getBankConfig OK');
     return res.status(200).json({
-      newUrl:
-        bankRes.rows[0].redirect_url ||
-        (bankIds.usesDeprecatedIntId
-          ? `https://${env.API_PUBLIC_HOSTNAME}/${bankIds.publicId}`
-          : null),
+      newUrl: bankRes.rows[0].redirect_url,
       bankName: bankRes.rows[0].name,
       preventUpdatePopup: bankRes.rows[0]?.settings?.PREVENT_UPDATE_POPUP || false,
       ssoConfigs: bankRes.rows[0]?.sso_configs.length == 0 ? null : bankRes.rows[0]?.sso_configs,
