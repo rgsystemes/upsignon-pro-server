@@ -98,6 +98,7 @@ export const getPasswordBackup2 = async (req: any, res: any) => {
           user_devices.device_unique_id=$1
           AND user_devices.bank_id=$2
           AND password_reset_request.status != 'COMPLETED'
+        ORDER BY password_reset_request.created_at DESC
         LIMIT 1`,
         [safeBody.deviceId, bankIds.internalId],
       );
