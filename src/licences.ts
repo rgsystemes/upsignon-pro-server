@@ -58,7 +58,6 @@ export const pullLicences = async (): Promise<boolean> => {
     const response = await fetch(`${env.STATUS_SERVER_URL}/pull-licences`, {
       method: 'POST',
       cache: 'no-store',
-      mode: 'cors',
       headers: {
         'Content-Type': 'application/json',
       },
