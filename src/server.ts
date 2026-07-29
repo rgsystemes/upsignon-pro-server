@@ -72,6 +72,7 @@ import { shamirSecurityAlert } from './api2/routes/shamirRecovery/shamirSecurity
 import { getShamirRecoveryChallenge } from './api2/routes/shamirRecovery/getShamirRecoveryChallenge';
 import { getRecoveryKeyPair } from './api2/routes/shamirRecovery/getRecoveryKeyPair';
 import helmet from 'helmet';
+import { usesPasswordlessUnlock } from './api2/routes/authentication/usesPasswordlessUnlock';
 
 export const app = express();
 
@@ -169,6 +170,10 @@ app.post(
 app.post(['/:bankUUID/api2/authenticate', '/api2/authenticate'], authenticate2);
 app.post(['/:bankUUID/api2/disconnect', '/api2/disconnect'], disconnect2);
 app.post(['/:bankUUID/api2/authenticate-device-only'], authenticateDeviceOnly);
+app.post(
+  ['/:bankUUID/api2/uses-passwordless-unlock', '/api2/uses-passwordless-unlock'],
+  usesPasswordlessUnlock,
+);
 
 // OPENID
 app.post(['/:bankUUID/api2/authenticate-with-openid-auth-code'], authenticateWithOpenidAuthCode);
