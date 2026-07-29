@@ -16,8 +16,7 @@ export const getBankConfig = async (req: any, res: any): Promise<void> => {
           json_agg(
             json_build_object(
               'openid_configuration_url', sso.openid_configuration_url,
-              'client_id', sso.client_id,
-              'is_sso_v2', sso.is_sso_v2
+              'client_id', sso.client_id
             )
           ) FILTER (WHERE sso.id IS NOT NULL),
           '[]'
@@ -38,6 +37,7 @@ export const getBankConfig = async (req: any, res: any): Promise<void> => {
       bankName: bankRes.rows[0].name,
       preventUpdatePopup: bankRes.rows[0]?.settings?.PREVENT_UPDATE_POPUP || false,
       ssoConfigs: bankRes.rows[0]?.sso_configs.length == 0 ? null : bankRes.rows[0]?.sso_configs,
+      usesSsoV2: true, // todo: (temporary) compute depending on email
     });
   } catch (e) {
     logError('getBankConfig', e);
