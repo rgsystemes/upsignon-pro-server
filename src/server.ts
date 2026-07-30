@@ -15,7 +15,10 @@ import { runMigrations } from './helpers/runMigrations';
 import { getBankConfig } from './api2/routes/bank/getBankConfig';
 import { getUrlList2 } from './api2/routes/bank/getUrlList';
 import { requestDeviceAccess2 } from './api2/routes/deviceAuthorization/requestDeviceAccess';
+import { authorizeDeviceWithOpenId } from './api2/routes/deviceAuthorization/authorizeDeviceWithOpenId';
 import { checkDevice2 } from './api2/routes/deviceAuthorization/checkDevice';
+import { rejectSsoDevice } from './api2/routes/deviceAuthorization/rejectSsoDevice';
+import { sendPasswordBackupPublicKey } from './api2/routes/deviceAuthorization/sendPasswordBackupPublicKey';
 import { getAuthenticationChallenges2 } from './api2/routes/authentication/getAuthenticationChallenges';
 import { authenticate2 } from './api2/routes/authentication/authenticate';
 import { updateVaultData } from './api2/routes/data/updateVaultData';
@@ -161,6 +164,15 @@ app.post(
   requestDeviceAccess2,
 );
 app.post(['/:bankUUID/api2/check-device', '/api2/check-device'], checkDevice2);
+app.post(['/:bankUUID/api2/reject-sso-device', '/api2/reject-sso-device'], rejectSsoDevice);
+app.post(
+  ['/:bankUUID/api2/authorize-device-with-openid', '/api2/authorize-device-with-openid'],
+  authorizeDeviceWithOpenId,
+);
+app.post(
+  ['/:bankUUID/api2/send-password-backup-public-key', '/api2/send-password-backup-public-key'],
+  sendPasswordBackupPublicKey,
+);
 
 // AUTHENTICATION
 app.post(
