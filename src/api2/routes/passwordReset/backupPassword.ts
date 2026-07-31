@@ -20,11 +20,7 @@ export const backupPassword2 = async (req: any, res: any) => {
 
     const results = await Promise.all(
       backups.map(async (backup) => {
-        // Also clears the target device's pending public key: receiving a backup here is the
-        // proof that another authorized device just approved it (see getPendingSsoDevices /
-        // authorizeSsoDevice). The device is already AUTHORIZED by this point (either via SSO's
-        // dedicated authorizeDeviceWithOpenId route, or via the classic email validation code) —
-        // this route never authorizes a device by itself.
+        // Also clears the target device's pending public key (SSO device pairing flow).
         const result = await db.query(
           `UPDATE user_devices SET encrypted_password_backup_2=$1, password_backup_public_key=NULL
            WHERE device_unique_id=$2 AND user_id=$3 AND bank_id=$4 AND authorization_status='AUTHORIZED'`,

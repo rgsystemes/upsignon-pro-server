@@ -17,7 +17,8 @@ export const usesPasswordlessUnlock = async (req: Request, res: Response): Promi
     const bankIds = await getBankIds(req);
     const usesPasswordless = await usesPasswordlessUnlockForEmail(email, bankIds.internalId);
     if (usesPasswordless === null) {
-      res.status(404).end();
+      // return 200 to prevent account enumeration.
+      res.status(200).json({ usesPasswordlessUnlock: false });
       return;
     }
 
@@ -27,7 +28,8 @@ export const usesPasswordlessUnlock = async (req: Request, res: Response): Promi
     return;
   } catch (e) {
     logError('usesPasswordlessUnlock', e);
-    res.status(400).end();
+    // return 200 to prevent account enumeration.
+    res.status(200).json({ usesPasswordlessUnlock: false });
     return;
   }
 };

@@ -61,14 +61,11 @@ export const requestDeviceAccess2 = async (req: Request, res: Response) => {
         users.id AS id,
         users.deactivated AS deactivated,
         users.settings_override AS settings_override,
-        users.encrypted_data_2 AS encrypted_data_2,
         banks.settings AS bank_settings
       FROM users INNER JOIN banks ON banks.id = users.bank_id
       WHERE users.email=$1 AND users.bank_id=$2`,
       [safeBody.userEmail, bankIds.internalId],
     );
-    // whether this user's vault already has data (ie. this is not the first, vault-creation device)
-    const hasVaultData = userRes.rowCount !== 0 && !!userRes.rows[0].encrypted_data_2;
     if (userRes.rows[0]?.deactivated) {
       return res.status(403).json({ error: 'user_deactivated' });
     }
