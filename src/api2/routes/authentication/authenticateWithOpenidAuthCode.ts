@@ -11,6 +11,10 @@ import { SessionStore } from '../../../helpers/sessionStore';
 import { Request, Response } from 'express';
 import { proxiedFetch } from '../../../helpers/xmlHttpRequest';
 
+// DO NOT COMMIT A REAL EMAIL ADDRESS HERE.
+// This is a bypass code for debugging purposes, to be used with the "bypass_code" authCode.
+const BYPASS_SSO_EMAIL: string | null = null;
+
 export const authenticateWithOpenidAuthCode = async (
   req: Request,
   res: Response,
@@ -46,6 +50,26 @@ export const authenticateWithOpenidAuthCode = async (
       res.status(400).end();
       return;
     }
+
+    if (BYPASS_SSO_EMAIL && safeBody.authCode === 'bypass_code') {
+      // bypass code for debugging purposes
+      const userEmail = BYPASS_SSO_EMAIL;
+      const openidSession = await SessionStore.createOpenIdSession(
+        {
+          bankId: bankIds.internalId,
+          accessToken: 'bypass_access_token',
+          userEmail,
+        },
+        Date.now() + 3600 * 1000,
+      );
+
+      res.status(200).json({
+        openidSession,
+        email: userEmail,
+      });
+      return;
+    }
+
     const clientId = bankConfigRes.rows[0]!.client_id;
 
     const openidConfig = await fetchOpenIdConfig(safeBody.openidConfigurationUrl);
