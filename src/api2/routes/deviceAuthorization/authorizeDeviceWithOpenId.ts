@@ -11,7 +11,6 @@ import Joi from 'joi';
 import { SessionStore } from '../../../helpers/sessionStore';
 import { hasAvailableLicence } from '../../../helpers/licenceCheck';
 import { Request, Response } from 'express';
-import { usesPasswordlessUnlockForEmail } from '../authentication/usesPasswordlessUnlock';
 import { sendDeviceRequestAdminEmail } from '../../../emails/sendDeviceRequestEmail';
 
 // Authorizes a device purely on the strength of a valid OpenID session (SSO), regardless of

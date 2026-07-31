@@ -53,7 +53,7 @@ export const usesPasswordlessUnlockForEmail = async (
     `SELECT deactivated, ms_entra_id FROM users WHERE email = $1 AND bank_id = $2`,
     [email, bankId],
   );
-  if ((userRes.rowCount ?? 0) === 0 && userRes.rows[0].deactivated) {
+  if ((userRes.rowCount ?? 0) === 0 || userRes.rows[0].deactivated) {
     logInfo(email, 'usesPasswordlessUnlock fail: email not found or deactivated');
     return null;
   }
