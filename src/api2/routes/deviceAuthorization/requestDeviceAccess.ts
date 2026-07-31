@@ -1,6 +1,9 @@
 import { db } from '../../../helpers/db';
 import { getExpirationDate, isExpired } from '../../../helpers/dateHelper';
-import { sendDeviceRequestEmail } from '../../../emails/sendDeviceRequestEmail';
+import {
+  sendDeviceRequestAdminEmail,
+  sendDeviceRequestEmail,
+} from '../../../emails/sendDeviceRequestEmail';
 import { logError, logInfo } from '../../../helpers/logger';
 import { getRandomString } from '../../../helpers/randomString';
 import {
@@ -11,12 +14,9 @@ import { isAllowedOnPlatform } from '../../../helpers/isAllowedOnPlatform';
 import { getEmailAuthorizationStatus } from '../../helpers/emailAuthorization';
 import { getBankIds } from '../../helpers/bankUUID';
 import Joi from 'joi';
+import { SessionStore } from '../../../helpers/sessionStore';
 import { hasAvailableLicence } from '../../../helpers/licenceCheck';
 import { Request, Response } from 'express';
-
-// This route only ever handles the classic email-validation-code enrollment flow. SSO
-// enrollment is handled by its own dedicated route (authorizeDeviceWithOpenId), which never
-// goes through here.
 
 // TESTS
 // - if I request access for a user that does not exist, it creates the user and the device request
@@ -48,6 +48,7 @@ export const requestDeviceAccess2 = async (req: Request, res: Response) => {
       osNameAndVersion: Joi.string().required(),
       installType: Joi.string().required(),
       appVersion: Joi.string().required(),
+      openidSession: Joi.string(),
     }).validate(req.body);
 
     if (joiRes.error) {
@@ -95,7 +96,7 @@ export const requestDeviceAccess2 = async (req: Request, res: Response) => {
 
     // CHECK SECOND REQUESTS FOR SAME DEVICE
     const deviceRes = await db.query(
-      'SELECT id, authorization_status, authorization_code, auth_code_expiration_date, enrollment_method FROM user_devices WHERE user_id=$1 AND device_unique_id=$2 AND bank_id=$3',
+      'SELECT id, authorization_status, authorization_code, auth_code_expiration_date FROM user_devices WHERE user_id=$1 AND device_unique_id=$2 AND bank_id=$3',
       [userId, safeBody.deviceId, bankIds.internalId],
     );
     const deviceInDb = deviceRes.rows[0];
@@ -120,80 +121,157 @@ export const requestDeviceAccess2 = async (req: Request, res: Response) => {
       }
     }
 
-    // RESEND EMAIL IF REQUEST IS STILL PENDING
-    if (
-      deviceInDb &&
-      deviceInDb.authorization_status === 'PENDING' &&
-      !isExpired(deviceInDb.auth_code_expiration_date)
-    ) {
-      // resend email
+    // if using openid session, validate it
+    let isOpenidAuthenticated = false;
+    if (safeBody.openidSession) {
+      const isOpenidSessionOK = await SessionStore.checkOpenIdSession(safeBody.openidSession, {
+        userEmail: safeBody.userEmail,
+        bankId: bankIds.internalId,
+      });
+      if (!isOpenidSessionOK) {
+        logInfo(safeBody.userEmail, 'requestDeviceAccess2 fail: invalid openidSession');
+        return res.status(401).end();
+      }
+      isOpenidAuthenticated = true;
+    }
+
+    if (isOpenidAuthenticated) {
+      const otherActiveDevicesRes = await db.query(
+        `SELECT COUNT(*) AS device_count FROM user_devices
+              WHERE user_id=$1 AND bank_id=$2 AND device_unique_id != $3
+                AND (authorization_status = 'AUTHORIZED' OR authorization_status = 'PENDING' OR
+                  authorization_status = 'USER_VERIFIED_PENDING_ADMIN_CHECK')`,
+        [userId, bankIds.internalId, safeBody.deviceId],
+      );
+      const isAdditionalDevice =
+        Number.parseInt(otherActiveDevicesRes.rows[0].device_count, 10) >= 1;
+      const requiresAdminCheck =
+        isAdditionalDevice &&
+        !!userRes.rows[0].bank_settings?.REQUIRE_ADMIN_CHECK_FOR_SECOND_DEVICE;
+      const nextAuthorizationStatus = requiresAdminCheck
+        ? 'USER_VERIFIED_PENDING_ADMIN_CHECK'
+        : 'AUTHORIZED';
+
+      if (!deviceInDb) {
+        // CREATE AUTHORIZED DEVICE
+        await db.query(
+          "INSERT INTO user_devices (user_id, device_name, device_type, install_type, os_family, os_version, app_version, device_unique_id, device_public_key_2, authorization_status, bank_id, enrollment_method) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'SSO')",
+          [
+            userId,
+            safeBody.deviceName,
+            safeBody.deviceType,
+            safeBody.installType,
+            safeBody.osFamily,
+            safeBody.osNameAndVersion,
+            safeBody.appVersion,
+            safeBody.deviceId,
+            safeBody.devicePublicKey,
+            nextAuthorizationStatus,
+            bankIds.internalId,
+          ],
+        );
+      } else {
+        // AUTHORIZE EXISTING DEVICE (previously added with email method)
+        await db.query(
+          "UPDATE user_devices SET (device_name, device_type, install_type, os_family, os_version, app_version, device_unique_id, authorization_status, enrollment_method) = ($1,$2,$3,$4,$5,$6,$7,$8,'SSO') WHERE id=$9",
+          [
+            safeBody.deviceName,
+            safeBody.deviceType,
+            safeBody.installType,
+            safeBody.osFamily,
+            safeBody.osNameAndVersion,
+            safeBody.appVersion,
+            safeBody.deviceId,
+            nextAuthorizationStatus,
+            deviceInDb.id,
+          ],
+        );
+      }
+      if (requiresAdminCheck) {
+        await sendDeviceRequestAdminEmail(safeBody.userEmail, bankIds.internalId);
+        logInfo(
+          safeBody.userEmail,
+          'requestDeviceAccess2 authorized with openid session (waiting for admin check)',
+        );
+      } else {
+        logInfo(safeBody.userEmail, 'requestDeviceAccess2 authorized with openid session');
+      }
+      return res.status(200).json({ authorizationStatus: nextAuthorizationStatus });
+    } else {
+      // RESEND EMAIL IF REQUEST IS STILL PENDING
+      if (
+        deviceInDb &&
+        deviceInDb.authorization_status === 'PENDING' &&
+        !isExpired(deviceInDb.auth_code_expiration_date)
+      ) {
+        // resend email
+        await sendDeviceRequestEmail(
+          safeBody.userEmail,
+          safeBody.deviceName,
+          safeBody.deviceType,
+          safeBody.osNameAndVersion,
+          deviceInDb.authorization_code,
+          deviceInDb.auth_code_expiration_date,
+          acceptLanguage,
+        );
+        logInfo(safeBody.userEmail, 'requestDeviceAccess2 OK (email resent)');
+        return res.status(200).json({ authorizationStatus: 'PENDING' });
+      }
+
+      // ELSE UPDATE OR CREATE DEVICE
+      const randomAuthorizationCode = getRandomString(8);
+      const expirationDate = getExpirationDate();
+      const nextDeviceStatus = 'PENDING';
+      if (!deviceInDb) {
+        await db.query(
+          "INSERT INTO user_devices (user_id, device_name, device_type, install_type, os_family, os_version, app_version, device_unique_id, device_public_key_2, authorization_status, authorization_code, auth_code_expiration_date, bank_id, enrollment_method) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'email')",
+          [
+            userId,
+            safeBody.deviceName,
+            safeBody.deviceType,
+            safeBody.installType,
+            safeBody.osFamily,
+            safeBody.osNameAndVersion,
+            safeBody.appVersion,
+            safeBody.deviceId,
+            safeBody.devicePublicKey,
+            nextDeviceStatus,
+            randomAuthorizationCode,
+            expirationDate.toISOString(),
+            bankIds.internalId,
+          ],
+        );
+      } else {
+        // request is pending and expired, let's update it
+        await db.query(
+          "UPDATE user_devices SET (device_name, authorization_status, authorization_code, auth_code_expiration_date, enrollment_method) = ($1,$2,$3,$4,'email') WHERE user_id=$5 AND device_unique_id=$6 AND bank_id=$7",
+          [
+            safeBody.deviceName,
+            nextDeviceStatus,
+            randomAuthorizationCode,
+            expirationDate,
+            userId,
+            safeBody.deviceId,
+            bankIds.internalId,
+          ],
+        );
+      }
+
+      // THEN SEND EMAIL
       await sendDeviceRequestEmail(
         safeBody.userEmail,
         safeBody.deviceName,
         safeBody.deviceType,
         safeBody.osNameAndVersion,
-        deviceInDb.authorization_code,
-        deviceInDb.auth_code_expiration_date,
+        randomAuthorizationCode,
+        expirationDate,
         acceptLanguage,
       );
-      logInfo(safeBody.userEmail, 'requestDeviceAccess2 OK (email resent)');
-      return res.status(200).json({ authorizationStatus: 'PENDING' });
+
+      logInfo(safeBody.userEmail, 'requestDeviceAccess2 OK (email sent with new code)');
+      // Return res
+      return res.status(200).json({ authorizationStatus: 'MAIL_SENT' });
     }
-
-    // ELSE UPDATE OR CREATE DEVICE
-    const randomAuthorizationCode = getRandomString(8);
-    const expirationDate = getExpirationDate();
-    const nextDeviceStatus = 'PENDING';
-
-    if (!deviceInDb) {
-      await db.query(
-        "INSERT INTO user_devices (user_id, device_name, device_type, install_type, os_family, os_version, app_version, device_unique_id, device_public_key_2, authorization_status, authorization_code, auth_code_expiration_date, bank_id, enrollment_method) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'email')",
-        [
-          userId,
-          safeBody.deviceName,
-          safeBody.deviceType,
-          safeBody.installType,
-          safeBody.osFamily,
-          safeBody.osNameAndVersion,
-          safeBody.appVersion,
-          safeBody.deviceId,
-          safeBody.devicePublicKey,
-          nextDeviceStatus,
-          randomAuthorizationCode,
-          expirationDate.toISOString(),
-          bankIds.internalId,
-        ],
-      );
-    } else {
-      // request is pending and expired, let's update it
-      await db.query(
-        "UPDATE user_devices SET (device_name, authorization_status, authorization_code, auth_code_expiration_date, enrollment_method) = ($1,$2,$3,$4,'email') WHERE user_id=$5 AND device_unique_id=$6 AND bank_id=$7",
-        [
-          safeBody.deviceName,
-          nextDeviceStatus,
-          randomAuthorizationCode,
-          expirationDate,
-          userId,
-          safeBody.deviceId,
-          bankIds.internalId,
-        ],
-      );
-    }
-
-    // THEN SEND EMAIL
-    await sendDeviceRequestEmail(
-      safeBody.userEmail,
-      safeBody.deviceName,
-      safeBody.deviceType,
-      safeBody.osNameAndVersion,
-      randomAuthorizationCode,
-      expirationDate,
-      acceptLanguage,
-    );
-
-    logInfo(safeBody.userEmail, 'requestDeviceAccess2 OK (email sent with new code)');
-    // Return res
-    return res.status(200).json({ authorizationStatus: 'MAIL_SENT' });
   } catch (e) {
     logError(req.body?.userEmail, 'requestDeviceAccess', e);
     res.status(400).end();

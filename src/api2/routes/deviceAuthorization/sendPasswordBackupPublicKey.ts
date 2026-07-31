@@ -6,10 +6,7 @@ import { checkDeviceAuth } from '../../helpers/authorizationChecks';
 import { usesPasswordlessUnlockForEmail } from '../authentication/usesPasswordlessUnlock';
 
 // Lets an already-AUTHORIZED device (re)send its password backup public key once proven
-// authentic via a deviceOnlySession (see authenticateDeviceOnly / checkDeviceAuth). This covers
-// a device whose SSO enrollment was gated by an admin check (see authorizeDeviceWithOpenId):
-// its key is withheld until the admin validates it, so it must be pushed here afterwards for a
-// peer to be able to discover and approve it (see getPendingSsoDevices).
+// authentic via a deviceOnlySession. This is needed for SSO device pairing.
 export const sendPasswordBackupPublicKey = async (req: Request, res: Response): Promise<void> => {
   try {
     const deviceAuth = await checkDeviceAuth(req);
