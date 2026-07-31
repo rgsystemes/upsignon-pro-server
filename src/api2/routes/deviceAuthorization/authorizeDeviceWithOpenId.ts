@@ -43,7 +43,6 @@ export const authorizeDeviceWithOpenId = async (req: Request, res: Response) => 
       installType: Joi.string().required(),
       appVersion: Joi.string().required(),
       openidSession: Joi.string().required(),
-      devicePasswordBackupPublicKey: Joi.string(),
     }).validate(req.body);
 
     if (joiRes.error) {
@@ -113,26 +112,12 @@ export const authorizeDeviceWithOpenId = async (req: Request, res: Response) => 
             authorization_status = 'USER_VERIFIED_PENDING_ADMIN_CHECK')`,
       [userId, bankIds.internalId, safeBody.deviceId],
     );
-    const isAdditionalDevice =
-      Number.parseInt(otherActiveDevicesRes.rows[0].device_count, 10) >= 1;
+    const isAdditionalDevice = Number.parseInt(otherActiveDevicesRes.rows[0].device_count, 10) >= 1;
     const requiresAdminCheck =
       isAdditionalDevice && !!userRes.rows[0].bank_settings?.REQUIRE_ADMIN_CHECK_FOR_SECOND_DEVICE;
     const nextAuthorizationStatus = requiresAdminCheck
       ? 'USER_VERIFIED_PENDING_ADMIN_CHECK'
       : 'AUTHORIZED';
-
-    // Only an additional device on an already-created passwordless vault needs its backup
-    // public key stored, so a peer can discover it via getPendingSsoDevices and push it a master
-    // password backup. On a non-passwordless vault, for the very first (vault-creation) device,
-    // or while still pending an admin check, there is no such need (or it would be unsafe).
-    const usesPasswordless = await usesPasswordlessUnlockForEmail(
-      safeBody.userEmail,
-      bankIds.internalId,
-    );
-    const passwordBackupPublicKeyToStore =
-      hasVaultData && usesPasswordless && nextAuthorizationStatus === 'AUTHORIZED'
-        ? safeBody.devicePasswordBackupPublicKey
-        : null;
 
     if (!deviceInDb) {
       const userAllowedOnPlatform = isAllowedOnPlatform(
@@ -148,7 +133,7 @@ export const authorizeDeviceWithOpenId = async (req: Request, res: Response) => 
         return res.status(403).json({ error: 'os_not_allowed' });
       }
       await db.query(
-        "INSERT INTO user_devices (user_id, device_name, device_type, install_type, os_family, os_version, app_version, device_unique_id, device_public_key_2, authorization_status, bank_id, enrollment_method, password_backup_public_key) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'SSO',$12)",
+        "INSERT INTO user_devices (user_id, device_name, device_type, install_type, os_family, os_version, app_version, device_unique_id, device_public_key_2, authorization_status, bank_id, enrollment_method) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'SSO')",
         [
           userId,
           safeBody.deviceName,
@@ -161,12 +146,11 @@ export const authorizeDeviceWithOpenId = async (req: Request, res: Response) => 
           safeBody.devicePublicKey,
           nextAuthorizationStatus,
           bankIds.internalId,
-          passwordBackupPublicKeyToStore,
         ],
       );
     } else {
       await db.query(
-        "UPDATE user_devices SET (device_name, device_type, install_type, os_family, os_version, app_version, device_unique_id, device_public_key_2, authorization_status, enrollment_method, password_backup_public_key) = ($1,$2,$3,$4,$5,$6,$7,$8,$9,'SSO',$10) WHERE id=$11",
+        "UPDATE user_devices SET (device_name, device_type, install_type, os_family, os_version, app_version, device_unique_id, device_public_key_2, authorization_status, enrollment_method) = ($1,$2,$3,$4,$5,$6,$7,$8,$9,'SSO') WHERE id=$10",
         [
           safeBody.deviceName,
           safeBody.deviceType,
@@ -177,7 +161,6 @@ export const authorizeDeviceWithOpenId = async (req: Request, res: Response) => 
           safeBody.deviceId,
           safeBody.devicePublicKey,
           nextAuthorizationStatus,
-          passwordBackupPublicKeyToStore,
           deviceInDb.id,
         ],
       );
