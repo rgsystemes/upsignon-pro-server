@@ -1,10 +1,9 @@
+import { Request, Response } from 'express';
 import { db } from '../../../helpers/db';
-import env from '../../../helpers/env';
 import { logError, logInfo } from '../../../helpers/logger';
 import { getBankIds } from '../../helpers/bankUUID';
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-export const getBankConfig = async (req: any, res: any): Promise<void> => {
+export const getBankConfig = async (req: Request, res: Response): Promise<void> => {
   try {
     const bankIds = await getBankIds(req);
     const bankRes = await db.query(
@@ -16,8 +15,7 @@ export const getBankConfig = async (req: any, res: any): Promise<void> => {
           json_agg(
             json_build_object(
               'openid_configuration_url', sso.openid_configuration_url,
-              'client_id', sso.client_id,
-              'is_sso_v2', sso.is_sso_v2
+              'client_id', sso.client_id
             )
           ) FILTER (WHERE sso.id IS NOT NULL),
           '[]'
@@ -30,17 +28,20 @@ export const getBankConfig = async (req: any, res: any): Promise<void> => {
     );
     if (bankRes.rowCount === 0) {
       logInfo(req.body?.userEmail, 'getBankConfig fail: bad bank');
-      return res.status(400).end();
+      res.status(400).end();
+      return;
     }
     logInfo(req.body?.userEmail, 'getBankConfig OK');
-    return res.status(200).json({
+    res.status(200).json({
       newUrl: bankRes.rows[0].redirect_url,
       bankName: bankRes.rows[0].name,
       preventUpdatePopup: bankRes.rows[0]?.settings?.PREVENT_UPDATE_POPUP || false,
       ssoConfigs: bankRes.rows[0]?.sso_configs.length == 0 ? null : bankRes.rows[0]?.sso_configs,
     });
+    return;
   } catch (e) {
     logError('getBankConfig', e);
-    return res.status(400).end();
+    res.status(400).end();
+    return;
   }
 };
