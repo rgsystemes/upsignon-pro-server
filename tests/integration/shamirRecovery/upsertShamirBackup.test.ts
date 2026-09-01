@@ -1,4 +1,4 @@
-import { beforeEach, describe, it, jest, expect } from '@jest/globals';
+import { beforeEach, describe, it, expect } from '@jest/globals';
 import { upsertShamirBackup } from '../../../src/api2/routes/shamirRecovery/upsertShamirBackup';
 import { cleanDatabase } from '../../setup/testHelpers';
 import { Request, Response } from 'express';

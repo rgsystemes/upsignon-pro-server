@@ -30,6 +30,8 @@
     "uuid": "^14.0.2"
   },
   "devDependencies": {
+    "@swc/core": "^1.16.1",
+    "@swc/jest": "^0.2.39",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/joi": "^17.2.3",
@@ -44,10 +46,9 @@
     "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
-    "jest": "30.5.0",
+    "jest": "30.5.1",
     "prettier": "^3.9.6",
     "supertest": "^7.0.0",
-    "ts-jest": "29.4.12",
-    "typescript": "6.0.3"
+    "typescript": "7.0.2"
   }
 }

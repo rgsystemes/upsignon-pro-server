@@ -1,5 +1,4 @@
 module.exports = {
-  preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>/tests', '<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.test.{ts,js}', '**/?(*.)+(spec|test).{ts,js}'],
@@ -7,31 +6,9 @@ module.exports = {
   globalTeardown: '<rootDir>/tests/setup/globalTeardown.ts',
   setupFilesAfterEnv: ['<rootDir>/tests/setup/testHelpers.ts'],
   transform: {
-    '^.+\\.tsx?$': [
-      'ts-jest',
-      {
-        tsconfig: {
-          esModuleInterop: true,
-          allowSyntheticDefaultImports: true,
-          jsx: 'react-jsx',
-          strict: false,
-        },
-      },
-    ],
-    '^.+\\.jsx?$': [
-      'ts-jest',
-      {
-        tsconfig: {
-          esModuleInterop: true,
-          allowSyntheticDefaultImports: true,
-          allowJs: true,
-          strict: false,
-          jsx: 'react-jsx',
-        },
-      },
-    ],
+    '^.+\\.(ts|tsx|js|jsx)$': '@swc/jest',
   },
-  transformIgnorePatterns: ['migrations/'],
+  transformIgnorePatterns: ['/node_modules/(?!(uuid|upsignon-mail|react-intl|@formatjs|intl-messageformat)/)', 'migrations/'],
   collectCoverageFrom: ['src/**/*.{ts,js}', '!src/**/*.d.ts'],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
