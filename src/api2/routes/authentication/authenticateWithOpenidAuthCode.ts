@@ -46,6 +46,27 @@ export const authenticateWithOpenidAuthCode = async (
       res.status(400).end();
       return;
     }
+
+    // // BYPASS CODE FOR DEBUGGING PURPOSES
+    // if (safeBody.authCode === 'bypass_code') {
+    //   // bypass code for debugging purposes
+    //   const userEmail = youremail@domain.com;
+    //   const openidSession = await SessionStore.createOpenIdSession(
+    //     {
+    //       bankId: bankIds.internalId,
+    //       accessToken: 'bypass_access_token',
+    //       userEmail,
+    //     },
+    //     Date.now() + 3600 * 1000,
+    //   );
+
+    //   res.status(200).json({
+    //     openidSession,
+    //     email: userEmail,
+    //   });
+    //   return;
+    // }
+
     const clientId = bankConfigRes.rows[0]!.client_id;
 
     const openidConfig = await fetchOpenIdConfig(safeBody.openidConfigurationUrl);
