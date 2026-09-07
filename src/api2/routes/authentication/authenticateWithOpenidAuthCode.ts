@@ -254,7 +254,7 @@ const postTokenEndpoint = async (params: {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}\nResponse body: ${response.body}`);
     }
 
     const json = JSON.parse(response.body);

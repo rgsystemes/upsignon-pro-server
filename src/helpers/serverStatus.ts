@@ -157,7 +157,7 @@ const sendToUpSignOn = async (status: any) => {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}\nResponse body: ${response.body}`);
     }
 
     console.log('Sent status');
@@ -249,7 +249,7 @@ const fetchActivationStatus = async (): Promise<boolean> => {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}\nResponse body: ${response.body}`);
     }
     console.log('Get Activation status');
     return !!JSON.parse(response.body).isActive;
