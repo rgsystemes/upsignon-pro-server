@@ -10,7 +10,7 @@ export const hasAvailableLicence = async (bankId: number): Promise<boolean> => {
       b.id,
       b.reseller_id,
       b.settings,
-      COALESCE((SELECT COUNT(1) FROM users WHERE users.bank_id=b.id)::int, 0) as used_vaults,
+      COALESCE((SELECT COUNT(1) FROM users WHERE users.bank_id=b.id AND (users.archived IS NOT TRUE))::int, 0) as used_vaults,
       COALESCE((SELECT
         SUM(il.nb_licences)
         FROM internal_licences AS il

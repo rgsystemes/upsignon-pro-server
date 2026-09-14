@@ -97,7 +97,8 @@ export const checkBasicAuth2 = async (
   ${dataSelect}
   ${deviceIdSelect}
   u.id AS user_id,
-  u.deactivated AS deactivated
+  u.deactivated AS deactivated,
+  u.archived AS archived
 FROM user_devices AS ud
 INNER JOIN users AS u ON ud.user_id = u.id
 ${accountManagerOrRecipientJoin}
@@ -113,7 +114,7 @@ WHERE
   // Request DB
   const dbRes = await db.query(query, params);
 
-  if (!dbRes || dbRes.rowCount === 0 || dbRes.rows[0].deactivated) {
+  if (!dbRes || dbRes.rowCount === 0 || dbRes.rows[0].deactivated || dbRes.rows[0].archived) {
     logInfo(
       req.body?.userEmail,
       `checkBasicAuth2 fail: (not found) - request = ${query} - params = ${params}`,
@@ -183,6 +184,7 @@ export const checkDeviceAuth = async (
         WHERE
           users.email=$1
           AND (users.deactivated IS NULL OR users.deactivated = false)
+          AND (users.archived IS NULL OR users.archived = false)
           AND user_devices.device_unique_id = $2
           AND user_devices.bank_id=$3
         LIMIT 1`,

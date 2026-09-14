@@ -34,6 +34,7 @@ export const getAuthenticationChallenges2 = async (req: any, res: any) => {
         u.id AS uid,
         u.encrypted_data_2 AS encrypted_data_2,
         u.deactivated AS deactivated,
+        u.archived AS archived,
         ud.id AS did,
         ud.authorization_status AS authorization_status,
         b.settings AS bank_settings,
@@ -77,7 +78,15 @@ export const getAuthenticationChallenges2 = async (req: any, res: any) => {
       logInfo(userEmail, 'getAuthenticationChallenges2 fail: device revoked by user');
       return res.status(403).json({ error: 'revoked' });
     }
-    if (dbRes.rows[0].authorization_status === 'REVOKED_BY_ADMIN' || dbRes.rows[0].deactivated) {
+    if (dbRes.rows[0].archived) {
+      logInfo(userEmail, 'getAuthenticationChallenges2 fail: vault archived');
+      return res.status(403).json({ error: 'user_archived' });
+    }
+    if (dbRes.rows[0].deactivated) {
+      logInfo(userEmail, 'getAuthenticationChallenges2 fail: vault deactivated');
+      return res.status(403).json({ error: 'user_deactivated' });
+    }
+    if (dbRes.rows[0].authorization_status === 'REVOKED_BY_ADMIN') {
       logInfo(
         userEmail,
         'getAuthenticationChallenges2 fail: device revoked by admin or deactivated',

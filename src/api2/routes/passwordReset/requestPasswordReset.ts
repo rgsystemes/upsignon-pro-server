@@ -33,6 +33,7 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
       `SELECT
         users.id AS uid,
         users.deactivated AS deactivated,
+        users.archived AS archived,
         user_devices.id AS did,
         user_devices.device_name AS device_name,
         user_devices.os_version AS os_version,
@@ -50,7 +51,12 @@ export const requestPasswordReset2 = async (req: any, res: any) => {
       [safeBody.userEmail, safeBody.deviceId, bankIds.internalId],
     );
 
-    if (!authDbRes || authDbRes.rowCount === 0 || authDbRes.rows[0].deactivated) {
+    if (
+      !authDbRes ||
+      authDbRes.rowCount === 0 ||
+      authDbRes.rows[0].deactivated ||
+      authDbRes.rows[0].archived
+    ) {
       logInfo(req.body?.userEmail, 'requestPasswordReset2 fail: no such authorized device');
       return res.status(401).end();
     }

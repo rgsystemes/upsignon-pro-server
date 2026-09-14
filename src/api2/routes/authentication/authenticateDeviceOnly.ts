@@ -37,6 +37,7 @@ export const authenticateDeviceOnly = async (req: Request, res: Response): Promi
       AND user_devices.device_unique_id = $2
       AND user_devices.authorization_status='AUTHORIZED'
       AND (users.deactivated IS NULL OR users.deactivated = false)
+      AND (users.archived IS NULL OR users.archived = false)
       AND user_devices.bank_id=$3
       LIMIT 1`,
       [safeBody.userEmail, safeBody.deviceId, bankIds.internalId],
