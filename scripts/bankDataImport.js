@@ -112,8 +112,9 @@ async function importBank(data, dbConnection, resellerId = null) {
         settings_override,
         ms_entra_id,
         deactivated,
+        archived,
         signing_public_key
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23) RETURNING id`,
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24) RETURNING id`,
       [
         u.email,
         u.created_at,
@@ -137,6 +138,7 @@ async function importBank(data, dbConnection, resellerId = null) {
         u.settings_override,
         u.ms_entra_id,
         u.deactivated,
+        u.archived,
         u.signing_public_key,
       ],
     );

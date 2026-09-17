@@ -58,12 +58,16 @@ export const requestDeviceAccess2 = async (req: Request, res: Response) => {
       `SELECT
         users.id AS id,
         users.deactivated AS deactivated,
+        users.archived AS archived,
         users.settings_override AS settings_override,
         banks.settings AS bank_settings
       FROM users INNER JOIN banks ON banks.id = users.bank_id
       WHERE users.email=$1 AND users.bank_id=$2`,
       [safeBody.userEmail, bankIds.internalId],
     );
+    if (userRes.rows[0]?.archived) {
+      return res.status(403).json({ error: 'user_archived' });
+    }
     if (userRes.rows[0]?.deactivated) {
       return res.status(403).json({ error: 'user_deactivated' });
     }

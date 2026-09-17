@@ -71,6 +71,7 @@ export const getVaultData = async (req: any, res: any): Promise<void> => {
         users.encrypted_data_2 AS encrypted_data_2,
         users.updated_at AS updated_at,
         users.deactivated AS deactivated,
+        users.archived AS archived,
         char_length(user_devices.device_public_key_2) > 0 AS has_device_public_key_2,
         users.allowed_to_export AS allowed_to_export,
         banks.settings AS bank_settings,
@@ -112,7 +113,15 @@ export const getVaultData = async (req: any, res: any): Promise<void> => {
       logInfo(req.body?.userEmail, 'getVaultData fail: revoked by user');
       return res.status(403).json({ error: 'revoked' });
     }
-    if (dbRes.rows[0].authorization_status === 'REVOKED_BY_ADMIN' || dbRes.rows[0].deactivated) {
+    if (dbRes.rows[0].archived) {
+      logInfo(req.body?.userEmail, 'getVaultData fail: vault archived');
+      return res.status(403).json({ error: 'user_archived' });
+    }
+    if (dbRes.rows[0].deactivated) {
+      logInfo(req.body?.userEmail, 'getVaultData fail: vault deactivated');
+      return res.status(403).json({ error: 'user_deactivated' });
+    }
+    if (dbRes.rows[0].authorization_status === 'REVOKED_BY_ADMIN') {
       logInfo(
         req.body?.userEmail,
         'getVaultData fail: device revoked by admin or user deactivated',
