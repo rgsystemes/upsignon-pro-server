@@ -6,6 +6,7 @@ import { inputSanitizer } from '../../../helpers/sanitizer';
 import { SessionStore } from '../../../helpers/sessionStore';
 import { getDefaultSettingOrUserOverride } from '../../../helpers/getDefaultSettingOrUserOverride';
 import { getBankIds } from '../../helpers/bankUUID';
+import { applyPasswordBackups } from '../../helpers/passwordBackups';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
 export const addNewData2 = async (req: any, res: any): Promise<void> => {
@@ -17,9 +18,13 @@ export const addNewData2 = async (req: any, res: any): Promise<void> => {
     const deviceUId = inputSanitizer.getString(req.body?.deviceId);
     const userEmail = inputSanitizer.getLowerCaseString(req.body?.userEmail);
     const bankIds = await getBankIds(req);
+    // Optional: password backups to save in the same transaction as the vault data
+    const backups =
+      req.body?.backups == null ? [] : inputSanitizer.getArrayOfBackups(req.body.backups);
 
     // 0 - Check params
     if (
+      !backups ||
       !newEncryptedData ||
       !deviceChallengeResponse ||
       !sharingPublicKey ||
@@ -84,21 +89,40 @@ export const addNewData2 = async (req: any, res: any): Promise<void> => {
 
     const newEncryptedDataWithPasswordChallengeSecured =
       hashPasswordChallengeResultForSecureStorageV2(newEncryptedData);
-    // 4 - Do the update
-    const updateRes = await db.query(
-      'UPDATE users SET (encrypted_data_2, updated_at, sharing_public_key_2, signing_public_key)=($1, CURRENT_TIMESTAMP(0), $2, $3) WHERE users.email=$4 AND users.bank_id=$5 RETURNING updated_at',
-      [
-        newEncryptedDataWithPasswordChallengeSecured,
-        sharingPublicKey,
-        signingPublicKey,
-        userEmail,
+    // 4 - Do the update, in the same transaction as the password backups: either both or none is saved
+    const transactionalClient = await db.getTransactionClient();
+    let updatedAt;
+    try {
+      await transactionalClient.begin();
+      const updateRes = await transactionalClient.query(
+        'UPDATE users SET (encrypted_data_2, updated_at, sharing_public_key_2, signing_public_key)=($1, CURRENT_TIMESTAMP(0), $2, $3) WHERE users.email=$4 AND users.bank_id=$5 RETURNING updated_at, id',
+        [
+          newEncryptedDataWithPasswordChallengeSecured,
+          sharingPublicKey,
+          signingPublicKey,
+          userEmail,
+          bankIds.internalId,
+        ],
+      );
+      if (updateRes.rowCount === 0) {
+        await transactionalClient.rollback();
+        logInfo(req.body?.userEmail, 'addNewData2 fail: database update failed');
+        // CONFLICT
+        return res.status(403).end();
+      }
+      updatedAt = updateRes.rows[0].updated_at;
+      await applyPasswordBackups(
+        transactionalClient,
+        backups,
+        updateRes.rows[0].id,
         bankIds.internalId,
-      ],
-    );
-    if (updateRes.rowCount === 0) {
-      logInfo(req.body?.userEmail, 'addNewData2 fail: database update failed');
-      // CONFLICT
-      return res.status(403).end();
+      );
+      await transactionalClient.commit();
+    } catch (e) {
+      await transactionalClient.rollback();
+      throw e;
+    } finally {
+      transactionalClient.release();
     }
 
     await db.query('UPDATE user_devices SET last_sync_date=$1 WHERE id=$2 AND bank_id=$3', [
@@ -126,7 +150,7 @@ export const addNewData2 = async (req: any, res: any): Promise<void> => {
     });
     logInfo(req.body?.userEmail, 'addNewData2 OK');
     return res.status(200).json({
-      lastUpdatedAt: updateRes.rows[0].updated_at,
+      lastUpdatedAt: updatedAt,
       deviceSession,
       allowedOffline: resultSettings?.allowed_offline,
       allowedToExport: resultSettings?.allowed_to_export,
