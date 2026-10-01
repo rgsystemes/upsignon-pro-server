@@ -119,7 +119,11 @@ export const addNewData2 = async (req: any, res: any): Promise<void> => {
       );
       await transactionalClient.commit();
     } catch (e) {
-      await transactionalClient.rollback();
+      try {
+        await transactionalClient.rollback();
+      } catch (ee) {
+        logError(req.body?.userEmail, 'addNewData2 rollback failed', ee);
+      }
       throw e;
     } finally {
       transactionalClient.release();

@@ -128,9 +128,18 @@ export const updateVaultData = async (req: any, res: any): Promise<void> => {
         basicAuth.userId,
         basicAuth.bankIds.internalId,
       );
+      await db.query('UPDATE user_devices SET last_sync_date=$1 WHERE id=$2 AND bank_id=$3', [
+        new Date().toISOString(),
+        basicAuth.deviceId,
+        basicAuth.bankIds.internalId,
+      ]);
       await transactionalClient.commit();
     } catch (e) {
-      await transactionalClient.rollback();
+      try {
+        await transactionalClient.rollback();
+      } catch (ee) {
+        logError(req.body?.userEmail, 'updateVaultData rollback failed', ee);
+      }
       throw e;
     } finally {
       transactionalClient.release();
@@ -138,11 +147,6 @@ export const updateVaultData = async (req: any, res: any): Promise<void> => {
 
     logInfo(req.body?.userEmail, 'updateVaultData OK');
     res.status(200).json({ lastUpdatedAt: updatedAt });
-    await db.query('UPDATE user_devices SET last_sync_date=$1 WHERE id=$2 AND bank_id=$3', [
-      new Date().toISOString(),
-      basicAuth.deviceId,
-      basicAuth.bankIds.internalId,
-    ]);
   } catch (e) {
     logError(req.body?.userEmail, 'updateData2', e);
     return res.status(400).end();

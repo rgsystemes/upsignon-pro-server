@@ -30,7 +30,11 @@ export const backupPassword2 = async (req: any, res: any) => {
       );
       await transactionalClient.commit();
     } catch (e) {
-      await transactionalClient.rollback();
+      try {
+        await transactionalClient.rollback();
+      } catch (ee) {
+        logError(req.body?.userEmail, 'backupPassword2 rollback failed', ee);
+      }
       throw e;
     } finally {
       transactionalClient.release();
