@@ -1,0 +1,1 @@
+- quand tu crées un worktree pour ce projet, copie les fichiers .env et .env.test dans ce worktree

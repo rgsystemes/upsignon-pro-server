@@ -111,7 +111,11 @@ export const upsertShamirBackup = async (req: Request, res: Response): Promise<v
       }
     } catch (e) {
       logError(req.body?.userEmail, e);
-      await transactionalClient.rollback();
+      try {
+        await transactionalClient.rollback();
+      } catch (ee) {
+        logError(req.body?.userEmail, 'upsertShamirBackup rollback failed', ee);
+      }
       res.status(403).json({ error: 'backup_creation_failed' });
       return;
     } finally {

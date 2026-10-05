@@ -26,7 +26,7 @@
     "nodemailer": "^9.1.0",
     "pg": "^8.23.0",
     "upsignon-mail": "git+https://github.com/rgsystemes/upsignon-mail.git#v1.0.9",
-    "upsignon-ms-entra": "git+https://github.com/rgsystemes/upsignon-ms-entra.git#v1.0.4",
+    "upsignon-ms-entra": "git+https://github.com/rgsystemes/upsignon-ms-entra.git#v1.0.5",
     "uuid": "^14.0.2"
   },
   "devDependencies": {
