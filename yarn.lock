@@ -65,10 +65,10 @@
     "@typespec/ts-http-runtime" "^0.3.0"
     tslib "^2.6.2"
 
-"@azure/identity@^4.13.1":
-  version "4.13.2"
-  resolved "https://registry.yarnpkg.com/@azure/identity/-/identity-4.13.2.tgz#cead7e69ff586dc28bebbaea2201b6bb6960b84f"
-  integrity sha512-NXL2/pCJctLxgw8bvrwwgge743kEq8LBT+O1pmV0vyUwetzFPH9auP6jhkU/cgZCPPtWoewAe3ncaGCgPo07fA==
+"@azure/identity@^4.13.3":
+  version "4.13.3"
+  resolved "https://registry.yarnpkg.com/@azure/identity/-/identity-4.13.3.tgz#f7781be089dc6231e17ae1454b9a1e91bc797b81"
+  integrity sha512-zGQPtqvXPgSA8yfV2CkIQ1qirqk0p9AIVpC5uEkdXQYcKl07QHvyaGYRnZOk0AsQUmxNb4wfkcwY5di8Z5xa9A==
   dependencies:
     "@azure/abort-controller" "^2.0.0"
     "@azure/core-auth" "^1.9.0"
@@ -79,7 +79,7 @@
     "@azure/core-util" "^1.11.0"
     "@azure/logger" "^1.0.0"
     "@azure/msal-browser" "^5.5.0"
-    "@azure/msal-node" "^5.1.5"
+    "@azure/msal-node" "^6.0.0"
     open "^10.1.0"
     tslib "^2.2.0"
 
@@ -98,22 +98,22 @@
   dependencies:
     "@azure/msal-common" "16.14.0"
 
-"@azure/msal-common@16.13.0":
-  version "16.13.0"
-  resolved "https://registry.yarnpkg.com/@azure/msal-common/-/msal-common-16.13.0.tgz#62e424c6b21e143e8ef4374a64dbf8772dfe1a07"
-  integrity sha512-rOAy0KUcyBbdwVJ+f3uPpthXatFLLZN+/KWAsTLzk1aB23Xl9DRmmXYwSvBFOZyXj4jUQQ5FKxxRkhAFW1fOow==
-
 "@azure/msal-common@16.14.0":
   version "16.14.0"
   resolved "https://registry.yarnpkg.com/@azure/msal-common/-/msal-common-16.14.0.tgz#cdddb38d832be0e1be6227ea64d4eb119997227c"
   integrity sha512-A4rb55hI86Q9tBl/+jBj7TMz7iX2RFgQs/nExFzcAtoI/BFRVdaH5SL/MivrYD7qvweMpN8AgVvVMHV8UBYxew==
 
-"@azure/msal-node@^5.1.5":
-  version "5.6.0"
-  resolved "https://registry.yarnpkg.com/@azure/msal-node/-/msal-node-5.6.0.tgz#8cbfeff021b6d2f3d064a3afb82262ad985e8434"
-  integrity sha512-uFY9NxrWHw8PwZx7gAX6PDn+9vdfS05+levc/kwkx77IkjfaldnQbbcQzzDIZ5Hq5Zdr6/z92oAIoRWKp6MnOA==
+"@azure/msal-common@16.14.1":
+  version "16.14.1"
+  resolved "https://registry.yarnpkg.com/@azure/msal-common/-/msal-common-16.14.1.tgz#2c987f31da858e544e72b6faa986fecdb3de20f8"
+  integrity sha512-Or6xhPNyi4zHW25158yxBoyxuCqNSPa5YBVqfF1J5Ks4MJWBo/USXdp05DQIPu1Zli00YZu6t0+h6KvHJealxQ==
+
+"@azure/msal-node@^6.0.0":
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/@azure/msal-node/-/msal-node-6.0.1.tgz#48b9d5a472f16b403bd3a32494227ecfc54cafd4"
+  integrity sha512-ixSO1Y/kCVRthRs+hSx/5qkwaunX1/RAePhlMN0wIpIQ4WEZ6AREGGnGd1AP0qspHVsAwzWQKGubpjh50JyJIQ==
   dependencies:
-    "@azure/msal-common" "16.13.0"
+    "@azure/msal-common" "16.14.1"
     jsonwebtoken "^9.0.0"
 
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.27.1", "@babel/code-frame@^7.29.7":
@@ -4832,11 +4832,11 @@ update-browserslist-db@^1.3.0:
     react-dom "19.2.4"
     react-intl "8.0.4"
 
-"upsignon-ms-entra@git+https://github.com/rgsystemes/upsignon-ms-entra.git#v1.0.4":
-  version "1.0.4"
-  resolved "git+https://github.com/rgsystemes/upsignon-ms-entra.git#21eda46975e658dd3b604ba993f6c1926e476728"
+"upsignon-ms-entra@git+https://github.com/rgsystemes/upsignon-ms-entra.git#v1.0.5":
+  version "1.0.5"
+  resolved "git+https://github.com/rgsystemes/upsignon-ms-entra.git#25b96ccd0d23686358592fc957c4a56408a3fd83"
   dependencies:
-    "@azure/identity" "^4.13.1"
+    "@azure/identity" "^4.13.3"
     "@microsoft/microsoft-graph-client" "^3.0.7"
 
 uri-js@^4.2.2:
