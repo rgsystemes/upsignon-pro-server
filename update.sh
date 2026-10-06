@@ -1,4 +1,9 @@
 #!/bin/bash
+if [ "$(id -u)" -eq 0 ]; then
+  echo "This script must not be run as root."
+  exit 1
+fi
+
 git remote set-url origin https://github.com/rgsystemes/upsignon-pro-server
 git fetch origin production
 git reset --hard origin/production

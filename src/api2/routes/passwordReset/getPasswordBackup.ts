@@ -83,7 +83,7 @@ export const getPasswordBackup2 = async (req: any, res: any) => {
         bankId: bankIds.internalId,
       });
       if (!isOpenidSessionOK) {
-        logInfo(safeBody.userEmail, 'requestDeviceAccess2 fail: invalid openidSession');
+        logInfo(safeBody.userEmail, 'getPasswordBackup2 fail: invalid openidSession');
         return res.status(401).end();
       }
     } else {

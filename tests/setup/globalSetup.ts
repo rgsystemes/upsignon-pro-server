@@ -1,8 +1,12 @@
 import path from 'path';
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env.test') });
 
-import { TestDatabase } from './testDatabase';
-import libsodium from 'libsodium-wrappers';
+// Use requires instead of imports because swc will run imports before any other code,
+// thus running the dotenv config too late and causing the tests to fail due to missing environment variables.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { TestDatabase } = require('./testDatabase');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const libsodium = require('libsodium-wrappers');
 
 export default async function globalSetup() {
   console.log('Setting up test environment...');

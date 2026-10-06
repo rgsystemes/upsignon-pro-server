@@ -34,7 +34,7 @@ async function importBank(data, dbConnection, resellerId = null) {
     let adminId;
     if (row.admin_role === 'superadmin') {
       const insertedAdmin = await dbConnection.query(
-        'INSERT INTO admins (email, password_hash, created_at, reseller_id) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING RETURNING id',
+        'INSERT INTO admins (id, email, password_hash, created_at, reseller_id) VALUES (gen_random_uuid(), $1,$2,$3,$4) ON CONFLICT DO NOTHING RETURNING id',
         [row.email, row.password_hash, row.created_at, resellerId],
       );
       if (insertedAdmin.rowCount > 0) {
@@ -42,7 +42,7 @@ async function importBank(data, dbConnection, resellerId = null) {
       }
     } else {
       const insertedAdmin = await dbConnection.query(
-        'INSERT INTO admins (email, password_hash, created_at) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING RETURNING id',
+        'INSERT INTO admins (id, email, password_hash, created_at) VALUES (gen_random_uuid(), $1,$2,$3) ON CONFLICT DO NOTHING RETURNING id',
         [row.email, row.password_hash, row.created_at],
       );
       if (insertedAdmin.rowCount > 0) {
@@ -556,7 +556,7 @@ async function main() {
   const filePath = process.argv[2];
   if (!filePath) {
     console.log('File path parameter missing.');
-    console.log('Usage: node ./scripts/bankDataImport.js 2 path/to/data/file');
+    console.log('Usage: node ./scripts/bankDataImport.js path/to/data/file');
     process.exit(1);
   }
 

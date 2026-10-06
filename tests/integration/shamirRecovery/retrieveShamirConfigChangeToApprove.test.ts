@@ -1,4 +1,4 @@
-import { beforeEach, describe, it, jest, expect } from '@jest/globals';
+import { beforeEach, describe, it, expect } from '@jest/globals';
 import { retrieveShamirConfigChangeToApprove } from '../../../src/api2/routes/shamirRecovery/retrieveShamirConfigChangeToApprove';
 import { cleanDatabase } from '../../setup/testHelpers';
 import { json, Request, Response } from 'express';
