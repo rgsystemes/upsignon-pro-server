@@ -128,11 +128,12 @@ export const updateVaultData = async (req: any, res: any): Promise<void> => {
         basicAuth.userId,
         basicAuth.bankIds.internalId,
       );
-      await db.query('UPDATE user_devices SET last_sync_date=$1 WHERE id=$2 AND bank_id=$3', [
-        new Date().toISOString(),
-        basicAuth.deviceId,
-        basicAuth.bankIds.internalId,
-      ]);
+      // Must use the transaction client: applyPasswordBackups may have locked this same user_devices row,
+      // and a query on another pool connection would wait for a lock this transaction never releases.
+      await transactionalClient.query(
+        'UPDATE user_devices SET last_sync_date=$1 WHERE id=$2 AND bank_id=$3',
+        [new Date().toISOString(), basicAuth.deviceId, basicAuth.bankIds.internalId],
+      );
       await transactionalClient.commit();
     } catch (e) {
       try {
