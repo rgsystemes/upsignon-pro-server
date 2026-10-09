@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - unstable
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to deploy
+        required: true
+        default: unstable
 
 jobs:
   deploy:
@@ -16,4 +22,4 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token ${{ secrets.RGSUPVDEV_TOKEN }}" \
             https://api.github.com/repos/rgsystemes/eel-ops/actions/workflows/uso.deploy.yml/dispatches \
-            -d '{"ref":"master","inputs":{"repository":"${{ github.event.repository.name }}","branch":"${{ github.ref_name }}"}}'
+            -d '{"ref":"master","inputs":{"repository":"${{ github.event.repository.name }}","branch":"${{ inputs.branch || github.ref_name }}"}}'
