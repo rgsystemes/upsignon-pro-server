@@ -1,0 +1,25 @@
+---
+name: Deploy USO
+on:
+  push:
+    branches:
+      - unstable
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to deploy
+        required: true
+        default: unstable
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Trigger USO deploy workflow
+    steps:
+      - name: Trigger USO deploy workflow
+        run: |
+          curl --fail -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.RGSUPVDEV_TOKEN }}" \
+            https://api.github.com/repos/rgsystemes/eel-ops/actions/workflows/uso.deploy.yml/dispatches \
+            -d '{"ref":"master","inputs":{"repository":"${{ github.event.repository.name }}","branch":"${{ inputs.branch || github.ref_name }}"}}'
