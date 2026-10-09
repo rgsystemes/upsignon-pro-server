@@ -17,8 +17,11 @@ export const applyPasswordBackups = async (
 ): Promise<string[]> => {
   const unappliedDeviceIds: string[] = [];
   for (const backup of backups) {
+    // We set password_backup_public_key to NULL when applying a new password backup because this value
+    // is only needed for the approval of a new SSO device. The SSO flow uses its presence/absence in its logic,
+    // so change with caution.
     const result = await client.query(
-      "UPDATE user_devices SET encrypted_password_backup_2=$1 WHERE device_unique_id=$2 AND user_id=$3 AND authorization_status='AUTHORIZED' AND bank_id=$4",
+      "UPDATE user_devices SET encrypted_password_backup_2=$1, password_backup_public_key=NULL WHERE device_unique_id=$2 AND user_id=$3 AND authorization_status='AUTHORIZED' AND bank_id=$4",
       [backup.encryptedPassword, backup.deviceId, userId, bankId],
     );
     if ((result.rowCount ?? 0) === 0) {

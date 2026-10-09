@@ -19,10 +19,11 @@ export const backupPassword2 = async (req: any, res: any) => {
       return res.status(401).end();
     }
 
+    let unappliedDeviceIds: string[] = [];
     const transactionalClient = await db.getTransactionClient();
     try {
       await transactionalClient.begin();
-      await applyPasswordBackups(
+      unappliedDeviceIds = await applyPasswordBackups(
         transactionalClient,
         backups,
         basicAuth.userId,
@@ -41,7 +42,7 @@ export const backupPassword2 = async (req: any, res: any) => {
     }
     logInfo(req.body?.userEmail, 'backupPassword2 OK');
     // Return res
-    return res.status(204).end();
+    return res.status(200).json({ unappliedDeviceIds });
   } catch (e) {
     logError(req.body?.userEmail, 'backupPassword2', e);
     return res.status(400).end();
