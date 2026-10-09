@@ -46,6 +46,7 @@ export const upsertShamirBackup = async (req: Request, res: Response): Promise<v
       return;
     }
 
+    let abortedRequestIds: number[] = [];
     const transactionalClient = await db.getTransactionClient();
     try {
       await transactionalClient.begin();
@@ -92,23 +93,7 @@ export const upsertShamirBackup = async (req: Request, res: Response): Promise<v
         [basicAuth.userId, validatedBody.shamirConfigId],
       );
       await transactionalClient.commit();
-
-      if (updatedRecoveryRequests.rows.length > 0) {
-        const acceptLanguage = req.headers['accept-language'];
-        const supportEmail = await getSupportEmail(basicAuth.userId);
-        for (let i = 0; i < updatedRecoveryRequests.rows.length; i++) {
-          const holdersEmails = await getShareholdersEmailsForVault(
-            basicAuth.userId,
-            updatedRecoveryRequests.rows[i].id,
-          );
-          await sendShamirRecoveryRequestCancelledToTrustedPersons({
-            vaultEmail: basicAuth.userEmail,
-            trustedPersonEmails: holdersEmails,
-            supportEmail,
-            acceptLanguage,
-          });
-        }
-      }
+      abortedRequestIds = updatedRecoveryRequests.rows.map((r) => r.id);
     } catch (e) {
       logError(req.body?.userEmail, e);
       try {
@@ -120,6 +105,21 @@ export const upsertShamirBackup = async (req: Request, res: Response): Promise<v
       return;
     } finally {
       transactionalClient.release();
+    }
+
+    // Send emails once the connection has been released
+    if (abortedRequestIds.length > 0) {
+      const acceptLanguage = req.headers['accept-language'];
+      const supportEmail = await getSupportEmail(basicAuth.userId);
+      for (const requestId of abortedRequestIds) {
+        const holdersEmails = await getShareholdersEmailsForVault(basicAuth.userId, requestId);
+        await sendShamirRecoveryRequestCancelledToTrustedPersons({
+          vaultEmail: basicAuth.userEmail,
+          trustedPersonEmails: holdersEmails,
+          supportEmail,
+          acceptLanguage,
+        });
+      }
     }
 
     res.status(200).end();

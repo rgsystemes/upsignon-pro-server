@@ -7,6 +7,11 @@ const pool = new Pool({
   user: env.DB_USER,
   database: env.DB_NAME,
   password: env.DB_PASS,
+  // Safety nets so that a stuck query or transaction fails fast instead of hanging until the proxy times out.
+  // statement_timeout is kept below the 60s proxy timeout.
+  statement_timeout: 50000,
+  idle_in_transaction_session_timeout: 30000,
+  options: '-c lock_timeout=10000',
 });
 
 const query = (text: string, params?: Array<any>): Promise<QueryResult> => pool.query(text, params);
