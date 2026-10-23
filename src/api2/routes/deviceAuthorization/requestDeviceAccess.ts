@@ -1,6 +1,9 @@
 import { db } from '../../../helpers/db';
 import { getExpirationDate, isExpired } from '../../../helpers/dateHelper';
-import { sendDeviceRequestEmail } from '../../../emails/sendDeviceRequestEmail';
+import {
+  sendDeviceRequestAdminEmail,
+  sendDeviceRequestEmail,
+} from '../../../emails/sendDeviceRequestEmail';
 import { logError, logInfo } from '../../../helpers/logger';
 import { getRandomString } from '../../../helpers/randomString';
 import {
@@ -133,6 +136,22 @@ export const requestDeviceAccess2 = async (req: Request, res: Response) => {
     }
 
     if (isOpenidAuthenticated) {
+      const otherActiveDevicesRes = await db.query(
+        `SELECT COUNT(*) AS device_count FROM user_devices
+              WHERE user_id=$1 AND bank_id=$2 AND device_unique_id != $3
+                AND (authorization_status = 'AUTHORIZED' OR authorization_status = 'PENDING' OR
+                  authorization_status = 'USER_VERIFIED_PENDING_ADMIN_CHECK')`,
+        [userId, bankIds.internalId, safeBody.deviceId],
+      );
+      const isAdditionalDevice =
+        Number.parseInt(otherActiveDevicesRes.rows[0].device_count, 10) >= 1;
+      const requiresAdminCheck =
+        isAdditionalDevice &&
+        !!userRes.rows[0].bank_settings?.REQUIRE_ADMIN_CHECK_FOR_SECOND_DEVICE;
+      const nextAuthorizationStatus = requiresAdminCheck
+        ? 'USER_VERIFIED_PENDING_ADMIN_CHECK'
+        : 'AUTHORIZED';
+
       if (!deviceInDb) {
         // CREATE AUTHORIZED DEVICE
         await db.query(
@@ -147,7 +166,7 @@ export const requestDeviceAccess2 = async (req: Request, res: Response) => {
             safeBody.appVersion,
             safeBody.deviceId,
             safeBody.devicePublicKey,
-            'AUTHORIZED',
+            nextAuthorizationStatus,
             bankIds.internalId,
           ],
         );
@@ -163,13 +182,21 @@ export const requestDeviceAccess2 = async (req: Request, res: Response) => {
             safeBody.osNameAndVersion,
             safeBody.appVersion,
             safeBody.deviceId,
-            'AUTHORIZED',
+            nextAuthorizationStatus,
             deviceInDb.id,
           ],
         );
       }
-      logInfo(safeBody.userEmail, 'requestDeviceAccess2 authorized with openid session');
-      return res.status(200).json({ authorizationStatus: 'AUTHORIZED' });
+      if (requiresAdminCheck) {
+        await sendDeviceRequestAdminEmail(safeBody.userEmail, bankIds.internalId);
+        logInfo(
+          safeBody.userEmail,
+          'requestDeviceAccess2 authorized with openid session (waiting for admin check)',
+        );
+      } else {
+        logInfo(safeBody.userEmail, 'requestDeviceAccess2 authorized with openid session');
+      }
+      return res.status(200).json({ authorizationStatus: nextAuthorizationStatus });
     } else {
       // RESEND EMAIL IF REQUEST IS STILL PENDING
       if (

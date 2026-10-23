@@ -126,6 +126,11 @@ export const getVaultData = async (req: any, res: any): Promise<void> => {
     }
 
     const sharedVaults = await getSharedVaults(dbRes.rows[0].user_id, bankIds.internalId);
+    const pendingSsoDevices = await getPendingSsoDevices(
+      dbRes.rows[0].user_id,
+      bankIds.internalId,
+      deviceId,
+    );
 
     const userResultingSetting = getDefaultSettingOrUserOverride(
       dbRes.rows[0].bank_settings,
@@ -142,6 +147,7 @@ export const getVaultData = async (req: any, res: any): Promise<void> => {
       defaultAutolockDelay: userResultingSetting?.defaultAutolockDelay,
       maxAutolockDelay: userResultingSetting?.maxAutolockDelay,
       sharedVaults,
+      pendingSsoDevices,
       needsPasswordBackup:
         !dbRes.rows[0].encrypted_password_backup_2 ||
         dbRes.rows[0].encrypted_password_backup_2.length == 512,
@@ -199,6 +205,48 @@ export const getSharedVaults = async (
     encryptedKey: s.encrypted_shared_vault_key,
     isManager: s.is_manager, // deprecated
     accessLevel: s.access_level,
+  }));
+};
+
+export const getPendingSsoDevices = async (
+  userId: number,
+  bankId: number,
+  callingDeviceUniqueId: string,
+): Promise<
+  {
+    deviceId: string;
+    deviceName: string;
+    deviceType: string;
+    osFamily: string;
+    osNameAndVersion: string;
+    createdAt: any;
+    passwordBackupPublicKey: string;
+  }[]
+> => {
+  const pendingSsoDevicesRes = await db.query(
+    `SELECT
+      device_unique_id AS device_id,
+      device_name,
+      device_type,
+      os_family,
+      os_version AS os_name_and_version,
+      created_at,
+      password_backup_public_key
+    FROM user_devices
+    WHERE user_id=$1 AND bank_id=$2 AND device_unique_id != $3
+      AND authorization_status = 'AUTHORIZED'
+      AND password_backup_public_key IS NOT NULL
+      AND (encrypted_password_backup_2 IS NULL OR encrypted_password_backup_2 = '')`,
+    [userId, bankId, callingDeviceUniqueId],
+  );
+  return pendingSsoDevicesRes.rows.map((d) => ({
+    deviceId: d.device_id,
+    deviceName: d.device_name,
+    deviceType: d.device_type,
+    osFamily: d.os_family,
+    osNameAndVersion: d.os_name_and_version,
+    createdAt: d.created_at,
+    passwordBackupPublicKey: d.password_backup_public_key,
   }));
 };
 
