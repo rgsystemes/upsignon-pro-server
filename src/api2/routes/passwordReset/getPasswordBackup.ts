@@ -9,6 +9,7 @@ import libsodium from 'libsodium-wrappers';
 import { getBankIds } from '../../helpers/bankUUID';
 import Joi from 'joi';
 import { SessionStore } from '../../../helpers/sessionStore';
+import { usesPasswordlessUnlockForEmail } from '../authentication/usesPasswordlessUnlock';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
 export const getPasswordBackup2 = async (req: any, res: any) => {
@@ -133,19 +134,25 @@ export const getPasswordBackup2 = async (req: any, res: any) => {
       return res.status(403).json({ error: 'backup_not_setup' });
     }
 
-    if (safeBody.openidSession) {
-      // create password reset request for the record
-      await db.query(
-        `INSERT INTO password_reset_request (device_id, status, bank_id, granted_by)
+    const isPasswordlessSSOUnlock = await usesPasswordlessUnlockForEmail(
+      safeBody.userEmail,
+      bankIds.internalId,
+    );
+    if (!isPasswordlessSSOUnlock) {
+      if (safeBody.openidSession) {
+        // create password reset request for the record
+        await db.query(
+          `INSERT INTO password_reset_request (device_id, status, bank_id, granted_by)
         VALUES ($1,'COMPLETED',$2, 'SSO authentication')`,
-        [deviceRes.rows[0].id, bankIds.internalId],
-      );
-    } else {
-      // update status for reset request
-      await db.query(
-        `UPDATE password_reset_request SET status='COMPLETED', reset_token=null WHERE id=$1 AND bank_id=$2`,
-        [resetRequest.reset_request_id, bankIds.internalId],
-      );
+          [deviceRes.rows[0].id, bankIds.internalId],
+        );
+      } else {
+        // update status for reset request
+        await db.query(
+          `UPDATE password_reset_request SET status='COMPLETED', reset_token=null WHERE id=$1 AND bank_id=$2`,
+          [resetRequest.reset_request_id, bankIds.internalId],
+        );
+      }
     }
     await db.query(
       'UPDATE user_devices SET password_challenge_error_count=0, last_password_challenge_submission_date=null WHERE device_unique_id=$1 AND bank_id=$2',

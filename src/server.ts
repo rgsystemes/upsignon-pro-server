@@ -16,6 +16,8 @@ import { getBankConfig } from './api2/routes/bank/getBankConfig';
 import { getUrlList2 } from './api2/routes/bank/getUrlList';
 import { requestDeviceAccess2 } from './api2/routes/deviceAuthorization/requestDeviceAccess';
 import { checkDevice2 } from './api2/routes/deviceAuthorization/checkDevice';
+import { rejectSsoDevice } from './api2/routes/deviceAuthorization/rejectSsoDevice';
+import { sendPasswordBackupPublicKey } from './api2/routes/deviceAuthorization/sendPasswordBackupPublicKey';
 import { getAuthenticationChallenges2 } from './api2/routes/authentication/getAuthenticationChallenges';
 import { authenticate2 } from './api2/routes/authentication/authenticate';
 import { updateVaultData } from './api2/routes/data/updateVaultData';
@@ -72,6 +74,7 @@ import { shamirSecurityAlert } from './api2/routes/shamirRecovery/shamirSecurity
 import { getShamirRecoveryChallenge } from './api2/routes/shamirRecovery/getShamirRecoveryChallenge';
 import { getRecoveryKeyPair } from './api2/routes/shamirRecovery/getRecoveryKeyPair';
 import helmet from 'helmet';
+import { usesPasswordlessUnlock } from './api2/routes/authentication/usesPasswordlessUnlock';
 
 export const app = express();
 
@@ -160,6 +163,11 @@ app.post(
   requestDeviceAccess2,
 );
 app.post(['/:bankUUID/api2/check-device', '/api2/check-device'], checkDevice2);
+app.post(['/:bankUUID/api2/reject-sso-device', '/api2/reject-sso-device'], rejectSsoDevice);
+app.post(
+  ['/:bankUUID/api2/send-password-backup-public-key', '/api2/send-password-backup-public-key'],
+  sendPasswordBackupPublicKey,
+);
 
 // AUTHENTICATION
 app.post(
@@ -169,6 +177,10 @@ app.post(
 app.post(['/:bankUUID/api2/authenticate', '/api2/authenticate'], authenticate2);
 app.post(['/:bankUUID/api2/disconnect', '/api2/disconnect'], disconnect2);
 app.post(['/:bankUUID/api2/authenticate-device-only'], authenticateDeviceOnly);
+app.post(
+  ['/:bankUUID/api2/uses-passwordless-unlock', '/api2/uses-passwordless-unlock'],
+  usesPasswordlessUnlock,
+);
 
 // OPENID
 app.post(['/:bankUUID/api2/authenticate-with-openid-auth-code'], authenticateWithOpenidAuthCode);
