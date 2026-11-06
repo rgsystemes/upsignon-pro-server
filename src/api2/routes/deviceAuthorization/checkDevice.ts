@@ -41,6 +41,7 @@ export const checkDevice2 = async (req: any, res: any) => {
         ud.id AS id,
         users.id AS user_id,
         users.deactivated AS deactivated,
+        users.archived AS archived,
         ud.authorization_code AS authorization_code,
         ud.authorization_status AS authorization_status,
         ud.auth_code_expiration_date AS auth_code_expiration_date,
@@ -69,7 +70,7 @@ export const checkDevice2 = async (req: any, res: any) => {
       [userEmail, deviceId, bankIds.internalId],
     );
 
-    if (!dbRes || dbRes.rowCount === 0 || dbRes.rows[0].deactivated) {
+    if (!dbRes || dbRes.rowCount === 0 || dbRes.rows[0].deactivated || dbRes.rows[0].archived) {
       logInfo(req.body?.userEmail, 'checkDevice2 fail: device deleted');
       return res.status(403).json({ error: 'revoked' });
     }

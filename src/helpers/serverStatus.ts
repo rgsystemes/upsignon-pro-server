@@ -20,7 +20,9 @@ export const sendStatusUpdate = async (): Promise<void> => {
         resolve(stdout?.toString().trim() || 'unknown');
       });
     });
-    const nbVaultsResult = await db.query('SELECT COUNT(*) FROM users');
+    const nbVaultsResult = await db.query(
+      'SELECT COUNT(*) FROM users WHERE archived IS NOT TRUE',
+    );
     const nbVaults = nbVaultsResult.rows[0].count;
     const statsByBank = await getStatsByBank();
     const statsByReseller = await getStatsByReseller();
@@ -178,7 +180,7 @@ const getStatsByBank = async () => {
       COUNT(users.id) AS nb_users
     FROM banks
     LEFT JOIN users
-      ON users.bank_id=banks.id
+      ON users.bank_id=banks.id AND (users.archived IS NOT TRUE)
     GROUP BY banks.id`,
   );
   return JSON.stringify(
@@ -213,7 +215,7 @@ const getStatsByReseller = async () => {
     LEFT JOIN banks
       ON banks.reseller_id = resellers.id
     LEFT JOIN users
-      ON banks.id = users.bank_id
+      ON banks.id = users.bank_id AND (users.archived IS NOT TRUE)
     GROUP BY resellers.id`);
   return JSON.stringify(res.rows);
 };
@@ -299,7 +301,7 @@ const getSSOStats = async () => {
       COUNT(u.id) as nb_vaults
     FROM bank_sso_config bsc
     LEFT JOIN banks b ON b.id = bsc.bank_id
-    LEFT JOIN users u ON u.bank_id = b.id
+    LEFT JOIN users u ON u.bank_id = b.id AND (u.archived IS NOT TRUE)
     GROUP BY bsc.id, b.id`,
   );
   return banksUsingSsoRes.rows;

@@ -37,9 +37,9 @@ const performMicrosoftEntraSync = async (): Promise<void> => {
       }
     }
 
-    // Loop through users in our db
+    // Loop through users in our db (archived users are ignored: they are not deactivated/reactivated by this cron)
     const usersRes = await db.query(
-      'SELECT id, email, ms_entra_id, deactivated, bank_id FROM users',
+      'SELECT id, email, ms_entra_id, deactivated, bank_id FROM users WHERE archived IS NOT TRUE',
     );
     const allowedEmailsRes = await db.query('SELECT pattern, bank_id FROM allowed_emails');
     for (let i = 0; i < usersRes.rows.length; i++) {

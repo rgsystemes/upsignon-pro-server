@@ -25,6 +25,7 @@
  settings_override                    | jsonb                    |                 |           | '{}'::jsonb
  ms_entra_id                          | uuid                     |                 |           |
  deactivated                          | boolean                  |                 |           |
+ archived                             | boolean                  |                 |           |
  signing_public_key                   | text                     |                 |       signingKeys.key .public|
 Index :
     "users_pkey" PRIMARY KEY, btree (id)
@@ -68,6 +69,7 @@ export type User = {
   settings_override: Record<string, any>;
   ms_entra_id: string | null;
   deactivated: boolean | null;
+  archived: boolean | null;
   signing_public_key: string | null;
 };
 
@@ -191,6 +193,7 @@ const basicUser1: User = {
   settings_override: {},
   ms_entra_id: null,
   deactivated: false,
+  archived: false,
   signing_public_key: signingKeys.key1.public,
 };
 
@@ -218,6 +221,7 @@ const basicUser2: User = {
   settings_override: {},
   ms_entra_id: null,
   deactivated: false,
+  archived: false,
   signing_public_key: signingKeys.key2.public,
 };
 
@@ -245,6 +249,7 @@ const basicUser3: User = {
   settings_override: {},
   ms_entra_id: null,
   deactivated: false,
+  archived: false,
   signing_public_key: signingKeys.key3.public,
 };
 
@@ -272,6 +277,7 @@ const basicUser4: User = {
   settings_override: {},
   ms_entra_id: null,
   deactivated: false,
+  archived: false,
   signing_public_key: signingKeys.key4.public,
 };
 
@@ -299,6 +305,7 @@ const basicUser5: User = {
   settings_override: {},
   ms_entra_id: null,
   deactivated: false,
+  archived: false,
   signing_public_key: signingKeys.key5.public,
 };
 
@@ -307,8 +314,8 @@ export const testUsers: User[] = [basicUser1, basicUser2, basicUser3, basicUser4
 export const addTestUsers = async () => {
   for (let u of testUsers) {
     await db.query(
-      `INSERT INTO users (id, email, created_at, updated_at, bank_id, nb_accounts, nb_codes, nb_accounts_strong, nb_accounts_medium, nb_accounts_weak, nb_accounts_with_duplicated_password, nb_accounts_with_no_password, nb_accounts_red, nb_accounts_orange, nb_accounts_green, allowed_to_export, encrypted_data_2, sharing_public_key_2, allowed_offline_desktop, allowed_offline_mobile, settings_override, ms_entra_id, deactivated, signing_public_key)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)`,
+      `INSERT INTO users (id, email, created_at, updated_at, bank_id, nb_accounts, nb_codes, nb_accounts_strong, nb_accounts_medium, nb_accounts_weak, nb_accounts_with_duplicated_password, nb_accounts_with_no_password, nb_accounts_red, nb_accounts_orange, nb_accounts_green, allowed_to_export, encrypted_data_2, sharing_public_key_2, allowed_offline_desktop, allowed_offline_mobile, settings_override, ms_entra_id, deactivated, archived, signing_public_key)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)`,
       [
         u.id,
         u.email,
@@ -333,6 +340,7 @@ export const addTestUsers = async () => {
         u.settings_override,
         u.ms_entra_id,
         u.deactivated,
+        u.archived,
         u.signing_public_key,
       ],
     );
