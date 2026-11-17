@@ -55,6 +55,7 @@ export const startServer = (app: any, then: any): void => {
       }
       logInfo(`${serverEnv} server listening `, address);
       notifyPm2Ready();
+      then();
     });
     listenForGracefulShutdown(server);
   }
