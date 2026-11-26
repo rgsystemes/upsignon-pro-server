@@ -48,6 +48,8 @@ export const getDefaultSettingOrUserOverride = (
     osFamily.toLowerCase() === 'windows' ||
     osFamily.toLowerCase() === 'macos' ||
     osFamily.toLowerCase() === 'linux' ||
+    // the web app uses the desktop defaults
+    osFamily.toLowerCase() === 'web' ||
     // for backwards compat
     osFamily.indexOf('Windows') === 0 ||
     osFamily.indexOf('Mac') === 0 ||

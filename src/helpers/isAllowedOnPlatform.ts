@@ -68,6 +68,7 @@ export const isAllowedOnPlatform = (
   } else if (isLinux(osFamily)) {
     return _settingResultForUser(bankSettings, userSettings, 'ALLOWED_LINUX', defaultAllowed);
   } else {
+    // TODO(web): handle web platforms specifically if needed
     console.error('isAllowedOnPlatform - unknown osFamily: ', osFamily);
     return false;
   }

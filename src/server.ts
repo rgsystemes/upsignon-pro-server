@@ -123,7 +123,22 @@ app.use((req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
   logInfo(req.body?.userEmail, ip, sanitizeUrlForLogs(req));
   if (!env.IS_PRODUCTION) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    if (req.headers.origin === 'http://localhost:5173') {
+      // credentials (cookies) require an explicit origin, '*' is refused by browsers
+      res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Vary', 'Origin');
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+    if (req.method === 'OPTIONS') {
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.setHeader(
+        'Access-Control-Allow-Headers',
+        req.headers['access-control-request-headers'] || 'Content-Type',
+      );
+      return res.sendStatus(204);
+    }
   }
   next();
 });
